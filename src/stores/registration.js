@@ -261,7 +261,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       visitWith: '',
       visitWithOther: '',
       remarks: `Online Application ${randomCode}`,
-      modifiedBy: '',
+      modifiedBy: '0',
       modifiedDate: '',
       userEmail: formData.value.emailAddress
     }
