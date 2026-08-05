@@ -1,0 +1,105 @@
+<template>
+  <footer class="transition-colors duration-300 dark:bg-[#050609] dark:border-slate-900/80 bg-slate-100 border-slate-200 border-t pt-16 pb-12 relative overflow-hidden">
+    <!-- Glow accent background -->
+    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-gradient-to-t from-[#ee2824]/10 via-rose-600/5 to-transparent blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b dark:border-slate-900 border-slate-200">
+        
+        <!-- Brand Summary Column -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center gap-3">
+            <img src="/logo.png" alt="Switch Fiber Logo" class="w-10 h-10 object-contain drop-shadow-md" />
+            <div>
+              <span class="font-heading font-extrabold text-2xl tracking-tight dark:text-white text-slate-900">SWITCH</span>
+              <span class="font-heading font-extrabold text-2xl tracking-tight text-gradient-red">FIBER</span>
+            </div>
+          </div>
+          
+          <p class="text-sm dark:text-slate-400 text-slate-600 max-w-sm leading-relaxed">
+            Rizal’s fast-growing and affordable internet provider. Delivering ultra-fast, unlimited fiber internet with transparent pricing and local 24/7 dedicated support.
+          </p>
+
+          <div class="pt-2 flex items-center gap-3">
+            <a href="https://www.facebook.com/switchfiberph" target="_blank" class="w-9 h-9 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+              <Facebook class="w-4 h-4" />
+            </a>
+            <a href="https://www.instagram.com/switchfiberph/" target="_blank" class="w-9 h-9 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+              <Instagram class="w-4 h-4" />
+            </a>
+            <a href="https://invite.viber.com/?g=HF_4mUx80VGD5igbMKZi5lV0ai8R6_ld&lang=en" target="_blank" class="w-9 h-9 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+              <MessageSquare class="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Quick Navigation</h4>
+          <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
+            <li><router-link to="/" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Home Page</router-link></li>
+            <li><router-link to="/plans" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
+            <li><router-link to="/coverage" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
+            <li><router-link to="/register" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
+            <li><router-link to="/status" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
+          </ul>
+        </div>
+
+        <!-- Self Service & Billing -->
+        <div>
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Customer Care</h4>
+          <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
+            <li><router-link to="/pay-bills" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Settle Bill (pay.switchfiber.ph)</router-link></li>
+            <li><router-link to="/tech-support" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">192.168.1.1 WiFi Router Guide</router-link></li>
+            <li><router-link to="/tech-support" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Change WiFi Password & SSID</router-link></li>
+            <li><router-link to="/careers" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Become a Freelance Sales Agent</router-link></li>
+          </ul>
+        </div>
+
+        <!-- Hotlines & Office Hours -->
+        <div>
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Direct Contact</h4>
+          <ul class="space-y-3 text-sm dark:text-slate-400 text-slate-600">
+            <li class="flex items-start gap-2.5">
+              <PhoneCall class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-0.5" />
+              <div>
+                <span class="block text-xs font-semibold dark:text-slate-300 text-slate-700">Customer Care Hotlines:</span>
+                <a href="tel:09154077565" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67]">0915 407 7565</a> / <a href="tel:09178762440" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67]">0917 876 2440</a>
+              </div>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <CreditCard class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-0.5" />
+              <div>
+                <span class="block text-xs font-semibold dark:text-slate-300 text-slate-700">Billing Support Hotline:</span>
+                <a href="tel:09154077555" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67]">0915 407 7555</a>
+              </div>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <Clock class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-0.5" />
+              <div>
+                <span class="block text-xs font-semibold dark:text-slate-300 text-slate-700">Business Hours:</span>
+                <span>Mon - Sat: 8:00 AM - 5:00 PM</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Footer Bottom -->
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs dark:text-slate-500 text-slate-500 gap-4">
+        <p>© 2026 Switch Internet Services Co. All Rights Reserved. Sister Company of Switch Group.</p>
+        <div class="flex items-center gap-6">
+          <span>Binangonan, Rizal, Philippines</span>
+          <span>•</span>
+          <router-link to="/register" class="text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+</template>
+
+<script setup>
+import { Zap, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock } from 'lucide-vue-next'
+</script>
