@@ -42,16 +42,16 @@
     </div>
 
     <!-- Main Navigation Bar -->
-    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3 sm:gap-4">
       
       <!-- Brand Logo -->
-      <router-link to="/" class="flex items-center gap-3 group shrink-0">
-        <img src="/logo.png" alt="Switch Fiber Logo" class="w-11 h-11 object-contain group-hover:scale-105 transition-transform drop-shadow-md" />
+      <router-link to="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+        <img src="/logo.png" alt="Switch Fiber Logo" class="w-9 h-9 sm:w-11 sm:h-11 object-contain group-hover:scale-105 transition-transform drop-shadow-md" />
         <div>
           <div class="flex items-center">
-            <span class="font-heading font-extrabold text-2xl tracking-tight text-[#ee2824] dark:text-[#ff6b67]">SWITCHFIBER</span>
+            <span class="font-heading font-extrabold text-xl sm:text-2xl tracking-tight text-[#ee2824] dark:text-[#ff6b67]">SWITCHFIBER</span>
           </div>
-          <span class="text-[10px] uppercase font-bold tracking-widest text-[#ee2824] dark:text-[#ff6b67] block -mt-1">Your life-long connection</span>
+          <span class="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-[#ee2824] dark:text-[#ff6b67] block -mt-1">Your life-long connection</span>
         </div>
       </router-link>
 
@@ -123,7 +123,7 @@
         </router-link>
       </div>
 
-      <!-- Extreme Right Action (Light/Dark Mode Switch Pill) -->
+      <!-- Extreme Right Action (Light/Dark Mode Switch Pill for Desktop) -->
       <div class="hidden lg:flex items-center shrink-0">
         <button 
           id="theme-toggle-btn"
@@ -139,115 +139,196 @@
         </button>
       </div>
 
-      <!-- Mobile Controls: Theme Toggle, Apply Now & Mobile Menu -->
-      <div class="flex lg:hidden items-center gap-2">
+      <!-- Mobile Controls: Theme Toggle & Hamburger Mobile Menu -->
+      <div class="flex lg:hidden items-center gap-2 shrink-0">
+        <!-- Light / Dark Mode Toggle Button -->
         <button 
           id="theme-toggle-btn-mobile"
           @click="themeStore.toggleTheme()"
-          class="p-2 rounded-xl border dark:bg-slate-900 dark:border-slate-800 bg-slate-100 border-slate-200 text-slate-700 dark:text-slate-300"
+          class="p-2.5 rounded-xl border dark:bg-slate-900/90 dark:border-slate-800 bg-slate-100 border-slate-200 text-slate-700 dark:text-slate-300 hover:border-[#ee2824]/40 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ee2824]/30"
           :title="themeStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          aria-label="Toggle light or dark theme"
         >
           <Sun v-if="themeStore.isDark" class="w-4 h-4 text-amber-400" />
           <Moon v-else class="w-4 h-4 text-slate-700" />
         </button>
 
-        <router-link to="/register" @click="registrationStore.resetForm()" class="btn-primary text-xs px-3 py-2">
-          Apply Now
-        </router-link>
-
+        <!-- Clean Mobile Hamburger Button on far right -->
         <button 
           @click="mobileMenuOpen = !mobileMenuOpen"
-          class="p-2 rounded-xl dark:bg-slate-900 dark:border-slate-800 bg-slate-100 border border-slate-200 text-slate-700 dark:text-slate-300"
+          class="p-2.5 rounded-xl dark:bg-slate-900/90 dark:border-slate-800 bg-slate-100 border border-slate-200 text-slate-700 dark:text-slate-300 hover:border-[#ee2824]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#ee2824]/30"
+          :aria-expanded="mobileMenuOpen"
+          aria-label="Toggle navigation menu"
         >
-          <Menu v-if="!mobileMenuOpen" class="w-5 h-5" />
-          <X v-else class="w-5 h-5" />
+          <Menu v-if="!mobileMenuOpen" class="w-5 h-5 transition-transform duration-200" />
+          <X v-else class="w-5 h-5 transition-transform duration-200 rotate-90 text-[#ee2824] dark:text-[#ff6b67]" />
         </button>
       </div>
 
     </div>
 
     <!-- Mobile Drawer Menu -->
-    <div 
-      v-if="mobileMenuOpen" 
-      class="lg:hidden border-b dark:border-slate-800 dark:bg-[#07080c] border-slate-200 bg-white px-4 pt-3 pb-6 space-y-2 animate-in slide-in-from-top-2 duration-200"
+    <transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2 scale-95"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0 scale-100"
+      leave-to-class="opacity-0 -translate-y-2 scale-95"
     >
-      <router-link 
-        to="/" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
+      <div 
+        v-if="mobileMenuOpen" 
+        class="lg:hidden border-b dark:border-slate-800/90 dark:bg-[#07080c]/95 border-slate-200/90 bg-white/95 backdrop-blur-xl px-4 pt-3 pb-6 space-y-3 max-h-[calc(100vh-4.5rem)] overflow-y-auto shadow-2xl"
       >
-        Home
-      </router-link>
-      <router-link 
-        to="/about" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        About Us
-      </router-link>
-      <router-link 
-        to="/plans" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Fiber Plans & Pricing
-      </router-link>
-      <router-link 
-        to="/coverage" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Area Coverage (Rizal)
-      </router-link>
-      <router-link 
-        to="/contact" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Contact Us
-      </router-link>
-      <router-link 
-        to="/register" 
-        @click="registrationStore.resetForm(); mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 border border-[#ee2824]/30"
-      >
-        ✨ Client Online Application
-      </router-link>
-      <router-link 
-        to="/status" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Track Application Reference
-      </router-link>
-      <router-link 
-        to="/pay-bills" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Pay Bills (GCash / Maya)
-      </router-link>
-      <router-link 
-        to="/tech-support" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Router & Wi-Fi Setup
-      </router-link>
-      <router-link 
-        to="/careers" 
-        @click="mobileMenuOpen = false"
-        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
-      >
-        Sales Agent Careers
-      </router-link>
-    </div>
+        <!-- Prominent Online Application Button inside Mobile Drawer -->
+        <router-link 
+          to="/register" 
+          @click="registrationStore.resetForm(); mobileMenuOpen = false"
+          class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-[#ee2824] to-[#cc1814] shadow-md hover:opacity-95 transition-all text-sm"
+        >
+          <Sparkles class="w-4 h-4" />
+          <span>Apply Online Now</span>
+        </router-link>
+
+        <div class="h-px bg-slate-200 dark:bg-slate-800/80 my-2"></div>
+
+        <!-- Mobile Navigation Links with Icons -->
+        <nav class="space-y-1">
+          <router-link 
+            to="/" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <Home class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+            <span>Home</span>
+          </router-link>
+
+          <router-link 
+            to="/about" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/about' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <Info class="w-4 h-4 text-blue-500" />
+            <span>About Us</span>
+          </router-link>
+
+          <router-link 
+            to="/plans" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/plans' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <Zap class="w-4 h-4 text-amber-500" />
+            <span>Fiber Plans & Pricing</span>
+          </router-link>
+
+          <router-link 
+            to="/coverage" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/coverage' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <MapPin class="w-4 h-4 text-emerald-500" />
+            <span>Area Coverage (Rizal)</span>
+          </router-link>
+
+          <router-link 
+            to="/status" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/status' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <Search class="w-4 h-4 text-purple-500" />
+            <span>Track Application Reference</span>
+          </router-link>
+
+          <router-link 
+            to="/pay-bills" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/pay-bills' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <CreditCard class="w-4 h-4 text-cyan-500" />
+            <span>Pay Bills (GCash / Maya)</span>
+          </router-link>
+
+          <router-link 
+            to="/tech-support" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/tech-support' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <Wrench class="w-4 h-4 text-orange-500" />
+            <span>Router & Wi-Fi Setup</span>
+          </router-link>
+
+          <router-link 
+            to="/contact" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/contact' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <PhoneCall class="w-4 h-4 text-[#ee2824]" />
+            <span>Contact Us</span>
+          </router-link>
+
+          <router-link 
+            to="/careers" 
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/careers' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <Users class="w-4 h-4 text-indigo-500" />
+            <span>Sales Agent Careers</span>
+          </router-link>
+        </nav>
+
+        <!-- Quick Hotline Footer inside Mobile Menu -->
+        <div class="pt-3 border-t dark:border-slate-800 border-slate-200 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-2">
+            <span>Customer Hotline:</span>
+            <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a>
+          </div>
+          <div class="flex items-center justify-center gap-4 pt-1">
+            <a href="https://facebook.com/switchfiber.ph" target="_blank" rel="noopener" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#1877F2]" title="Facebook">
+              <Facebook class="w-4 h-4" />
+            </a>
+            <a href="https://instagram.com/switchfiber.ph" target="_blank" rel="noopener" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-500" title="Instagram">
+              <Instagram class="w-4 h-4" />
+            </a>
+            <a href="https://m.me/switchfiber.ph" target="_blank" rel="noopener" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-cyan-500" title="Messenger">
+              <MessageCircle class="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </transition>
   </header>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { Zap, Sparkles, Menu, X, Search, Sun, Moon, Facebook, Instagram, MessageCircle } from 'lucide-vue-next'
+import { 
+  Home, 
+  Info, 
+  Zap, 
+  MapPin, 
+  Search, 
+  CreditCard, 
+  Wrench, 
+  PhoneCall, 
+  Users, 
+  Sparkles, 
+  Menu, 
+  X, 
+  Sun, 
+  Moon, 
+  Facebook, 
+  Instagram, 
+  MessageCircle 
+} from 'lucide-vue-next'
 import { useThemeStore } from '../stores/theme'
 import { useRegistrationStore } from '../stores/registration'
 
