@@ -48,11 +48,10 @@
       <router-link to="/" class="flex items-center gap-3 group shrink-0">
         <img src="/logo.png" alt="Switch Fiber Logo" class="w-11 h-11 object-contain group-hover:scale-105 transition-transform drop-shadow-md" />
         <div>
-          <div class="flex items-center gap-1.5">
-            <span class="font-heading font-extrabold text-2xl tracking-tight dark:text-white text-slate-900">SWITCH</span>
-            <span class="font-heading font-extrabold text-2xl tracking-tight text-gradient-red">FIBER</span>
+          <div class="flex items-center">
+            <span class="font-heading font-extrabold text-2xl tracking-tight text-[#ee2824] dark:text-[#ff6b67]">SWITCHFIBER</span>
           </div>
-          <span class="text-[10px] uppercase font-bold tracking-widest text-[#ee2824] dark:text-[#ff6b67] block -mt-1">Rizal Fiber Internet</span>
+          <span class="text-[10px] uppercase font-bold tracking-widest text-[#ee2824] dark:text-[#ff6b67] block -mt-1">Your life-long connection</span>
         </div>
       </router-link>
 
@@ -65,6 +64,14 @@
             :class="$route.path === '/' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-700 hover:text-[#ee2824] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'"
           >
             Home
+          </router-link>
+
+          <router-link 
+            to="/about" 
+            class="px-3 py-2 rounded-xl text-sm font-semibold transition-all"
+            :class="$route.path === '/about' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-700 hover:text-[#ee2824] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'"
+          >
+            About Us
           </router-link>
           
           <router-link 
@@ -92,11 +99,11 @@
           </router-link>
 
           <router-link 
-            to="/tech-support" 
+            to="/contact" 
             class="px-3 py-2 rounded-xl text-sm font-semibold transition-all"
-            :class="$route.path === '/tech-support' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-700 hover:text-[#ee2824] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'"
+            :class="$route.path === '/contact' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-700 hover:text-[#ee2824] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'"
           >
-            Router Setup
+            Contact Us
           </router-link>
 
           <router-link 
@@ -172,6 +179,13 @@
         Home
       </router-link>
       <router-link 
+        to="/about" 
+        @click="mobileMenuOpen = false"
+        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
+      >
+        About Us
+      </router-link>
+      <router-link 
         to="/plans" 
         @click="mobileMenuOpen = false"
         class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
@@ -184,6 +198,13 @@
         class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
       >
         Area Coverage (Rizal)
+      </router-link>
+      <router-link 
+        to="/contact" 
+        @click="mobileMenuOpen = false"
+        class="block px-4 py-3 rounded-lg font-medium dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900"
+      >
+        Contact Us
       </router-link>
       <router-link 
         to="/register" 

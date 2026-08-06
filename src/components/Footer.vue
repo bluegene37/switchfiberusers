@@ -11,8 +11,7 @@
           <div class="flex items-center gap-3">
             <img src="/logo.png" alt="Switch Fiber Logo" class="w-10 h-10 object-contain drop-shadow-md" />
             <div>
-              <span class="font-heading font-extrabold text-2xl tracking-tight dark:text-white text-slate-900">SWITCH</span>
-              <span class="font-heading font-extrabold text-2xl tracking-tight text-gradient-red">FIBER</span>
+              <span class="font-heading font-extrabold text-2xl tracking-tight text-[#ee2824] dark:text-[#ff6b67]">SWITCHFIBER</span>
             </div>
           </div>
           
@@ -38,8 +37,10 @@
           <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Quick Navigation</h4>
           <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
             <li><router-link to="/" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Home Page</router-link></li>
+            <li><router-link to="/about" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">About Switch Fiber</router-link></li>
             <li><router-link to="/plans" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
             <li><router-link to="/coverage" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
+            <li><router-link to="/contact" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
             <li><router-link to="/register" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
             <li><router-link to="/status" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
           </ul>

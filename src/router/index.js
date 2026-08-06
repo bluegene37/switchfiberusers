@@ -7,12 +7,19 @@ import ApplicationStatusView from '../views/ApplicationStatusView.vue'
 import PayBillsView from '../views/PayBillsView.vue'
 import TechSupportView from '../views/TechSupportView.vue'
 import CareersView from '../views/CareersView.vue'
+import AboutView from '../views/AboutView.vue'
+import ContactView from '../views/ContactView.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: HomeView
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: AboutView
   },
   {
     path: '/plans',
@@ -23,6 +30,11 @@ const routes = [
     path: '/coverage',
     name: 'Coverage',
     component: CoverageView
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: ContactView
   },
   {
     path: '/register',
