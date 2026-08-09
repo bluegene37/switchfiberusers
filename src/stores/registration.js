@@ -21,7 +21,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     // Address Details
     region: 'Region IV-A (CALABARZON)',
     city: 'Binangonan',
-    barangay: 'Bilibiran',
+    barangay: '',
     installationAddress: '',
     landmark: '',
     
@@ -31,21 +31,27 @@ export const useRegistrationStore = defineStore('registration', () => {
     selectedPlanPrice: 799,
     applicablePromo: 'Standard Free Installation',
 
-    // Document File Strings / Base64 Data URLs
+    // Document File Strings & ID Types
     houseFrontPicture: '',
     houseFrontName: '',
     governmentValidId: '',
     governmentValidIdName: '',
+    primaryGovtIdType: 'National ID (Philsys)',
     secondGovernmentValidId: '',
     secondGovernmentValidIdName: '',
+    secondaryGovtIdType: '',
     firstNearestLandmark: '',
     firstNearestLandmarkName: '',
     secondNearestLandmark: '',
     secondNearestLandmarkName: '',
 
+    // Option Features
+    expressInstallation: false,
+
     // Agreement & Signature
     termsAndConditionsAgreement: false,
     signatureName: '',
+    digitalSignature: '',
     applicationReferenceCode: '',
     submissionDate: ''
   })
@@ -156,10 +162,56 @@ export const useRegistrationStore = defineStore('registration', () => {
     'Senior Citizen ID'
   ]
 
+  // Safe LocalStorage Persist Helper to prevent QuotaExceededError with base64 data
+  function saveToLocalStorage() {
+    try {
+      const sanitizedApps = submittedApplications.value.map(app => {
+        const copy = { ...app }
+        if (copy.digitalSignature && copy.digitalSignature.length > 200) {
+          copy.digitalSignature = '[Digital Signature Captured]'
+        }
+        if (copy.payload) {
+          const payloadCopy = { ...copy.payload }
+          if (payloadCopy.houseFrontPicture?.length > 200) payloadCopy.houseFrontPicture = '[Uploaded Photo]'
+          if (payloadCopy.governmentValidId?.length > 200) payloadCopy.governmentValidId = '[Uploaded ID]'
+          if (payloadCopy.secondGovernmentValidId?.length > 200) payloadCopy.secondGovernmentValidId = '[Uploaded ID]'
+          if (payloadCopy.firstNearestLandmark?.length > 200) payloadCopy.firstNearestLandmark = '[Uploaded Landmark]'
+          if (payloadCopy.secondNearestLandmark?.length > 200) payloadCopy.secondNearestLandmark = '[Uploaded Landmark]'
+          copy.payload = payloadCopy
+        }
+        return copy
+      })
+      localStorage.setItem('switch_applications', JSON.stringify(sanitizedApps))
+    } catch (err) {
+      console.warn('LocalStorage quota exceeded, trimming older applications:', err)
+      try {
+        const trimmedApps = submittedApplications.value.slice(0, 3).map(app => ({
+          referenceCode: app.referenceCode,
+          applicantName: app.applicantName,
+          mobile: app.mobile,
+          plan: app.plan,
+          city: app.city,
+          barangay: app.barangay,
+          date: app.date,
+          status: app.status,
+          statusStep: app.statusStep,
+          notes: app.notes
+        }))
+        localStorage.setItem('switch_applications', JSON.stringify(trimmedApps))
+      } catch (err2) {
+        console.warn('LocalStorage unavailable or fully restricted, using memory store.', err2)
+      }
+    }
+  }
+
   // Mock DB in LocalStorage
-  const submittedApplications = ref(
-    JSON.parse(localStorage.getItem('switch_applications') || '[]')
-  )
+  let initialApps = []
+  try {
+    initialApps = JSON.parse(localStorage.getItem('switch_applications') || '[]')
+  } catch (err) {
+    console.warn('Error reading from localStorage:', err)
+  }
+  const submittedApplications = ref(initialApps)
 
   if (submittedApplications.value.length === 0) {
     submittedApplications.value.push({
@@ -174,7 +226,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       statusStep: 4,
       notes: 'Ocular survey completed. Fiber drop cable installation scheduled for tomorrow morning.'
     })
-    localStorage.setItem('switch_applications', JSON.stringify(submittedApplications.value))
+    saveToLocalStorage()
   }
 
   function resetForm() {
@@ -260,7 +312,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       visitBy: '',
       visitWith: '',
       visitWithOther: '',
-      remarks: `Online Application ${randomCode}`,
+      remarks: `Online Application ${randomCode} | ID: ${formData.value.primaryGovtIdType}${formData.value.digitalSignature ? ' | Signed' : ''}`,
       modifiedBy: '0',
       modifiedDate: '',
       userEmail: formData.value.emailAddress
@@ -276,15 +328,19 @@ export const useRegistrationStore = defineStore('registration', () => {
       city: formData.value.city,
       barangay: formData.value.barangay,
       streetAddress: formData.value.installationAddress,
+      primaryGovtIdType: formData.value.primaryGovtIdType,
+      secondaryGovtIdType: formData.value.secondaryGovtIdType,
+      digitalSignature: formData.value.digitalSignature,
+      expressInstallation: formData.value.expressInstallation,
       date: new Date().toISOString().split('T')[0],
       status: 'Submitted',
       statusStep: 1,
-      notes: 'Application logged. Account officer is reviewing uploaded government IDs.',
+      notes: 'Application logged. Account officer is reviewing uploaded government IDs and signature.',
       payload: apiPayload
     }
 
     submittedApplications.value.unshift(newApp)
-    localStorage.setItem('switch_applications', JSON.stringify(submittedApplications.value))
+    saveToLocalStorage()
 
     // Attempt POST to backend API endpoint
     try {

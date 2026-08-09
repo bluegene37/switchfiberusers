@@ -54,7 +54,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Full Name -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Full Legal Name *</label>
+              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Full Legal Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <div class="relative">
                 <input 
                   v-model="form.fullName" 
@@ -73,7 +73,7 @@
 
             <!-- Email Address -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Email Address *</label>
+              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <div class="relative">
                 <input 
                   v-model="form.email" 
@@ -94,7 +94,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Mobile Number -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Mobile Phone Number (Numeric Only) *</label>
+              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Mobile Phone Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <div class="relative">
                 <input 
                   v-model="form.mobile" 
@@ -117,7 +117,7 @@
 
             <!-- Target Service Municipality -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Primary Target Area (Rizal) *</label>
+              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Primary Target Area (Rizal) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <select 
                 v-model="form.municipality" 
                 @blur="touch('municipality')"

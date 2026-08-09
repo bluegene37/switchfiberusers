@@ -211,15 +211,15 @@
       <form @submit.prevent="sendMessage" class="space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Full Name *</label>
+            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Full Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
             <input v-model="form.name" type="text" placeholder="John Doe" class="input-field" required />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Mobile Number *</label>
+            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Mobile Number <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
             <input v-model="form.mobile" type="text" placeholder="09171234567" class="input-field" required />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Email Address *</label>
+            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
             <input v-model="form.email" type="email" placeholder="name@example.com" class="input-field" required />
           </div>
         </div>
@@ -241,7 +241,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Your Message *</label>
+          <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Your Message <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <textarea v-model="form.message" rows="4" placeholder="How can we assist you today?" class="input-field" required></textarea>
         </div>
 

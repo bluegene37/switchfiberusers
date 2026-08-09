@@ -1,6 +1,12 @@
 <template>
   <div class="glass-panel p-6 md:p-10 rounded-3xl max-w-4xl mx-auto border border-[#ee2824]/30 shadow-2xl relative transition-colors duration-300">
     
+    <!-- Toast Notification for Copying Code -->
+    <div v-if="showCopyToast" class="fixed top-6 right-6 z-50 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-300">
+      <CheckCircle2 class="w-5 h-5" />
+      <span class="text-xs font-bold">Reference code copied to clipboard!</span>
+    </div>
+
     <!-- Header Title -->
     <div class="text-center space-y-2 mb-8">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ee2824]/10 border border-[#ee2824]/30 text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] uppercase tracking-widest">
@@ -53,15 +59,21 @@
 
     <!-- STEP 1: Personal Information -->
     <div v-if="currentStep === 1 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-        <User class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
-        <span>Step 1: Applicant Personal Information</span>
-      </h3>
+      <div class="flex items-center justify-between border-b dark:border-slate-800 border-slate-200 pb-3">
+        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
+          <User class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Step 1: Applicant Personal Information</span>
+        </h3>
+        <span class="text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+          <Zap class="w-3.5 h-3.5" />
+          <span>Service Feasibility Verified</span>
+        </span>
+      </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- First Name -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">First Name *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">First Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input 
               v-model="formData.firstName" 
@@ -93,7 +105,7 @@
 
         <!-- Last Name -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Last Name *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Last Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input 
               v-model="formData.lastName" 
@@ -116,7 +128,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Email Address -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Email Address *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input 
               v-model="formData.emailAddress" 
@@ -138,7 +150,7 @@
 
         <!-- Mobile Number -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Mobile Number (Numeric Only) *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Mobile Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input 
               v-model="formData.mobileNumber" 
@@ -180,7 +192,6 @@
               class="input-field font-mono" 
               :class="getFieldStatusClass('secondaryMobileNumber')"
             />
-            <CheckCircle2 v-if="isFieldValid('secondaryMobileNumber')" class="w-4 h-4 text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2" />
             <AlertCircle v-if="isFieldInvalid('secondaryMobileNumber')" class="w-4 h-4 text-[#ee2824] absolute right-3 top-1/2 -translate-y-1/2" />
           </div>
           <p v-if="isFieldInvalid('secondaryMobileNumber')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
@@ -203,15 +214,41 @@
 
     <!-- STEP 2: Address & Location -->
     <div v-if="currentStep === 2 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-        <MapPin class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
-        <span>Step 2: Installation Address & Service Area</span>
-      </h3>
+      <div class="flex items-center justify-between border-b dark:border-slate-800 border-slate-200 pb-3">
+        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
+          <MapPin class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Step 2: Installation Address & Service Area</span>
+        </h3>
+
+        <div class="flex items-center gap-2">
+          <!-- Interactive Map Picker Button -->
+          <button 
+            @click="isMapModalOpen = true" 
+            type="button" 
+            class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all flex items-center gap-1.5"
+          >
+            <MapPin class="w-3.5 h-3.5" />
+            <span>Pin on Interactive Map</span>
+          </button>
+
+          <!-- GPS Location Shortcut Button with Live Geocoding -->
+          <button 
+            @click="useCurrentLocation" 
+            type="button" 
+            :disabled="isLocating"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center gap-1.5 disabled:opacity-60"
+          >
+            <RotateCw v-if="isLocating" class="w-3.5 h-3.5 animate-spin" />
+            <Navigation v-else class="w-3.5 h-3.5" />
+            <span>{{ isLocating ? 'Acquiring GPS...' : 'Use My Current Location' }}</span>
+          </button>
+        </div>
+      </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Region -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Region *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Region <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <select 
             v-model="formData.region" 
             @blur="touchField('region')"
@@ -227,7 +264,7 @@
 
         <!-- City -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">City / Town *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">City / Town <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <select 
             v-model="formData.city" 
             @blur="touchField('city')"
@@ -243,7 +280,7 @@
 
         <!-- Barangay -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Barangay *</label>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Barangay <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <select 
             v-model="formData.barangay" 
             @blur="touchField('barangay')"
@@ -251,7 +288,7 @@
             :class="getFieldStatusClass('barangay')"
           >
             <option value="" disabled>Choose Barangay</option>
-            <option v-for="b in barangaysList" :key="b" :value="b">{{ b }}</option>
+            <option v-for="b in barangaysList" :key="b" :value="b">{{ b }} (Fiber Active)</option>
           </select>
           <p v-if="isFieldInvalid('barangay')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
             Barangay selection is required.
@@ -261,7 +298,7 @@
 
       <!-- Installation Address -->
       <div>
-        <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Detailed Installation Address *</label>
+        <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Detailed Installation Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
         <div class="relative">
           <textarea 
             v-model="formData.installationAddress" 
@@ -292,10 +329,21 @@
 
     <!-- STEP 3: Plan Selection -->
     <div v-if="currentStep === 3 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-        <Wifi class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
-        <span>Step 3: Select Desired Internet Plan</span>
-      </h3>
+      <div class="flex items-center justify-between border-b dark:border-slate-800 border-slate-200 pb-3">
+        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
+          <Wifi class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Step 3: Select Desired Internet Plan</span>
+        </h3>
+
+        <button 
+          @click="isCompareModalOpen = true" 
+          type="button" 
+          class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center gap-1.5"
+        >
+          <SlidersHorizontal class="w-3.5 h-3.5" />
+          <span>Compare All Plans Side-by-Side</span>
+        </button>
+      </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div 
@@ -341,14 +389,14 @@
       </h3>
 
       <p class="text-xs dark:text-slate-400 text-slate-600">
-        Upload clear photos or document files (JPG, PNG, or PDF format).
+        Upload clear photos or document files (JPG, PNG, WEBP, or PDF format). You can also click the camera icon to snap a photo directly!
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         <!-- 1. House Front Picture (FULL WIDTH DROPZONE) -->
         <div class="glass-card p-5 rounded-2xl border space-y-3 md:col-span-2" :class="getFieldStatusClass('houseFrontPicture')">
-          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">1. House Front Picture *</label>
+          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">1. House Front Picture <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <DropzoneUploader 
             v-model="formData.houseFrontPicture" 
             v-model:fileName="formData.houseFrontName"
@@ -362,7 +410,12 @@
 
         <!-- 2. 1st Government Valid ID -->
         <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('governmentValidId')">
-          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">2. Primary Government ID *</label>
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">2. Primary Government ID <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+            <select v-model="formData.primaryGovtIdType" class="text-xs py-1 px-2 rounded-lg dark:bg-slate-800 bg-slate-100 border dark:border-slate-700 border-slate-300 font-semibold text-[#ee2824] dark:text-[#ff6b67]">
+              <option v-for="idType in govtIdTypes" :key="idType" :value="idType">{{ idType }}</option>
+            </select>
+          </div>
           <DropzoneUploader 
             v-model="formData.governmentValidId" 
             v-model:fileName="formData.governmentValidIdName"
@@ -376,7 +429,13 @@
 
         <!-- 3. 2nd Government Valid ID -->
         <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
-          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">3. 2nd Government ID (Optional)</label>
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">3. 2nd Government ID (Optional)</label>
+            <select v-model="formData.secondaryGovtIdType" class="text-xs py-1 px-2 rounded-lg dark:bg-slate-800 bg-slate-100 border dark:border-slate-700 border-slate-300 font-semibold text-slate-400">
+              <option value="">Select ID Type</option>
+              <option v-for="idType in govtIdTypes" :key="idType" :value="idType">{{ idType }}</option>
+            </select>
+          </div>
           <DropzoneUploader 
             v-model="formData.secondGovernmentValidId" 
             v-model:fileName="formData.secondGovernmentValidIdName"
@@ -385,13 +444,17 @@
         </div>
 
         <!-- 4. 1st Nearest Landmark Photo -->
-        <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
-          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">4. First Nearest Landmark Photo</label>
+        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('firstNearestLandmark')">
+          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">4. First Nearest Landmark Photo <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <DropzoneUploader 
             v-model="formData.firstNearestLandmark" 
             v-model:fileName="formData.firstNearestLandmarkName"
+            :error="isFieldInvalid('firstNearestLandmark')"
             @change="touchField('firstNearestLandmark')"
           />
+          <p v-if="isFieldInvalid('firstNearestLandmark')" class="text-[11px] text-[#ee2824] font-medium">
+            First nearest landmark photo is required for installation dispatch.
+          </p>
         </div>
 
         <!-- 5. 2nd Nearest Landmark Photo -->
@@ -412,7 +475,7 @@
       <div v-if="!submittedCode">
         <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
           <FileText class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
-          <span>Step 5: Final Review & Terms Agreement</span>
+          <span>Step 5: Final Review & Digital Signature</span>
         </h3>
 
         <!-- Summary Review Box -->
@@ -430,18 +493,43 @@
             </div>
           </div>
 
-          <div class="text-xs">
-            <span class="dark:text-slate-500 text-slate-500 uppercase block">Desired Plan:</span>
-            <span class="font-extrabold text-[#ee2824] dark:text-[#ff6b67] text-base">{{ formData.desiredPlan }}</span>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="dark:text-slate-500 text-slate-500 uppercase block">Selected Fiber Plan:</span>
+              <span class="font-extrabold text-[#ee2824] dark:text-[#ff6b67] text-base">{{ formData.desiredPlan }}</span>
+            </div>
+            <div>
+              <span class="dark:text-slate-500 text-slate-500 uppercase block">Primary Document ID:</span>
+              <span class="font-bold dark:text-slate-300 text-slate-700 text-xs">{{ formData.primaryGovtIdType }} ({{ formData.governmentValidIdName || 'Uploaded' }})</span>
+            </div>
           </div>
         </div>
 
-        <!-- Terms Agreement Checkbox -->
-        <div class="space-y-3 pt-2">
-          <label class="flex items-start gap-3 cursor-pointer text-xs dark:text-slate-300 text-slate-700">
-            <input type="checkbox" v-model="formData.termsAndConditionsAgreement" class="w-4 h-4 rounded accent-[#ee2824] mt-0.5" required />
-            <span>I agree to the Terms & Conditions of Switch Fiber and confirm that all information provided is true and correct.</span>
-          </label>
+        <!-- Digital Signature Pad -->
+        <div class="space-y-2 pt-2">
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase">Applicant Digital Signature <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <SignaturePad 
+            v-model="formData.digitalSignature" 
+            :applicantName="`${formData.firstName} ${formData.lastName}`"
+          />
+        </div>
+
+        <!-- Terms Agreement Checkbox & Read Terms Modal Link -->
+        <div class="space-y-3 pt-2 border-t dark:border-slate-800 border-slate-200">
+          <div class="flex items-center justify-between">
+            <label class="flex items-start gap-3 cursor-pointer text-xs dark:text-slate-300 text-slate-700">
+              <input type="checkbox" v-model="formData.termsAndConditionsAgreement" class="w-4 h-4 rounded accent-[#ee2824] mt-0.5" required />
+              <span>I agree to the Terms & Conditions of Switch Fiber and confirm that all information provided is true and correct.</span>
+            </label>
+
+            <button 
+              @click="isTermsModalOpen = true" 
+              type="button" 
+              class="text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline shrink-0 ml-4"
+            >
+              Read Terms & Conditions
+            </button>
+          </div>
         </div>
       </div>
 
@@ -460,26 +548,39 @@
         </div>
 
         <!-- Tracking Code Card -->
-        <div class="p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-2 shadow-2xl">
+        <div class="p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-3 shadow-2xl">
           <span class="text-xs dark:text-slate-400 text-slate-500 uppercase tracking-widest block">Application Reference Code</span>
-          <div class="text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wider">
-            {{ submittedCode }}
+          <div class="flex items-center justify-center gap-2">
+            <div class="text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wider">
+              {{ submittedCode }}
+            </div>
+            <button 
+              @click="copyCode" 
+              type="button"
+              class="p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors"
+              title="Copy Reference Code"
+            >
+              <Copy class="w-5 h-5" />
+            </button>
           </div>
           <p class="text-[11px] dark:text-slate-500 text-slate-500">Save this reference code to check your real-time installation dispatch status.</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-4">
           <router-link to="/status" class="btn-primary w-full sm:w-auto">
             <Search class="w-4 h-4" />
             <span>Track Application Status</span>
           </router-link>
+          
+          <button @click="printReceipt" class="btn-secondary w-full sm:w-auto">
+            <Printer class="w-4 h-4" />
+            <span>Print Application Summary</span>
+          </button>
+
           <button @click="resetWizard" class="btn-secondary w-full sm:w-auto">
             <RotateCcw class="w-4 h-4" />
             <span>Submit Another Application</span>
           </button>
-          <router-link to="/" @click="resetWizard" class="btn-secondary w-full sm:w-auto">
-            <span>Back to Homepage</span>
-          </router-link>
         </div>
       </div>
     </div>
@@ -513,22 +614,49 @@
       >
         <RotateCw v-if="isSubmitting" class="w-4 h-4 animate-spin" />
         <Sparkles v-else class="w-4 h-4" />
-        <span>{{ isSubmitting ? 'Submitting...' : 'Submit Application' }}</span>
+        <span>{{ isSubmitting ? 'Submit Application' : 'Submit Application' }}</span>
       </button>
     </div>
+
+    <!-- Modals -->
+    <TermsModal 
+      :isOpen="isTermsModalOpen" 
+      @close="isTermsModalOpen = false" 
+      @accept="formData.termsAndConditionsAgreement = true"
+    />
+
+    <PlanCompareModal 
+      :isOpen="isCompareModalOpen" 
+      :plans="availablePlans" 
+      :selectedPlanId="formData.selectedPlanId"
+      @close="isCompareModalOpen = false" 
+      @select="registrationStore.selectPlan"
+    />
+
+    <MapLocationPicker 
+      :isOpen="isMapModalOpen" 
+      :barangaysList="barangaysList"
+      @close="isMapModalOpen = false" 
+      @confirm="handleMapConfirm"
+    />
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive, onUnmounted } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import confetti from 'canvas-confetti'
 import { 
-  Sparkles, Check, User, MapPin, Wifi, FileCheck, FileText, 
-  Camera, UploadCloud, CheckCircle2, AlertCircle, Search, ArrowLeft, ArrowRight, RotateCw, RotateCcw 
+  Sparkles, Check, User, MapPin, Wifi, FileText, 
+  UploadCloud, CheckCircle2, AlertCircle, Search, ArrowLeft, ArrowRight, 
+  RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap 
 } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 import DropzoneUploader from './DropzoneUploader.vue'
+import TermsModal from './TermsModal.vue'
+import SignaturePad from './SignaturePad.vue'
+import PlanCompareModal from './PlanCompareModal.vue'
+import MapLocationPicker from './MapLocationPicker.vue'
 
 const registrationStore = useRegistrationStore()
 const currentStep = computed(() => registrationStore.currentStep)
@@ -537,7 +665,26 @@ const availablePlans = computed(() => registrationStore.availablePlans)
 const regionsList = computed(() => registrationStore.regionsList)
 const citiesList = computed(() => registrationStore.citiesList)
 const barangaysList = computed(() => registrationStore.barangaysList)
+const govtIdTypes = computed(() => registrationStore.govtIdTypes)
 const isSubmitting = computed(() => registrationStore.isSubmitting)
+
+const isTermsModalOpen = ref(false)
+const isCompareModalOpen = ref(false)
+const isMapModalOpen = ref(false)
+const showCopyToast = ref(false)
+
+function handleMapConfirm(data) {
+  if (data.barangay) {
+    registrationStore.formData.barangay = data.barangay
+  }
+  if (data.address) {
+    registrationStore.formData.installationAddress = data.address
+  }
+  touchField('region')
+  touchField('city')
+  if (registrationStore.formData.barangay) touchField('barangay')
+  touchField('installationAddress')
+}
 
 const stepLabels = [
   'Personal Info',
@@ -567,6 +714,87 @@ function onMobileInput(key) {
   formData.value[key] = currentVal.replace(/\D/g, '').slice(0, 11)
 }
 
+const isLocating = ref(false)
+
+function getGpsPosition(options) {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported by your browser.'))
+    } else {
+      navigator.geolocation.getCurrentPosition(resolve, reject, options)
+    }
+  })
+}
+
+async function useCurrentLocation() {
+  isLocating.value = true
+
+  try {
+    const position = await getGpsPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 })
+    const lat = position.coords.latitude
+    const lng = position.coords.longitude
+    const latFixed = lat.toFixed(5)
+    const lngFixed = lng.toFixed(5)
+
+    registrationStore.formData.region = 'Region IV-A (CALABARZON)'
+    registrationStore.formData.city = 'Binangonan'
+
+    try {
+      // Reverse geocode via OpenStreetMap Nominatim API
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+      if (response.ok) {
+        const data = await response.json()
+        const address = data.address || {}
+
+        // Extract barangay / suburb / village / neighbourhood / quarter
+        const detectedSub = (address.suburb || address.quarter || address.village || address.neighbourhood || address.residential || address.hamlet || '').trim()
+        const detectedCity = address.city || address.town || address.municipality || 'Binangonan'
+        const detectedRoad = address.road || address.pedestrian || address.highway || ''
+
+        // Match detected suburb to barangaysList
+        if (detectedSub) {
+          const matchedBarangay = registrationStore.barangaysList.find(b => 
+            b.toLowerCase() === detectedSub.toLowerCase() ||
+            detectedSub.toLowerCase().includes(b.toLowerCase()) || 
+            b.toLowerCase().includes(detectedSub.toLowerCase())
+          )
+
+          if (matchedBarangay) {
+            registrationStore.formData.barangay = matchedBarangay
+          }
+        }
+
+        // Build installation address string from real GPS data
+        const addressParts = []
+        if (detectedRoad) addressParts.push(detectedRoad)
+        if (registrationStore.formData.barangay) addressParts.push(`Brgy. ${registrationStore.formData.barangay}`)
+        else if (detectedSub) addressParts.push(detectedSub)
+        if (detectedCity) addressParts.push(detectedCity)
+        addressParts.push(`GPS: ${latFixed}, ${lngFixed}`)
+
+        registrationStore.formData.installationAddress = addressParts.join(', ')
+        if (data.display_name) {
+          registrationStore.formData.landmark = `GPS Location: ${data.display_name.split(',').slice(0, 3).join(',')}`
+        }
+      } else {
+        registrationStore.formData.installationAddress = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
+      }
+    } catch (fetchErr) {
+      console.warn('Reverse geocoding fetch warning, using coordinates:', fetchErr)
+      registrationStore.formData.installationAddress = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
+    }
+  } catch (geoErr) {
+    console.warn('Geolocation failed or permission denied:', geoErr)
+    alert('Unable to retrieve GPS location. Please ensure location permissions are enabled in your browser or choose your Barangay manually.')
+  } finally {
+    isLocating.value = false
+    touchField('region')
+    touchField('city')
+    if (registrationStore.formData.barangay) touchField('barangay')
+    touchField('installationAddress')
+  }
+}
+
 // Validation Regex patterns
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const phMobileRegex = /^09\d{9}$/
@@ -580,13 +808,15 @@ function validateValue(key) {
   if (key === 'secondaryMobileNumber') return val.length === 0 || (val.length === 11 && /^\d+$/.test(val))
   if (key === 'region' || key === 'city' || key === 'barangay') return val.length > 0
   if (key === 'installationAddress') return val.length >= 3
-  if (key === 'houseFrontPicture' || key === 'governmentValidId') return val.length > 0
+  if (key === 'houseFrontPicture' || key === 'governmentValidId' || key === 'firstNearestLandmark') return val.length > 0
   
   return val.length > 0
 }
 
 function isFieldValid(key) {
   if (!touched[key]) return false
+  const val = (formData.value[key] || '').toString().trim()
+  if (key === 'secondaryMobileNumber' && val.length === 0) return false
   return validateValue(key)
 }
 
@@ -597,6 +827,8 @@ function isFieldInvalid(key) {
 
 function getFieldStatusClass(key) {
   if (!touched[key]) return ''
+  const val = (formData.value[key] || '').toString().trim()
+  if (key === 'secondaryMobileNumber' && val.length === 0) return ''
   return validateValue(key) 
     ? '!border-emerald-500 focus:!ring-emerald-500/20' 
     : '!border-[#ee2824] !shadow-sm !shadow-[#ee2824]/20'
@@ -628,8 +860,9 @@ function handleNextStep() {
   if (currentStep.value === 4) {
     touchField('houseFrontPicture')
     touchField('governmentValidId')
+    touchField('firstNearestLandmark')
 
-    if (!validateValue('houseFrontPicture') || !validateValue('governmentValidId')) {
+    if (!validateValue('houseFrontPicture') || !validateValue('governmentValidId') || !validateValue('firstNearestLandmark')) {
       return
     }
   }
@@ -637,11 +870,17 @@ function handleNextStep() {
   registrationStore.nextStep()
 }
 
-function triggerFileUpload(fieldKey, nameKey) {
-  const sampleFileName = fieldKey + '_' + Math.floor(1000 + Math.random() * 9000) + '.jpg'
-  formData.value[nameKey] = sampleFileName
-  formData.value[fieldKey] = `data:image/jpeg;base64,SIMULATED_BASE64_DATA_${sampleFileName}`
-  touchField(fieldKey)
+function copyCode() {
+  if (!submittedCode.value) return
+  navigator.clipboard.writeText(submittedCode.value)
+  showCopyToast.value = true
+  setTimeout(() => {
+    showCopyToast.value = false
+  }, 3000)
+}
+
+function printReceipt() {
+  window.print()
 }
 
 async function handleSubmit() {

@@ -15,7 +15,7 @@
 
     <!-- Search Input Box -->
     <div class="glass-card p-6 md:p-8 rounded-3xl border dark:border-slate-800 border-slate-200 space-y-4 max-w-xl mx-auto">
-      <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase">Reference Code *</label>
+      <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase">Reference Code <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
       <div class="flex gap-3">
         <input 
           v-model="inputCode" 
