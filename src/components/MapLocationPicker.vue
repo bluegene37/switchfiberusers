@@ -10,7 +10,7 @@
           </div>
           <div>
             <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900">Pin Your Installation Location</h3>
-            <p class="text-xs dark:text-slate-400 text-slate-600">Free OpenStreetMap - Drag marker or search address</p>
+            <p class="text-xs dark:text-slate-400 text-slate-600">OpenStreetMap - Drag marker or search address</p>
           </div>
         </div>
         <button 
