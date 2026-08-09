@@ -505,31 +505,68 @@
           </div>
         </div>
 
+        <!-- Validation Error Alert Banner -->
+        <div v-if="submissionError" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300">
+          <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
+          <div class="space-y-1">
+            <h4 class="font-bold text-sm">Application Cannot Be Submitted Yet</h4>
+            <p>{{ submissionError }}</p>
+          </div>
+        </div>
+
         <!-- Digital Signature Pad -->
-        <div class="space-y-2 pt-2">
+        <div 
+          class="p-4 rounded-2xl border space-y-2 transition-all"
+          :class="[
+            touched['digitalSignature'] && (!formData.digitalSignature || formData.digitalSignature.trim().length === 0)
+              ? 'border-[#ee2824] bg-rose-500/10 ring-2 ring-[#ee2824]/20'
+              : 'dark:border-slate-800 border-slate-200'
+          ]"
+        >
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase">Applicant Digital Signature <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <SignaturePad 
             v-model="formData.digitalSignature" 
             :applicantName="`${formData.firstName} ${formData.lastName}`"
+            @change="touchField('digitalSignature'); submissionError = ''"
           />
+          <p v-if="touched['digitalSignature'] && (!formData.digitalSignature || formData.digitalSignature.trim().length === 0)" class="text-[11px] text-[#ee2824] font-medium flex items-center gap-1">
+            <AlertCircle class="w-3.5 h-3.5" />
+            <span>Digital signature is required before submitting.</span>
+          </p>
         </div>
 
         <!-- Terms Agreement Checkbox & Read Terms Modal Link -->
-        <div class="space-y-3 pt-2 border-t dark:border-slate-800 border-slate-200">
-          <div class="flex items-center justify-between">
+        <div 
+          class="p-4 rounded-2xl border space-y-3 transition-all"
+          :class="[
+            touched['termsAndConditionsAgreement'] && !formData.termsAndConditionsAgreement 
+              ? 'border-[#ee2824] bg-rose-500/10 ring-2 ring-[#ee2824]/20' 
+              : 'dark:border-slate-800 border-slate-200 dark:bg-slate-900/50 bg-slate-50'
+          ]"
+        >
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <label class="flex items-start gap-3 cursor-pointer text-xs dark:text-slate-300 text-slate-700">
-              <input type="checkbox" v-model="formData.termsAndConditionsAgreement" class="w-4 h-4 rounded accent-[#ee2824] mt-0.5" required />
-              <span>I agree to the Terms & Conditions of Switch Fiber and confirm that all information provided is true and correct.</span>
+              <input 
+                type="checkbox" 
+                v-model="formData.termsAndConditionsAgreement" 
+                @change="touchField('termsAndConditionsAgreement'); submissionError = ''"
+                class="w-4 h-4 rounded accent-[#ee2824] mt-0.5 cursor-pointer" 
+              />
+              <span>I agree to the Terms & Conditions of Switch Fiber and confirm that all information provided is true and correct. <span class="text-[#ee2824] font-bold">*</span></span>
             </label>
 
             <button 
               @click="isTermsModalOpen = true" 
               type="button" 
-              class="text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline shrink-0 ml-4"
+              class="text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline shrink-0 sm:ml-4"
             >
               Read Terms & Conditions
             </button>
           </div>
+          <p v-if="touched['termsAndConditionsAgreement'] && !formData.termsAndConditionsAgreement" class="text-[11px] text-[#ee2824] font-medium flex items-center gap-1">
+            <AlertCircle class="w-3.5 h-3.5" />
+            <span>You must agree to the Terms & Conditions to proceed.</span>
+          </p>
         </div>
       </div>
 
@@ -610,11 +647,11 @@
         v-else 
         @click="handleSubmit" 
         class="btn-primary text-xs bg-emerald-600 hover:bg-emerald-500"
-        :disabled="!formData.termsAndConditionsAgreement || isSubmitting"
+        :disabled="isSubmitting"
       >
         <RotateCw v-if="isSubmitting" class="w-4 h-4 animate-spin" />
         <Sparkles v-else class="w-4 h-4" />
-        <span>{{ isSubmitting ? 'Submit Application' : 'Submit Application' }}</span>
+        <span>{{ isSubmitting ? 'Submitting Application...' : 'Submit Application' }}</span>
       </button>
     </div>
 
@@ -672,6 +709,7 @@ const isTermsModalOpen = ref(false)
 const isCompareModalOpen = ref(false)
 const isMapModalOpen = ref(false)
 const showCopyToast = ref(false)
+const submissionError = ref('')
 
 function handleMapConfirm(data) {
   if (data.barangay) {
@@ -801,6 +839,7 @@ const phMobileRegex = /^09\d{9}$/
 
 function validateValue(key) {
   const val = (formData.value[key] || '').toString().trim()
+  const nameVal = (formData.value[key + 'Name'] || '').toString().trim()
   
   if (key === 'firstName' || key === 'lastName') return val.length >= 2
   if (key === 'emailAddress') return emailRegex.test(val)
@@ -808,7 +847,9 @@ function validateValue(key) {
   if (key === 'secondaryMobileNumber') return val.length === 0 || (val.length === 11 && /^\d+$/.test(val))
   if (key === 'region' || key === 'city' || key === 'barangay') return val.length > 0
   if (key === 'installationAddress') return val.length >= 3
-  if (key === 'houseFrontPicture' || key === 'governmentValidId' || key === 'firstNearestLandmark') return val.length > 0
+  if (key === 'houseFrontPicture' || key === 'governmentValidId' || key === 'firstNearestLandmark') {
+    return val.length > 0 || nameVal.length > 0
+  }
   
   return val.length > 0
 }
@@ -884,13 +925,29 @@ function printReceipt() {
 }
 
 async function handleSubmit() {
-  const code = await registrationStore.submitApplication()
-  submittedCode.value = code
+  touchField('termsAndConditionsAgreement')
+  touchField('digitalSignature')
 
-  confetti({
-    particleCount: 80,
-    spread: 70,
-    origin: { y: 0.6 }
-  })
+  // Check terms agreement
+  if (!formData.value.termsAndConditionsAgreement) {
+    submissionError.value = 'Please check the box to agree to the Terms & Conditions.'
+    return
+  }
+
+  submissionError.value = ''
+
+  try {
+    const code = await registrationStore.submitApplication()
+    submittedCode.value = code
+
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 }
+    })
+  } catch (err) {
+    console.error('Submission failed:', err)
+    submissionError.value = 'Failed to submit application. Please check your network connection.'
+  }
 }
 </script>

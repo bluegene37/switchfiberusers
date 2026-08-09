@@ -67,25 +67,30 @@
       </div>
 
       <!-- Leaflet Map Canvas Container -->
-      <div class="relative flex-1 min-h-[350px] w-full dark:bg-slate-950 bg-slate-100">
-        <div ref="mapContainerRef" class="w-full h-full min-h-[350px]"></div>
-
-        <!-- Floating Address Preview Banner -->
-        <div v-if="selectedAddress" class="absolute bottom-4 left-4 right-4 z-[1000] p-3.5 rounded-2xl dark:bg-slate-900/95 bg-white/95 backdrop-blur-md border border-[#ee2824]/50 dark:text-white text-slate-900 text-xs space-y-1 shadow-2xl">
-          <div class="flex items-center gap-1.5 font-bold text-[#ee2824] dark:text-[#ff6b67]">
-            <CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0" />
-            <span class="truncate">Pinned Location: {{ selectedBarangay ? 'Brgy. ' + selectedBarangay : 'Binangonan' }}</span>
-          </div>
-          <p class="text-[11px] dark:text-slate-300 text-slate-700 truncate font-medium">{{ selectedAddress }}</p>
-        </div>
+      <div class="relative flex-1 min-h-[380px] w-full dark:bg-slate-950 bg-slate-100">
+        <div ref="mapContainerRef" class="w-full h-full min-h-[380px]"></div>
       </div>
 
-      <!-- Footer Action -->
-      <div class="px-6 py-4 border-t dark:border-slate-800 border-slate-200 flex items-center justify-between shrink-0 dark:bg-slate-950 bg-slate-50">
-        <div class="text-[11px] dark:text-slate-400 text-slate-600 font-mono font-medium">
-          Lat: {{ currentLat.toFixed(5) }}, Lng: {{ currentLng.toFixed(5) }}
+      <!-- Footer Action Bar -->
+      <div class="px-6 py-4 border-t dark:border-slate-800 border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0 dark:bg-slate-950 bg-slate-50">
+        <div class="flex items-center gap-2.5 overflow-hidden max-w-full sm:max-w-[55%]">
+          <div class="w-8 h-8 rounded-xl bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] flex items-center justify-center shrink-0">
+            <MapPin class="w-4 h-4" />
+          </div>
+          <div class="overflow-hidden">
+            <span class="text-xs font-bold dark:text-white text-slate-900 block truncate">
+              Pinned Location: {{ selectedBarangay ? 'Brgy. ' + selectedBarangay + ', ' : '' }}Binangonan
+            </span>
+            <span v-if="selectedAddress" class="text-[11px] dark:text-slate-400 text-slate-600 block truncate font-medium">
+              {{ selectedAddress }}
+            </span>
+            <span v-else class="text-[11px] dark:text-slate-400 text-slate-600 block font-mono">
+              Lat: {{ currentLat.toFixed(5) }}, Lng: {{ currentLng.toFixed(5) }}
+            </span>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
+
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
           <button @click="close" type="button" class="btn-secondary py-2 px-4 text-xs">
             Cancel
           </button>

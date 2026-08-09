@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export const useRegistrationStore = defineStore('registration', () => {
   const currentStep = ref(1)
