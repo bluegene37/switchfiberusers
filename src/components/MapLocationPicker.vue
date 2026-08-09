@@ -10,13 +10,13 @@
           </div>
           <div>
             <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900">Pin Your Installation Location</h3>
-            <p class="text-xs dark:text-slate-400 text-slate-500">Free OpenStreetMap - Drag marker or search address</p>
+            <p class="text-xs dark:text-slate-400 text-slate-600">Free OpenStreetMap - Drag marker or search address</p>
           </div>
         </div>
         <button 
           @click="close" 
           type="button"
-          class="p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
         >
           <X class="w-5 h-5" />
         </button>
@@ -37,7 +37,7 @@
               @keyup.enter="searchAddress"
               type="text" 
               placeholder="Search landmark, street or barangay (e.g. Batingan, Binangonan)..." 
-              class="input-field py-2 text-xs transition-all"
+              class="input-field py-2 text-xs transition-all dark:text-white text-slate-900 bg-white dark:bg-slate-900"
               :class="(!isSearchFocused && !searchQuery) ? 'pl-9' : 'pl-3'"
             />
           </div>
@@ -67,22 +67,22 @@
       </div>
 
       <!-- Leaflet Map Canvas Container -->
-      <div class="relative flex-1 min-h-[350px] w-full bg-slate-950">
+      <div class="relative flex-1 min-h-[350px] w-full dark:bg-slate-950 bg-slate-100">
         <div ref="mapContainerRef" class="w-full h-full min-h-[350px]"></div>
 
         <!-- Floating Address Preview Banner -->
-        <div v-if="selectedAddress" class="absolute bottom-4 left-4 right-4 z-[1000] p-3 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-[#ee2824]/40 text-white text-xs space-y-1 shadow-2xl">
-          <div class="flex items-center gap-1.5 font-bold text-[#ff6b67]">
-            <CheckCircle2 class="w-4 h-4 text-emerald-400 shrink-0" />
+        <div v-if="selectedAddress" class="absolute bottom-4 left-4 right-4 z-[1000] p-3.5 rounded-2xl dark:bg-slate-900/95 bg-white/95 backdrop-blur-md border border-[#ee2824]/50 dark:text-white text-slate-900 text-xs space-y-1 shadow-2xl">
+          <div class="flex items-center gap-1.5 font-bold text-[#ee2824] dark:text-[#ff6b67]">
+            <CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0" />
             <span class="truncate">Pinned Location: {{ selectedBarangay ? 'Brgy. ' + selectedBarangay : 'Binangonan' }}</span>
           </div>
-          <p class="text-[11px] text-slate-300 truncate">{{ selectedAddress }}</p>
+          <p class="text-[11px] dark:text-slate-300 text-slate-700 truncate font-medium">{{ selectedAddress }}</p>
         </div>
       </div>
 
       <!-- Footer Action -->
       <div class="px-6 py-4 border-t dark:border-slate-800 border-slate-200 flex items-center justify-between shrink-0 dark:bg-slate-950 bg-slate-50">
-        <div class="text-[11px] dark:text-slate-400 text-slate-500 font-mono">
+        <div class="text-[11px] dark:text-slate-400 text-slate-600 font-mono font-medium">
           Lat: {{ currentLat.toFixed(5) }}, Lng: {{ currentLng.toFixed(5) }}
         </div>
         <div class="flex items-center gap-2">
@@ -314,5 +314,21 @@ onUnmounted(() => {
 .leaflet-container {
   font-family: inherit;
   z-index: 1;
+  color: #0f172a;
+}
+.dark .leaflet-container {
+  color: #f8fafc;
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #475569 !important;
+}
+.dark .leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: #94a3b8 !important;
+}
+.leaflet-control-attribution a {
+  color: #ee2824 !important;
 }
 </style>

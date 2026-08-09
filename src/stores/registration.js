@@ -56,8 +56,35 @@ export const useRegistrationStore = defineStore('registration', () => {
     submissionDate: ''
   })
 
-  // Registration Form State matching exact API payload fields
-  const formData = ref(getInitialFormData())
+  // Registration Form State with localStorage draft auto-recovery
+  const getSavedDraft = () => {
+    try {
+      const saved = localStorage.getItem('switch_registration_draft')
+      return saved ? JSON.parse(saved) : null
+    } catch (e) {
+      return null
+    }
+  }
+
+  const initialDraft = getSavedDraft()
+  const formData = ref(initialDraft ? { ...getInitialFormData(), ...initialDraft } : getInitialFormData())
+
+  // Automatically save form history as user types
+  watch(formData, (newVal) => {
+    try {
+      const draft = { ...newVal }
+      // Omit heavy base64 file payloads from draft cache
+      draft.houseFrontPicture = ''
+      draft.governmentValidId = ''
+      draft.secondGovernmentValidId = ''
+      draft.firstNearestLandmark = ''
+      draft.secondNearestLandmark = ''
+      draft.digitalSignature = ''
+      localStorage.setItem('switch_registration_draft', JSON.stringify(draft))
+    } catch (e) {
+      console.warn('Failed to save registration draft history:', e)
+    }
+  }, { deep: true })
 
   const availablePlans = [
     {
@@ -233,6 +260,9 @@ export const useRegistrationStore = defineStore('registration', () => {
     currentStep.value = 1
     formData.value = getInitialFormData()
     apiError.value = null
+    try {
+      localStorage.removeItem('switch_registration_draft')
+    } catch (e) {}
   }
 
   function openModal(planId = null) {
@@ -274,9 +304,19 @@ export const useRegistrationStore = defineStore('registration', () => {
     isSubmitting.value = true
     apiError.value = null
 
-    const randomCode = 'SF-2026-' + Math.floor(1000 + Math.random() * 9000)
-    formData.value.applicationReferenceCode = randomCode
-    formData.value.submissionDate = new Date().toISOString()
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const seconds = String(now.getSeconds()).padStart(2, '0')
+    const randomSuffix = Math.floor(10 + Math.random() * 90)
+
+    const uniqueReferenceCode = `SF-${year}${month}${day}-${hours}${minutes}${seconds}-${randomSuffix}`
+    formData.value.applicationReferenceCode = uniqueReferenceCode
+    formData.value.submissionDate = now.toISOString()
+    const randomCode = uniqueReferenceCode
 
     // Construct exact JSON API Payload requested by user
     const apiPayload = {
