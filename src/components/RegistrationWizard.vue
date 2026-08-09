@@ -567,7 +567,7 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 pt-4">
-          <router-link to="/status" class="btn-primary w-full sm:w-auto">
+          <router-link :to="`/status?code=${submittedCode}`" class="btn-primary w-full sm:w-auto">
             <Search class="w-4 h-4" />
             <span>Track Application Status</span>
           </router-link>

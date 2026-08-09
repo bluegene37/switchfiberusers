@@ -99,14 +99,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Search, Info, CheckCircle2, Clock, MessageSquare, AlertCircle } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 
+const route = useRoute()
 const registrationStore = useRegistrationStore()
-const inputCode = ref('SF-2026-8942')
-const searched = ref(true)
-const foundApp = ref(registrationStore.findApplicationByCode('SF-2026-8942'))
+
+const inputCode = ref('')
+const searched = ref(false)
+const foundApp = ref(null)
 
 const stages = [
   'Online Submitted',
@@ -121,4 +124,27 @@ function handleSearch() {
   searched.value = true
   foundApp.value = registrationStore.findApplicationByCode(inputCode.value)
 }
+
+function loadInitialStatus() {
+  const queryCode = route.query.code
+  if (queryCode) {
+    inputCode.value = queryCode.toString().trim()
+  } else if (registrationStore.submittedApplications && registrationStore.submittedApplications.length > 0) {
+    inputCode.value = registrationStore.submittedApplications[0].referenceCode
+  } else {
+    inputCode.value = 'SF-2026-8942'
+  }
+  handleSearch()
+}
+
+onMounted(() => {
+  loadInitialStatus()
+})
+
+watch(() => route.query.code, (newCode) => {
+  if (newCode) {
+    inputCode.value = newCode.toString().trim()
+    handleSearch()
+  }
+})
 </script>
