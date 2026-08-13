@@ -155,25 +155,21 @@ export const useRegistrationStore = defineStore('registration', () => {
 
   function formatApiPlan(item) {
     const rawId = item.id
-    const price = Number(item.amount) || 0
+    const price = typeof item.amount === 'number' ? item.amount : (parseFloat(item.amount) || 0)
     const name = item.name || 'Switch Fiber Plan'
     const desc = item.description || ''
 
-    // Derive speed string, e.g. "50 Mbps Turbo-Speed..." -> "Turbo Speed (50 Mbps)"
-    let speed = 'Turbo Speed'
-    const speedMatch = desc.match(/(\d+\+?\s*Mbps)/i)
+    // Dynamically derive speed string (e.g. "50 Mbps - Turbo-Speed..." -> "Turbo Speed (50 Mbps)")
+    let speed = ''
+    const speedMatch = (desc + ' ' + name).match(/(\d+\+?\s*(?:Mbps|Gbps|Gb|Mb))/i)
     if (speedMatch) {
       speed = `Turbo Speed (${speedMatch[1]})`
-    } else if (price === 699) {
-      speed = 'Turbo Speed (50 Mbps)'
-    } else if (price === 799) {
-      speed = 'Turbo Speed (90 Mbps)'
-    } else if (price === 999) {
-      speed = 'Turbo Speed (120 Mbps)'
-    } else if (price === 1299) {
-      speed = 'Turbo Speed (150 Mbps)'
-    } else if (price === 1499) {
-      speed = 'Turbo Speed (200 Mbps)'
+    } else {
+      if (price <= 700) speed = 'Turbo Speed (50 Mbps)'
+      else if (price <= 850) speed = 'Turbo Speed (90 Mbps)'
+      else if (price <= 1100) speed = 'Turbo Speed (120 Mbps)'
+      else if (price <= 1350) speed = 'Turbo Speed (150 Mbps)'
+      else speed = 'Turbo Speed (200 Mbps)'
     }
 
     // Lock-in period
@@ -185,26 +181,34 @@ export const useRegistrationStore = defineStore('registration', () => {
 
     // Recommended badge
     const recommended = Boolean(
-      price === 799 ||
+      item.recommended ||
       desc.toLowerCase().includes('popular') ||
-      name.toLowerCase().includes('connect')
+      name.toLowerCase().includes('connect') ||
+      price === 799
     )
 
-    // Tag
-    let tag = 'Fiber Plan'
-    if (price <= 699) tag = 'Best Budget'
-    else if (price <= 799 || recommended) tag = 'Most Popular'
-    else if (price <= 999) tag = 'High Performance'
-    else if (price <= 1299) tag = 'Gamer & Streaming'
-    else tag = 'Ultimate Power'
+    // Dynamic Tag assignment
+    let tag = item.tag || ''
+    if (!tag) {
+      if (price <= 700) tag = 'Best Budget'
+      else if (price <= 850 || recommended) tag = 'Most Popular'
+      else if (price <= 1100) tag = 'High Performance'
+      else if (price <= 1350) tag = 'Gamer & Streaming'
+      else tag = 'Ultimate Power'
+    }
 
-    // Features array
+    // Clean features list from description
     let features = []
     if (desc) {
       const parts = desc.split(',').map(s => s.trim()).filter(Boolean)
       features = parts.map(p => {
         return p.replace(/\s*\(Popular!\)/gi, '').trim()
-      }).filter(p => p.length > 0)
+      }).filter(p => {
+        if (!p) return false
+        // Exclude redundant lock-in item if already shown as badge
+        if (p.toLowerCase().includes('lock-in')) return false
+        return true
+      })
     }
 
     if (features.length === 0) {
@@ -232,12 +236,20 @@ export const useRegistrationStore = defineStore('registration', () => {
     isLoadingPlans.value = true
     plansError.value = null
     try {
-      const response = await fetch('https://103.249.198.43:8090/api/Plans', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      let response
+      // Try fetching via local Vite proxy first, fallback to direct HTTPS API URL
+      try {
+        response = await fetch('/api/Plans', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        if (!response.ok) throw new Error(`Proxy HTTP ${response.status}`)
+      } catch (proxyErr) {
+        response = await fetch('https://103.249.198.43:8090/api/Plans', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
 
       if (!response.ok) {
         throw new Error(`Server returned HTTP ${response.status}`)

@@ -18,6 +18,10 @@
           <RotateCw class="w-3.5 h-3.5 animate-spin" />
           Fetching live plans from server...
         </span>
+        <span v-else-if="plansError" class="inline-flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+          <AlertCircle class="w-3.5 h-3.5" />
+          {{ plansError }}
+        </span>
         <span v-else class="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
           <Wifi class="w-3.5 h-3.5 animate-pulse" />
           Live API Synced (https://103.249.198.43:8090/api/Plans)
@@ -130,7 +134,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Sparkles, RotateCw, Wifi } from 'lucide-vue-next'
+import { Sparkles, RotateCw, Wifi, AlertCircle } from 'lucide-vue-next'
 import PlanCard from '../components/PlanCard.vue'
 import { useRegistrationStore } from '../stores/registration'
 
@@ -139,6 +143,7 @@ const registrationStore = useRegistrationStore()
 
 const availablePlans = computed(() => registrationStore.availablePlans)
 const isLoading = computed(() => registrationStore.isLoadingPlans)
+const plansError = computed(() => registrationStore.plansError)
 
 function handleSelect(plan) {
   registrationStore.openModal(plan.id)

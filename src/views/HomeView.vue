@@ -43,7 +43,7 @@
                 <div class="text-xs dark:text-slate-400 text-slate-500">Pure Fiber Optic</div>
               </div>
               <div>
-                <div class="text-2xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">₱699</div>
+                <div class="text-2xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">₱{{ minPlanPrice }}</div>
                 <div class="text-xs dark:text-slate-400 text-slate-500">Plans Starting at</div>
               </div>
               <div>
@@ -215,6 +215,10 @@ import { useRegistrationStore } from '../stores/registration'
 const router = useRouter()
 const registrationStore = useRegistrationStore()
 const featuredPlans = computed(() => registrationStore.availablePlans.slice(0, 3))
+const minPlanPrice = computed(() => {
+  if (!registrationStore.availablePlans.length) return 699
+  return Math.min(...registrationStore.availablePlans.map(p => p.price))
+})
 
 const activeFaq = ref(0)
 const faqs = [
