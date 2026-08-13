@@ -86,54 +86,179 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }, { deep: true })
 
-  const availablePlans = [
+  const defaultPlans = [
     {
-      id: 'lite-699',
+      id: '1',
+      rawId: 1,
+      slug: 'lite-699',
       title: 'SwitchLite Plan',
       price: 699,
-      speed: 'Turbo Speed (30 Mbps)',
+      speed: 'Turbo Speed (50 Mbps)',
       lockIn: '1 Year Lock-In',
       tag: 'Best Budget',
+      recommended: false,
       features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Router Unit']
     },
     {
-      id: 'connect-799',
+      id: '2',
+      rawId: 2,
+      slug: 'connect-799',
       title: 'SwitchConnect Plan',
       price: 799,
-      speed: 'Turbo Speed (60 Mbps)',
+      speed: 'Turbo Speed (90 Mbps)',
       lockIn: '1 Year Lock-In',
       tag: 'Most Popular',
       recommended: true,
       features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Dual-Band Router', '24/7 Priority Support']
     },
     {
-      id: 'net-999',
+      id: '3',
+      rawId: 3,
+      slug: 'net-999',
       title: 'SwitchNet Plan',
       price: 999,
-      speed: 'Turbo Speed (100 Mbps)',
+      speed: 'Turbo Speed (120 Mbps)',
       lockIn: '1 Year Lock-In',
       tag: 'High Performance',
+      recommended: false,
       features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Dual-Band Wi-Fi 6 Router', 'Zero Activation Fee']
     },
     {
-      id: 'speed-1299',
+      id: '4',
+      rawId: 4,
+      slug: 'speed-1299',
       title: 'SwitchSpeed Plan',
       price: 1299,
-      speed: 'Turbo Speed (200 Mbps)',
+      speed: 'Turbo Speed (150 Mbps)',
       lockIn: '1 Year Lock-In',
       tag: 'Gamer & Streaming',
+      recommended: false,
       features: ['Unlimited Fiber Internet', 'No Data Cap', 'Ultra-Low Ping Routing', 'Free Wi-Fi Mesh Node included']
     },
     {
-      id: 'ultra-1499',
+      id: '5',
+      rawId: 5,
+      slug: 'ultra-1499',
       title: 'SwitchUltra Plan',
       price: 1499,
-      speed: 'Turbo Speed (350+ Mbps)',
+      speed: 'Turbo Speed (200 Mbps)',
       lockIn: '1 Year Lock-In',
       tag: 'Ultimate Power',
+      recommended: false,
       features: ['Unlimited Fiber Internet', 'No Data Cap', 'Priority Support Line', '2x Mesh Nodes included', 'Symmetrical Upload/Download']
     }
   ]
+
+  const isLoadingPlans = ref(false)
+  const plansError = ref(null)
+  const plansList = ref([...defaultPlans])
+
+  function formatApiPlan(item) {
+    const rawId = item.id
+    const price = Number(item.amount) || 0
+    const name = item.name || 'Switch Fiber Plan'
+    const desc = item.description || ''
+
+    // Derive speed string, e.g. "50 Mbps Turbo-Speed..." -> "Turbo Speed (50 Mbps)"
+    let speed = 'Turbo Speed'
+    const speedMatch = desc.match(/(\d+\+?\s*Mbps)/i)
+    if (speedMatch) {
+      speed = `Turbo Speed (${speedMatch[1]})`
+    } else if (price === 699) {
+      speed = 'Turbo Speed (50 Mbps)'
+    } else if (price === 799) {
+      speed = 'Turbo Speed (90 Mbps)'
+    } else if (price === 999) {
+      speed = 'Turbo Speed (120 Mbps)'
+    } else if (price === 1299) {
+      speed = 'Turbo Speed (150 Mbps)'
+    } else if (price === 1499) {
+      speed = 'Turbo Speed (200 Mbps)'
+    }
+
+    // Lock-in period
+    let lockIn = '1 Year Lock-In'
+    if (desc.toLowerCase().includes('lock-in')) {
+      const lockMatch = desc.match(/(\d+\s*(?:Year|Yr|Month|Mo)s?\s*Lock-In)/i)
+      if (lockMatch) lockIn = lockMatch[1]
+    }
+
+    // Recommended badge
+    const recommended = Boolean(
+      price === 799 ||
+      desc.toLowerCase().includes('popular') ||
+      name.toLowerCase().includes('connect')
+    )
+
+    // Tag
+    let tag = 'Fiber Plan'
+    if (price <= 699) tag = 'Best Budget'
+    else if (price <= 799 || recommended) tag = 'Most Popular'
+    else if (price <= 999) tag = 'High Performance'
+    else if (price <= 1299) tag = 'Gamer & Streaming'
+    else tag = 'Ultimate Power'
+
+    // Features array
+    let features = []
+    if (desc) {
+      const parts = desc.split(',').map(s => s.trim()).filter(Boolean)
+      features = parts.map(p => {
+        return p.replace(/\s*\(Popular!\)/gi, '').trim()
+      }).filter(p => p.length > 0)
+    }
+
+    if (features.length === 0) {
+      features = ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Router Unit']
+    }
+
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.round(price)
+    const id = String(rawId)
+
+    return {
+      id,
+      rawId,
+      slug,
+      title: name,
+      price,
+      speed,
+      lockIn,
+      tag,
+      recommended,
+      features
+    }
+  }
+
+  async function fetchPlans() {
+    isLoadingPlans.value = true
+    plansError.value = null
+    try {
+      const response = await fetch('https://103.249.198.43:8090/api/Plans', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Server returned HTTP ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (Array.isArray(data) && data.length > 0) {
+        plansList.value = data.map(formatApiPlan)
+      }
+    } catch (err) {
+      console.warn('API fetch failed for Plans endpoint, using cached defaults:', err)
+      plansError.value = 'Could not sync live plans from backend. Using cached plans.'
+    } finally {
+      isLoadingPlans.value = false
+    }
+  }
+
+  // Trigger immediate fetch
+  fetchPlans()
+
+  const availablePlans = computed(() => plansList.value)
 
   const regionsList = [
     'Region IV-A (CALABARZON)',
@@ -268,7 +393,7 @@ export const useRegistrationStore = defineStore('registration', () => {
   function openModal(planId = null) {
     resetForm()
     if (planId) {
-      const plan = availablePlans.find(p => p.id === planId)
+      const plan = availablePlans.value.find(p => String(p.id) === String(planId) || p.slug === planId || String(p.rawId) === String(planId))
       if (plan) {
         formData.value.selectedPlanId = plan.id
         formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
@@ -418,6 +543,9 @@ export const useRegistrationStore = defineStore('registration', () => {
     currentStep,
     isModalOpen,
     isSubmitting,
+    isLoadingPlans,
+    plansError,
+    fetchPlans,
     apiError,
     formData,
     availablePlans,

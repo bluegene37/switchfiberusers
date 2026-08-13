@@ -11,6 +11,25 @@
       <p class="text-slate-300 text-base leading-relaxed">
         Choose the perfect turbo-speed fiber internet plan for your home or business in Rizal. Enjoy 0 data capping, symmetrical speeds, and transparent billing.
       </p>
+
+      <!-- Live API Status Indicator -->
+      <div class="flex items-center justify-center gap-2 pt-2">
+        <span v-if="isLoading" class="inline-flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+          <RotateCw class="w-3.5 h-3.5 animate-spin" />
+          Fetching live plans from server...
+        </span>
+        <span v-else class="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+          <Wifi class="w-3.5 h-3.5 animate-pulse" />
+          Live API Synced (https://103.249.198.43:8090/api/Plans)
+        </span>
+        <button 
+          @click="refreshPlans" 
+          title="Refresh plans from API" 
+          class="p-1 text-slate-400 hover:text-white transition-colors"
+        >
+          <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': isLoading }" />
+        </button>
+      </div>
     </div>
 
     <!-- Plans Matrix Grid -->
@@ -37,70 +56,67 @@
           <thead>
             <tr class="border-b border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider">
               <th class="py-4 px-4">Feature</th>
-              <th class="py-4 px-4 text-center">SwitchLite</th>
-              <th class="py-4 px-4 text-center">SwitchConnect</th>
-              <th class="py-4 px-4 text-center text-[#ff6b67]">SwitchNet</th>
-              <th class="py-4 px-4 text-center">SwitchSpeed</th>
-              <th class="py-4 px-4 text-center">SwitchUltra</th>
+              <th 
+                v-for="plan in availablePlans" 
+                :key="plan.id" 
+                class="py-4 px-4 text-center font-bold"
+                :class="plan.recommended ? 'text-[#ff6b67]' : 'text-slate-300'"
+              >
+                {{ plan.title.replace(' Plan', '') }}
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-800/60 text-sm text-slate-300">
             <tr>
               <td class="py-4 px-4 font-semibold text-white">Monthly Fee</td>
-              <td class="py-4 px-4 text-center font-bold">₱699</td>
-              <td class="py-4 px-4 text-center font-bold">₱799</td>
-              <td class="py-4 px-4 text-center font-bold text-[#ff6b67]">₱999</td>
-              <td class="py-4 px-4 text-center font-bold">₱1,299</td>
-              <td class="py-4 px-4 text-center font-bold">₱1,499</td>
+              <td 
+                v-for="plan in availablePlans" 
+                :key="plan.id" 
+                class="py-4 px-4 text-center font-bold"
+                :class="plan.recommended ? 'text-[#ff6b67]' : ''"
+              >
+                ₱{{ plan.price }}
+              </td>
             </tr>
             <tr>
               <td class="py-4 px-4 font-semibold text-white">Speed Tier</td>
-              <td class="py-4 px-4 text-center">30 Mbps</td>
-              <td class="py-4 px-4 text-center">60 Mbps</td>
-              <td class="py-4 px-4 text-center text-[#ff6b67] font-bold">100 Mbps</td>
-              <td class="py-4 px-4 text-center">200 Mbps</td>
-              <td class="py-4 px-4 text-center">350+ Mbps</td>
+              <td 
+                v-for="plan in availablePlans" 
+                :key="plan.id" 
+                class="py-4 px-4 text-center"
+                :class="plan.recommended ? 'text-[#ff6b67] font-bold' : ''"
+              >
+                {{ plan.speed.replace('Turbo Speed ', '').replace('(', '').replace(')', '') }}
+              </td>
             </tr>
             <tr>
               <td class="py-4 px-4 font-semibold text-white">Data Cap</td>
-              <td class="py-4 px-4 text-center text-emerald-400">Unlimited</td>
-              <td class="py-4 px-4 text-center text-emerald-400">Unlimited</td>
-              <td class="py-4 px-4 text-center text-emerald-400">Unlimited</td>
-              <td class="py-4 px-4 text-center text-emerald-400">Unlimited</td>
-              <td class="py-4 px-4 text-center text-emerald-400">Unlimited</td>
+              <td v-for="plan in availablePlans" :key="plan.id" class="py-4 px-4 text-center text-emerald-400">
+                Unlimited
+              </td>
             </tr>
             <tr>
               <td class="py-4 px-4 font-semibold text-white">Router Included</td>
-              <td class="py-4 px-4 text-center">Standard Wi-Fi</td>
-              <td class="py-4 px-4 text-center">Dual-Band ONU</td>
-              <td class="py-4 px-4 text-center text-[#ff6b67]">Dual-Band Wi-Fi 6</td>
-              <td class="py-4 px-4 text-center">+1 Mesh Node</td>
-              <td class="py-4 px-4 text-center">+2 Mesh Nodes</td>
+              <td v-for="plan in availablePlans" :key="plan.id" class="py-4 px-4 text-center">
+                {{ plan.price >= 1299 ? 'Wi-Fi 6 Dual Band' : 'Dual-Band ONU' }}
+              </td>
             </tr>
             <tr>
               <td class="py-4 px-4 font-semibold text-white">Lock-In Period</td>
-              <td class="py-4 px-4 text-center">1 Year</td>
-              <td class="py-4 px-4 text-center">1 Year</td>
-              <td class="py-4 px-4 text-center">1 Year</td>
-              <td class="py-4 px-4 text-center">1 Year</td>
-              <td class="py-4 px-4 text-center">1 Year</td>
+              <td v-for="plan in availablePlans" :key="plan.id" class="py-4 px-4 text-center">
+                {{ plan.lockIn }}
+              </td>
             </tr>
             <tr>
               <td class="py-4 px-4 font-semibold text-white">Action</td>
-              <td class="py-4 px-4 text-center">
-                <button @click="handleSelect(availablePlans[0])" class="btn-secondary text-xs py-1.5 px-3">Apply</button>
-              </td>
-              <td class="py-4 px-4 text-center">
-                <button @click="handleSelect(availablePlans[1])" class="btn-secondary text-xs py-1.5 px-3">Apply</button>
-              </td>
-              <td class="py-4 px-4 text-center">
-                <button @click="handleSelect(availablePlans[2])" class="btn-primary text-xs py-1.5 px-3">Apply</button>
-              </td>
-              <td class="py-4 px-4 text-center">
-                <button @click="handleSelect(availablePlans[3])" class="btn-secondary text-xs py-1.5 px-3">Apply</button>
-              </td>
-              <td class="py-4 px-4 text-center">
-                <button @click="handleSelect(availablePlans[4])" class="btn-secondary text-xs py-1.5 px-3">Apply</button>
+              <td v-for="plan in availablePlans" :key="plan.id" class="py-4 px-4 text-center">
+                <button 
+                  @click="handleSelect(plan)" 
+                  class="text-xs py-1.5 px-3 rounded-xl font-bold transition-all"
+                  :class="plan.recommended ? 'btn-primary' : 'btn-secondary'"
+                >
+                  Apply
+                </button>
               </td>
             </tr>
           </tbody>
@@ -114,16 +130,23 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Sparkles } from 'lucide-vue-next'
+import { Sparkles, RotateCw, Wifi } from 'lucide-vue-next'
 import PlanCard from '../components/PlanCard.vue'
 import { useRegistrationStore } from '../stores/registration'
 
 const router = useRouter()
 const registrationStore = useRegistrationStore()
+
 const availablePlans = computed(() => registrationStore.availablePlans)
+const isLoading = computed(() => registrationStore.isLoadingPlans)
 
 function handleSelect(plan) {
   registrationStore.openModal(plan.id)
   router.push('/register')
 }
+
+function refreshPlans() {
+  registrationStore.fetchPlans()
+}
 </script>
+
