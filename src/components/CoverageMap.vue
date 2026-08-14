@@ -23,7 +23,18 @@
       </div>
 
       <!-- Map Action Buttons -->
-      <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+        <button
+          @click="toggleCustomerNodes"
+          type="button"
+          class="btn-secondary py-2 px-3 text-xs flex items-center gap-1.5 shrink-0"
+          :class="showCustomerPins ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold' : ''"
+          title="Toggle active customer drop pins"
+        >
+          <Home class="w-3.5 h-3.5" />
+          <span>{{ showCustomerPins ? 'Hide Customer Pins' : 'Show Customer Pins' }}</span>
+        </button>
+
         <button
           @click="locateUser"
           type="button"
@@ -49,7 +60,7 @@
     </div>
 
     <!-- Map Canvas Container -->
-    <div class="relative w-full h-[420px] sm:h-[500px] bg-slate-100 dark:bg-slate-950">
+    <div class="relative w-full h-[450px] sm:h-[540px] bg-slate-100 dark:bg-slate-950">
       <div ref="mapElementRef" class="w-full h-full z-10"></div>
 
       <!-- Live GPS Banner if detected -->
@@ -77,20 +88,24 @@
       <div class="flex flex-wrap items-center gap-4 sm:gap-6">
         <div class="flex items-center gap-2">
           <span class="w-3.5 h-3.5 rounded-full bg-red-600 border-2 border-white shadow-sm inline-block"></span>
-          <span class="font-bold dark:text-slate-200 text-slate-800">Head Office / NOC Hub (Binangonan)</span>
+          <span class="font-bold dark:text-slate-200 text-slate-800">Head Office / NOC Hub</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-sm inline-block"></span>
-          <span class="font-bold dark:text-slate-200 text-slate-800">Available Now (Ready for Dispatch)</span>
+          <span class="font-bold dark:text-slate-200 text-slate-800">Barangay Active Area</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-sky-500 border-2 border-white shadow-sm inline-block"></span>
+          <span class="font-bold dark:text-slate-200 text-slate-800">🏠 Connected Customer Drop Point</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white shadow-sm inline-block"></span>
-          <span class="font-bold dark:text-slate-200 text-slate-800">Expansion Active (Inquire for Port)</span>
+          <span class="font-bold dark:text-slate-200 text-slate-800">Expansion Active</span>
         </div>
       </div>
 
       <div class="text-[11px] dark:text-slate-400 text-slate-500 font-medium">
-        Serving 49+ Barangays & Communities across Rizal
+        4,500+ Connected Homes & Active Fiber Subscribers across Rizal
       </div>
     </div>
 
@@ -101,16 +116,18 @@
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { MapPin, Navigation, RotateCw, Maximize2, CheckCircle2 } from 'lucide-vue-next'
+import { MapPin, Navigation, RotateCw, Maximize2, CheckCircle2, Home } from 'lucide-vue-next'
 import { useCoverageStore } from '../stores/coverage'
 
 const coverageStore = useCoverageStore()
 const mapElementRef = ref(null)
 const isLocating = ref(false)
 const userLocationMessage = ref('')
+const showCustomerPins = ref(true)
 
 let map = null
 let markersLayer = null
+let customerPinsLayer = null
 let circlesLayer = null
 let userMarker = null
 
@@ -134,8 +151,9 @@ function initMap() {
     minZoom: 10
   }).addTo(map)
 
-  markersLayer = L.layerGroup().addTo(map)
   circlesLayer = L.layerGroup().addTo(map)
+  markersLayer = L.layerGroup().addTo(map)
+  customerPinsLayer = L.layerGroup().addTo(map)
 
   renderCoverageItems()
 }
@@ -195,11 +213,57 @@ function createPinIcon(type) {
   })
 }
 
+function createCustomerPinIcon() {
+  const html = `
+    <div style="position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
+      <div style="
+        position: relative;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #0284c7;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-size: 9px;
+      ">
+        🏠
+      </div>
+    </div>
+  `
+
+  return L.divIcon({
+    className: 'customer-subnode-marker',
+    html: html,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+    popupAnchor: [0, -10]
+  })
+}
+
+function toggleCustomerNodes() {
+  showCustomerPins.value = !showCustomerPins.value
+  if (!customerPinsLayer) return
+  if (showCustomerPins.value) {
+    if (!map.hasLayer(customerPinsLayer)) {
+      map.addLayer(customerPinsLayer)
+    }
+  } else {
+    if (map.hasLayer(customerPinsLayer)) {
+      map.removeLayer(customerPinsLayer)
+    }
+  }
+}
+
 function renderCoverageItems() {
-  if (!map || !markersLayer || !circlesLayer) return
+  if (!map || !markersLayer || !circlesLayer || !customerPinsLayer) return
 
   markersLayer.clearLayers()
   circlesLayer.clearLayers()
+  customerPinsLayer.clearLayers()
 
   const items = coverageStore.filteredCoverage
 
@@ -211,23 +275,31 @@ function renderCoverageItems() {
     const icon = createPinIcon(type)
     const marker = L.marker([item.lat, item.lng], { icon })
 
-    // Popup card
+    const coveredAreasHtml = item.coveredAreas && item.coveredAreas.length
+      ? item.coveredAreas.map(a => `<span style="display:inline-block; font-size:10px; background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; margin:2px 2px 0 0; font-weight:600;">${a}</span>`).join('')
+      : ''
+
+    // Main Barangay Popup
     const popupContent = `
-      <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 220px; padding: 2px;">
+      <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 240px; padding: 4px;">
         <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: ${isHq ? '#ee2824' : (isAvailable ? '#059669' : '#d97706')}; margin-bottom: 2px;">
           ${item.municipality}, Rizal
         </div>
-        <div style="font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
+        <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
           Brgy. ${item.name}
         </div>
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; color: #334155;">
+        <div style="font-size: 11px; font-weight: 700; color: #0284c7; margin-bottom: 8px;">
+          🏠 ${item.connectedHomes || 'Connected Subscribers'} • ${item.activeNodes || 'Fiber Terminal Active'}
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #334155;">
           <span style="font-weight: 700;">Speed:</span>
           <span>${item.speed}</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; font-size: 12px; color: #334155;">
-          <span style="font-weight: 700;">Port Status:</span>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: #334155;">
+          <span style="font-weight: 700;">Status:</span>
           <span style="font-weight: 700; color: ${isAvailable ? '#059669' : '#d97706'};">${item.slots}</span>
         </div>
+        ${coveredAreasHtml ? `<div style="margin-bottom: 10px; border-top: 1px solid #e2e8f0; pt: 6px;"><div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:3px;">Covered Subdivisions & Streets:</div><div>${coveredAreasHtml}</div></div>` : ''}
         <a 
           href="/register?barangay=${encodeURIComponent(item.name)}&city=${encodeURIComponent(item.municipality)}" 
           style="
@@ -237,19 +309,59 @@ function renderCoverageItems() {
             color: #ffffff;
             font-weight: 700;
             font-size: 11px;
-            padding: 7px 12px;
+            padding: 8px 12px;
             border-radius: 8px;
             text-decoration: none;
             box-shadow: 0 2px 6px rgba(238,40,36,0.35);
           "
         >
-          Apply Online Now
+          Apply for my House in this Barangay
         </a>
       </div>
     `
 
     marker.bindPopup(popupContent)
     markersLayer.addLayer(marker)
+
+    // Render SubNodes (Customer Connection Points)
+    if (item.subNodes && item.subNodes.length) {
+      item.subNodes.forEach(sub => {
+        const subIcon = createCustomerPinIcon()
+        const subMarker = L.marker([sub.lat, sub.lng], { icon: subIcon })
+
+        const subPopup = `
+          <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
+            <div style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase;">
+              🏠 Active Customer Connection Point
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 3px 0;">
+              ${sub.name}
+            </div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
+              Brgy. ${item.name}, ${item.municipality} (${sub.status})
+            </div>
+            <a 
+              href="/register?barangay=${encodeURIComponent(item.name)}&city=${encodeURIComponent(item.municipality)}" 
+              style="
+                display: block;
+                text-align: center;
+                background-color: #0284c7;
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 10px;
+                padding: 6px 10px;
+                border-radius: 6px;
+                text-decoration: none;
+              "
+            >
+              Connect My Residence
+            </a>
+          </div>
+        `
+        subMarker.bindPopup(subPopup)
+        customerPinsLayer.addLayer(subMarker)
+      })
+    }
 
     // Soft coverage radius
     const circleColor = isHq ? '#ee2824' : (isAvailable ? '#10b981' : '#f59e0b')

@@ -92,7 +92,16 @@
             </button>
           </h3>
 
-          <div class="mt-4 space-y-2 text-xs dark:text-slate-300 text-slate-600">
+          <div class="mt-3 space-y-2.5 text-xs dark:text-slate-300 text-slate-600">
+            <!-- Connected Homes & Capacity -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-sky-500/10 dark:bg-sky-500/10 border border-sky-500/20 text-sky-700 dark:text-sky-300 font-semibold text-[11px]">
+              <span class="flex items-center gap-1.5">
+                <Home class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                <span>{{ item.connectedHomes }}</span>
+              </span>
+              <span class="text-[10px] font-mono font-bold">{{ item.activeNodes }}</span>
+            </div>
+
             <div class="flex justify-between border-b dark:border-slate-800/80 border-slate-100 pb-2">
               <span class="dark:text-slate-500 text-slate-500">Max Supported Speed:</span>
               <span class="font-bold dark:text-slate-200 text-slate-800">{{ item.speed }}</span>
@@ -100,6 +109,20 @@
             <div class="flex justify-between border-b dark:border-slate-800/80 border-slate-100 pb-2">
               <span class="dark:text-slate-500 text-slate-500">Port Capacity:</span>
               <span class="font-bold" :class="item.status === 'Available Now' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">{{ item.slots }}</span>
+            </div>
+
+            <!-- Covered Subdivisions / Streets -->
+            <div v-if="item.coveredAreas && item.coveredAreas.length" class="pt-1">
+              <span class="text-[10px] font-bold dark:text-slate-400 text-slate-500 uppercase tracking-wider block mb-1.5">Covered Subdivisions & Streets:</span>
+              <div class="flex flex-wrap gap-1">
+                <span
+                  v-for="(area, idx) in item.coveredAreas"
+                  :key="idx"
+                  class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/80 text-[10px] font-medium dark:text-slate-300 text-slate-700 border dark:border-slate-700/50 border-slate-200"
+                >
+                  {{ area }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -139,7 +162,7 @@
 </template>
 
 <script setup>
-import { MapPin, Search, CheckCircle2, Compass } from 'lucide-vue-next'
+import { MapPin, Search, CheckCircle2, Compass, Home } from 'lucide-vue-next'
 import { useCoverageStore } from '../stores/coverage'
 import CoverageMap from '../components/CoverageMap.vue'
 
