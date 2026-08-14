@@ -492,9 +492,9 @@ export const useRegistrationStore = defineStore('registration', () => {
       city: 'Binangonan',
       barangay: 'Bilibiran',
       date: '2026-08-01',
-      status: 'Dispatch Scheduled',
-      statusStep: 4,
-      notes: 'Ocular survey completed. Fiber drop cable installation scheduled for tomorrow morning.'
+      status: 'Installation Scheduled',
+      statusStep: 3,
+      notes: 'Account verification completed. Fiber drop cable installation scheduled for tomorrow morning.'
     })
     saveToLocalStorage()
   }
@@ -614,7 +614,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       digitalSignature: formData.value.digitalSignature,
       expressInstallation: formData.value.expressInstallation,
       date: new Date().toISOString().split('T')[0],
-      status: 'Submitted',
+      status: 'Application Submitted',
       statusStep: 1,
       notes: 'Application logged. Account officer is reviewing uploaded government IDs and signature.',
       payload: apiPayload

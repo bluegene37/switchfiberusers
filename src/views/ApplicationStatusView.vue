@@ -60,7 +60,7 @@
       <!-- Stage Timeline Progress Bar -->
       <div>
         <h3 class="text-xs font-bold dark:text-slate-400 text-slate-700 uppercase tracking-widest mb-6">Installation Stage Timeline</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div 
             v-for="(stage, idx) in stages" 
             :key="idx"
@@ -116,10 +116,9 @@ const searched = ref(false)
 const foundApp = ref(null)
 
 const stages = [
-  'Online Submitted',
-  'ID Verification',
-  'Ocular Survey',
-  'Dispatch Scheduled',
+  'Application Submitted',
+  'Under Verification',
+  'Installation Scheduled',
   'Connection Active'
 ]
 
