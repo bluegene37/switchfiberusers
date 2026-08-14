@@ -26,7 +26,7 @@
       </div>
 
       <div class="glass-card p-6 rounded-2xl border dark:border-slate-800 border-slate-200 text-center space-y-2">
-        <div class="w-12 h-12 rounded-xl bg-[#ee2824]/10 border border-[#ee2824]/30 text-[#ee2824] dark:text-[#ff6b67] flex items-center justify-center mx-auto">
+        <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-500 flex items-center justify-center mx-auto">
           <Clock class="w-6 h-6" />
         </div>
         <h3 class="font-bold font-heading dark:text-white text-slate-900">Flexible Work</h3>
@@ -39,6 +39,36 @@
         </div>
         <h3 class="font-bold font-heading dark:text-white text-slate-900">Sales Kit & Training</h3>
         <p class="text-xs dark:text-slate-400 text-slate-600">Get free marketing flyers, digital banners, and sales guidance.</p>
+      </div>
+    </div>
+
+    <!-- Qualifications & Document Requirements Matrix -->
+    <div class="glass-card p-6 sm:p-8 rounded-3xl border dark:border-slate-800 border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs dark:text-slate-300 text-slate-600 leading-relaxed">
+      <div class="space-y-3">
+        <h4 class="font-bold font-heading dark:text-white text-slate-900 text-sm flex items-center gap-2">
+          <CheckCircle2 class="w-4 h-4 text-emerald-500" />
+          <span>Agent Qualifications:</span>
+        </h4>
+        <ul class="space-y-1.5 list-disc list-inside">
+          <li>Willing to do active field work & direct community marketing.</li>
+          <li>Prior sales / telecom marketing experience is a big advantage.</li>
+          <li>Willing to work flexibly during weekends and community events.</li>
+          <li>Strong interpersonal and communication skills.</li>
+          <li>Willing to be assigned in Binangonan, Angono, Taytay, or across Rizal.</li>
+        </ul>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="font-bold font-heading dark:text-white text-slate-900 text-sm flex items-center gap-2">
+          <FileText class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Onboarding Document Checklist:</span>
+        </h4>
+        <ul class="space-y-1.5 list-disc list-inside">
+          <li><strong>Updated Resume or Bio-Data</strong></li>
+          <li><strong>Valid Government Issued ID</strong> (1 Primary or 2 Secondary)</li>
+          <li><strong>Certificate of Residency</strong> or Lease Agreement</li>
+          <li><strong>NBI Clearance</strong></li>
+        </ul>
       </div>
     </div>
 
@@ -175,7 +205,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { Briefcase, DollarSign, Clock, Award, Sparkles, CheckCircle2, AlertCircle } from 'lucide-vue-next'
+import { Briefcase, DollarSign, Clock, Award, Sparkles, CheckCircle2, AlertCircle, FileText } from 'lucide-vue-next'
 
 const submitted = ref(false)
 

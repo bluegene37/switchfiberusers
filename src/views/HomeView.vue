@@ -145,8 +145,43 @@
       </div>
     </section>
 
-    <!-- PAY BILLS PROMO CALLOUT -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- PAY BILLS & PROMOS CALLOUT -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      
+      <!-- Special Back to School & MSME Campaign Banner -->
+      <div class="glass-panel p-8 md:p-10 rounded-3xl border border-sky-500/30 dark:bg-sky-500/5 bg-sky-50/70 relative overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-8 space-y-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 text-xs font-bold uppercase">
+                <Gift class="w-3.5 h-3.5" />
+                <span>Active Campaign</span>
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold uppercase">
+                <Briefcase class="w-3.5 h-3.5" />
+                <span>MSME Deals</span>
+              </span>
+            </div>
+            <h3 class="text-2xl sm:text-3xl font-extrabold font-heading dark:text-white text-slate-900">
+              Get ConnectED Back to School & SmartBiz MSME Bundles!
+            </h3>
+            <p class="dark:text-slate-300 text-slate-600 text-sm leading-relaxed max-w-2xl">
+              Enjoy <strong>15% OFF for 6 months + Free Switch Tumbler</strong> for students & teachers, or scale your enterprise with our <strong>SmartBiz Bundle Deals</strong> (Free CCTV, Mesh & Laptop).
+            </p>
+          </div>
+
+          <div class="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-end">
+            <router-link to="/plans" class="btn-primary text-xs py-3 px-6 text-center bg-sky-600 hover:bg-sky-500 shadow-sky-500/25">
+              <span>View Active Deals & Bundles</span>
+            </router-link>
+            <router-link to="/register" class="btn-secondary text-xs py-3 px-6 text-center">
+              <span>Apply Online Now</span>
+            </router-link>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Portal Direct Card -->
       <div class="glass-panel p-8 md:p-12 rounded-3xl border border-[#ee2824]/30 relative overflow-hidden">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div class="space-y-4">
@@ -231,7 +266,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Zap, Sparkles, ArrowRight, Infinity, ShieldCheck, 
-  HeartHandshake, CreditCard, ChevronDown 
+  HeartHandshake, CreditCard, ChevronDown, Gift, Briefcase 
 } from 'lucide-vue-next'
 import SpeedTestSim from '../components/SpeedTestSim.vue'
 import CoverageChecker from '../components/CoverageChecker.vue'
