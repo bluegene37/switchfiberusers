@@ -59,13 +59,13 @@
 
     <!-- STEP 1: Personal Information -->
     <div v-if="currentStep === 1 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <div class="flex items-center justify-between border-b dark:border-slate-800 border-slate-200 pb-3">
-        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
-          <User class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+        <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
+          <User class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
           <span>Step 1: Applicant Personal Information</span>
         </h3>
-        <span class="text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
-          <Zap class="w-3.5 h-3.5" />
+        <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 inline-flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
+          <Zap class="w-3.5 h-3.5 shrink-0" />
           <span>Service Feasibility Verified</span>
         </span>
       </div>
@@ -214,9 +214,9 @@
 
     <!-- STEP 2: Address & Location -->
     <div v-if="currentStep === 2 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <div class="flex items-center justify-between border-b dark:border-slate-800 border-slate-200 pb-3">
-        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
-          <MapPin class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+        <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
+          <MapPin class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
           <span>Step 2: Installation Address & Service Area</span>
         </h3>
 
@@ -329,50 +329,175 @@
 
     <!-- STEP 3: Plan Selection -->
     <div v-if="currentStep === 3 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <div class="flex items-center justify-between border-b dark:border-slate-800 border-slate-200 pb-3">
-        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
-          <Wifi class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
-          <span>Step 3: Select Desired Internet Plan</span>
-        </h3>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b dark:border-slate-800 border-slate-200 pb-3">
+        <div>
+          <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
+            <Wifi class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0" />
+            <span>Step 3: Select Desired Internet Plan</span>
+          </h3>
+          <p class="text-xs dark:text-slate-400 text-slate-500 mt-0.5">
+            Choose a plan below. Live rates and features are synced dynamically.
+          </p>
+        </div>
 
-        <button 
-          @click="isCompareModalOpen = true" 
-          type="button" 
-          class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center gap-1.5"
-        >
-          <SlidersHorizontal class="w-3.5 h-3.5" />
-          <span>Compare All Plans Side-by-Side</span>
-        </button>
-      </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Refresh Live API Plans button -->
+          <button
+            @click="registrationStore.fetchPlans(true)"
+            type="button"
+            :disabled="isLoadingPlans"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold dark:bg-slate-800 bg-slate-100 dark:text-slate-300 text-slate-700 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all flex items-center gap-1.5 disabled:opacity-50"
+            title="Refresh plans from API"
+          >
+            <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': isLoadingPlans }" />
+            <span class="hidden sm:inline">Refresh</span>
+          </button>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div 
-          v-for="plan in availablePlans" 
-          :key="plan.id"
-          @click="registrationStore.selectPlan(plan)"
-          class="p-4 rounded-xl border cursor-pointer transition-all relative flex flex-col justify-between"
-          :class="formData.selectedPlanId === plan.id ? 'bg-[#ee2824]/10 border-[#ee2824] shadow-lg shadow-[#ee2824]/20' : 'dark:bg-slate-900/80 bg-white dark:border-slate-800 border-slate-200 hover:border-slate-400'"
-        >
-          <div v-if="plan.recommended" class="absolute -top-2.5 right-3 bg-[#ee2824] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-            Popular
-          </div>
-          <div>
-            <h4 class="font-bold dark:text-white text-slate-900 text-base mb-1">{{ plan.title }}</h4>
-            <div class="text-2xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">₱{{ plan.price }}<span class="text-xs font-normal dark:text-slate-400 text-slate-500">/mo</span></div>
-            <p class="text-xs text-emerald-500 font-semibold my-2">{{ plan.speed }}</p>
-            <span class="text-[11px] dark:text-slate-400 text-slate-500 block">{{ plan.lockIn }} • No Data Cap</span>
-          </div>
-          <div class="mt-4 pt-3 border-t dark:border-slate-800/80 border-slate-200 flex items-center justify-between text-xs font-semibold" :class="formData.selectedPlanId === plan.id ? 'text-[#ee2824] dark:text-[#ff6b67]' : 'dark:text-slate-500 text-slate-400'">
-            <span>{{ formData.selectedPlanId === plan.id ? '✓ Selected' : 'Select Plan' }}</span>
-            <CheckCircle2 class="w-4 h-4" />
-          </div>
+          <!-- Compare All Plans Side-by-Side Modal -->
+          <button
+            @click="isCompareModalOpen = true"
+            type="button"
+            :disabled="!availablePlans.length"
+            class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+          >
+            <SlidersHorizontal class="w-3.5 h-3.5" />
+            <span class="sm:hidden">Compare</span>
+            <span class="hidden sm:inline">Compare All Side-by-Side</span>
+          </button>
         </div>
       </div>
 
+      <!-- Plan Category Filter Pills & Live Status -->
+      <div v-if="availablePlans.length > 0" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+        <div class="inline-flex p-1 rounded-xl dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 text-xs font-semibold">
+          <button
+            v-for="tab in planTierTabs"
+            :key="tab.id"
+            type="button"
+            @click="selectedTierFilter = tab.id"
+            class="px-3 py-1.5 rounded-lg transition-all"
+            :class="selectedTierFilter === tab.id
+              ? 'bg-[#ee2824] text-white shadow-sm font-bold'
+              : 'dark:text-slate-400 text-slate-600 hover:text-slate-900 dark:hover:text-white'"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <div class="text-[11px] flex items-center gap-1.5 dark:text-slate-400 text-slate-500">
+          <span v-if="isLoadingPlans" class="inline-flex items-center gap-1 text-amber-500 font-medium">
+            <RotateCw class="w-3 h-3 animate-spin" /> Syncing live plans...
+          </span>
+          <span v-else-if="plansError" class="inline-flex items-center gap-1 text-amber-500 font-medium">
+            <AlertCircle class="w-3 h-3" /> Using cached rates
+          </span>
+          <span v-else class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            {{ availablePlans.length }} Active Plans Available
+          </span>
+        </div>
+      </div>
+
+      <!-- Loading skeletons while the live plan list is being fetched -->
+      <div v-if="isLoadingPlans && !availablePlans.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-for="n in 3" :key="n" class="p-5 rounded-2xl border dark:border-slate-800 border-slate-200 animate-pulse space-y-3">
+          <div class="h-4 w-2/3 rounded dark:bg-slate-800 bg-slate-200"></div>
+          <div class="h-8 w-1/2 rounded dark:bg-slate-800 bg-slate-200"></div>
+          <div class="h-3 w-3/4 rounded dark:bg-slate-800 bg-slate-200"></div>
+          <div class="h-3 w-1/2 rounded dark:bg-slate-800 bg-slate-200"></div>
+        </div>
+      </div>
+
+      <!-- No plans available error state -->
+      <div v-else-if="!availablePlans.length" class="p-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-center space-y-3">
+        <AlertCircle class="w-8 h-8 text-amber-500 mx-auto" />
+        <p class="text-sm font-bold dark:text-white text-slate-900">We couldn't load the plan list</p>
+        <p class="text-xs dark:text-slate-300 text-slate-600">
+          Please retry, or call
+          <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a>
+          and we'll take your application over the phone.
+        </p>
+        <button type="button" @click="registrationStore.fetchPlans(true)" class="btn-secondary text-xs mx-auto">
+          Retry Sync
+        </button>
+      </div>
+
+      <template v-else>
+        <!-- Stale-pricing notice when API failed and cached plans are shown -->
+        <div v-if="plansError" class="p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 flex items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <AlertCircle class="w-4 h-4 text-amber-500 shrink-0" />
+            <span class="dark:text-slate-300 text-slate-700">
+              Showing cached pricing — rates will be re-verified upon submission.
+            </span>
+          </div>
+          <button @click="registrationStore.fetchPlans(true)" type="button" class="font-bold text-[#ee2824] dark:text-[#ff6b67] underline shrink-0">
+            Retry
+          </button>
+        </div>
+
+        <!-- Dynamic Plan Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <button
+            v-for="plan in filteredPlans"
+            :key="plan.id"
+            type="button"
+            @click="registrationStore.selectPlan(plan)"
+            :aria-pressed="isPlanSelected(plan)"
+            class="p-5 rounded-2xl border cursor-pointer transition-all relative flex flex-col justify-between text-left w-full group"
+            :class="isPlanSelected(plan) 
+              ? 'bg-[#ee2824]/10 border-[#ee2824] shadow-xl shadow-[#ee2824]/20 ring-2 ring-[#ee2824]/30' 
+              : 'dark:bg-slate-900/80 bg-white dark:border-slate-800 border-slate-200 hover:border-[#ee2824]/50 hover:shadow-md'"
+          >
+            <!-- Badge -->
+            <div v-if="plan.recommended || plan.tag" class="absolute -top-2.5 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase shadow-md"
+              :class="plan.recommended ? 'bg-[#ee2824] text-white' : 'dark:bg-slate-800 bg-slate-200 dark:text-slate-300 text-slate-700 border dark:border-slate-700 border-slate-300'"
+            >
+              {{ plan.tag || (plan.recommended ? 'Popular' : 'Fiber') }}
+            </div>
+
+            <div>
+              <h4 class="font-bold dark:text-white text-slate-900 text-base mb-1 pr-16 group-hover:text-[#ee2824] dark:group-hover:text-[#ff6b67] transition-colors">
+                {{ plan.title }}
+              </h4>
+              <div class="text-2xl sm:text-3xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">
+                ₱{{ plan.price }}<span class="text-xs font-normal dark:text-slate-400 text-slate-500">/mo</span>
+              </div>
+              <div class="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-bold my-2 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                <Zap class="w-3 h-3" />
+                <span>{{ plan.speed }}</span>
+              </div>
+              <div class="space-y-1 text-[11px] dark:text-slate-400 text-slate-600 mt-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-medium">• {{ plan.lockIn }}</span>
+                  <span>•</span>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ plan.dataCap }}</span>
+                </div>
+                <div class="truncate">• {{ plan.router }}</div>
+                <div v-if="plan.mesh && plan.mesh !== 'Optional Add-on'" class="text-emerald-600 dark:text-emerald-400 font-medium truncate">• Free {{ plan.mesh }}</div>
+              </div>
+            </div>
+
+            <div 
+              class="mt-4 pt-3 border-t dark:border-slate-800/80 border-slate-200 flex items-center justify-between text-xs font-bold" 
+              :class="isPlanSelected(plan) ? 'text-[#ee2824] dark:text-[#ff6b67]' : 'dark:text-slate-400 text-slate-500 group-hover:text-[#ee2824]'"
+            >
+              <span>{{ isPlanSelected(plan) ? '✓ Active Selection' : 'Select Plan' }}</span>
+              <CheckCircle2 v-if="isPlanSelected(plan)" class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+              <ArrowRight v-else class="w-4 h-4 opacity-70 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </button>
+        </div>
+      </template>
+
+      <!-- Selected Plan Readout & Promo Inputs -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
         <div>
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Desired Plan Selection</label>
-          <input v-model="formData.desiredPlan" type="text" readonly class="input-field font-semibold text-[#ee2824] dark:text-[#ff6b67]" />
+          <div class="relative">
+            <input v-model="formData.desiredPlan" type="text" readonly class="input-field font-bold text-[#ee2824] dark:text-[#ff6b67] bg-slate-50 dark:bg-slate-900/60" />
+            <CheckCircle2 v-if="formData.desiredPlan" class="w-4 h-4 text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2" />
+          </div>
         </div>
         <div>
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Applicable Promo</label>
@@ -383,8 +508,8 @@
 
     <!-- STEP 4: Document & Landmark Photo Uploads -->
     <div v-if="currentStep === 4 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-        <UploadCloud class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+      <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+        <UploadCloud class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
         <span>Step 4: Required Documents & Photo Uploads</span>
       </h3>
 
@@ -473,34 +598,58 @@
     <!-- STEP 5: Review, Terms & API Submission -->
     <div v-if="currentStep === 5 || submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div v-if="!submittedCode">
-        <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-          <FileText class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+        <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+          <FileText class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
           <span>Step 5: Final Review & Digital Signature</span>
         </h3>
 
         <!-- Summary Review Box -->
         <div class="p-5 rounded-2xl dark:bg-slate-900/90 bg-slate-100 border dark:border-slate-800 border-slate-200 space-y-4">
-          <div class="grid grid-cols-2 gap-4 text-xs border-b dark:border-slate-800 border-slate-300 pb-3">
+          <!-- Applicant & Installation Address Row -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-b dark:border-slate-800 border-slate-300 pb-3">
             <div>
-              <span class="dark:text-slate-500 text-slate-500 uppercase block">Applicant Full Name:</span>
+              <span class="dark:text-slate-500 text-slate-500 uppercase block font-semibold mb-0.5">Applicant Full Name:</span>
               <span class="font-bold dark:text-slate-200 text-slate-900 text-sm">{{ formData.firstName }} {{ formData.middleName }} {{ formData.lastName }}</span>
-              <span class="block dark:text-slate-400 text-slate-600">{{ formData.emailAddress }} | {{ formData.mobileNumber }}</span>
+              <span class="block dark:text-slate-400 text-slate-600 mt-0.5">{{ formData.emailAddress }} | {{ formData.mobileNumber }}</span>
             </div>
             <div>
-              <span class="dark:text-slate-500 text-slate-500 uppercase block">Installation Address:</span>
+              <span class="dark:text-slate-500 text-slate-500 uppercase block font-semibold mb-0.5">Installation Address:</span>
               <span class="font-bold dark:text-slate-200 text-slate-900 text-sm">{{ formData.barangay }}, {{ formData.city }}, {{ formData.region }}</span>
-              <span class="block dark:text-slate-400 text-slate-600">{{ formData.installationAddress }}</span>
+              <span class="block dark:text-slate-400 text-slate-600 mt-0.5">{{ formData.installationAddress }}</span>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <span class="dark:text-slate-500 text-slate-500 uppercase block">Selected Fiber Plan:</span>
-              <span class="font-extrabold text-[#ee2824] dark:text-[#ff6b67] text-base">{{ formData.desiredPlan }}</span>
+          <!-- Dynamic Plan Details Box & Primary ID Row -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px]">Selected Fiber Plan</span>
+                <button @click="registrationStore.currentStep = 3" type="button" class="text-[11px] font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">
+                  Change Plan
+                </button>
+              </div>
+              <div class="text-base font-extrabold text-[#ee2824] dark:text-[#ff6b67]">
+                {{ formData.desiredPlan }}
+              </div>
+              <div class="flex flex-wrap items-center gap-2 text-[11px] dark:text-slate-400 text-slate-600 pt-0.5">
+                <span v-if="selectedPlanDetails?.speed" class="font-semibold text-emerald-600 dark:text-emerald-400">{{ selectedPlanDetails.speed }}</span>
+                <span v-if="selectedPlanDetails?.router">• {{ selectedPlanDetails.router }}</span>
+                <span v-if="selectedPlanDetails?.lockIn">• {{ selectedPlanDetails.lockIn }}</span>
+              </div>
+              <div v-if="formData.applicablePromo" class="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                Promo: {{ formData.applicablePromo }}
+              </div>
             </div>
-            <div>
-              <span class="dark:text-slate-500 text-slate-500 uppercase block">Primary Document ID:</span>
-              <span class="font-bold dark:text-slate-300 text-slate-700 text-xs">{{ formData.primaryGovtIdType }} ({{ formData.governmentValidIdName || 'Uploaded' }})</span>
+
+            <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5 flex flex-col justify-between">
+              <div>
+                <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px] block mb-1">Primary Document ID</span>
+                <span class="font-bold dark:text-slate-300 text-slate-800 text-xs block">{{ formData.primaryGovtIdType }}</span>
+                <span class="text-[11px] dark:text-slate-400 text-slate-500 block truncate">{{ formData.governmentValidIdName || 'Photo Attached' }}</span>
+              </div>
+              <div v-if="formData.secondaryGovtIdType" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
+                2nd ID: {{ formData.secondaryGovtIdType }} ({{ formData.secondGovernmentValidIdName || 'Attached' }})
+              </div>
             </div>
           </div>
         </div>
@@ -681,7 +830,8 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import confetti from 'canvas-confetti'
 import { 
   Sparkles, Check, User, MapPin, Wifi, FileText, 
@@ -695,6 +845,7 @@ import SignaturePad from './SignaturePad.vue'
 import PlanCompareModal from './PlanCompareModal.vue'
 import MapLocationPicker from './MapLocationPicker.vue'
 
+const route = useRoute()
 const registrationStore = useRegistrationStore()
 const currentStep = computed(() => registrationStore.currentStep)
 const formData = computed(() => registrationStore.formData)
@@ -704,6 +855,60 @@ const citiesList = computed(() => registrationStore.citiesList)
 const barangaysList = computed(() => registrationStore.barangaysList)
 const govtIdTypes = computed(() => registrationStore.govtIdTypes)
 const isSubmitting = computed(() => registrationStore.isSubmitting)
+const isLoadingPlans = computed(() => registrationStore.isLoadingPlans)
+const plansError = computed(() => registrationStore.plansError)
+
+// Tier Category Filtering for Plan Selection
+const selectedTierFilter = ref('all')
+const planTierTabs = [
+  { id: 'all', label: 'All Plans' },
+  { id: 'budget', label: 'Starter & Budget' },
+  { id: 'power', label: 'Ultra & Power' }
+]
+
+const filteredPlans = computed(() => {
+  if (!availablePlans.value || availablePlans.value.length === 0) return []
+  if (selectedTierFilter.value === 'budget') {
+    return availablePlans.value.filter(p => p.price <= 850)
+  }
+  if (selectedTierFilter.value === 'power') {
+    return availablePlans.value.filter(p => p.price >= 900)
+  }
+  return availablePlans.value
+})
+
+const selectedPlanDetails = computed(() => {
+  return registrationStore.findPlan(formData.value.selectedPlanId) || 
+         (formData.value.desiredPlan ? registrationStore.findPlan(formData.value.desiredPlan) : null) ||
+         (availablePlans.value && availablePlans.value.length > 0 ? availablePlans.value[0] : null)
+})
+
+// The API returns numeric or string IDs while the form stores them as strings
+function isPlanSelected(plan) {
+  if (!plan) return false
+  return String(formData.value.selectedPlanId) === String(plan.id) ||
+         (formData.value.desiredPlan && formData.value.desiredPlan.includes(plan.title))
+}
+
+// Deep-link support: URL query param selection e.g. /register?plan=2 or /register?plan=connect-799
+function syncPlanFromRouteQuery() {
+  const queryPlan = route?.query?.plan || route?.query?.planId || route?.query?.id || route?.query?.slug
+  if (queryPlan) {
+    registrationStore.selectPlan(queryPlan)
+  }
+}
+
+onMounted(() => {
+  syncPlanFromRouteQuery()
+})
+
+watch(() => route?.query, () => {
+  syncPlanFromRouteQuery()
+}, { deep: true })
+
+watch(availablePlans, () => {
+  syncPlanFromRouteQuery()
+})
 
 const isTermsModalOpen = ref(false)
 const isCompareModalOpen = ref(false)

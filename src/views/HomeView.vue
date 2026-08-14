@@ -126,7 +126,16 @@
         </router-link>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div v-if="isLoadingPlans && !featuredPlans.length" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div v-for="n in 3" :key="n" class="glass-card rounded-2xl p-6 md:p-8 animate-pulse space-y-4 border dark:border-slate-800 border-slate-200">
+          <div class="h-4 w-1/3 rounded dark:bg-slate-800 bg-slate-200"></div>
+          <div class="h-7 w-2/3 rounded dark:bg-slate-800 bg-slate-200"></div>
+          <div class="h-10 w-1/2 rounded dark:bg-slate-800 bg-slate-200"></div>
+          <div class="h-12 w-full rounded dark:bg-slate-800 bg-slate-200"></div>
+        </div>
+      </div>
+
+      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <PlanCard 
           v-for="plan in featuredPlans" 
           :key="plan.id" 
@@ -180,18 +189,35 @@
       </div>
 
       <div class="space-y-4">
-        <div 
-          v-for="(faq, idx) in faqs" 
+        <div
+          v-for="(faq, idx) in faqs"
           :key="idx"
-          class="glass-card p-6 rounded-2xl border dark:border-slate-800 border-slate-200 cursor-pointer"
-          @click="activeFaq = activeFaq === idx ? null : idx"
+          class="glass-card rounded-2xl border dark:border-slate-800 border-slate-200 overflow-hidden"
         >
-          <div class="flex items-center justify-between font-bold dark:text-slate-100 text-slate-900 text-base">
+          <button
+            type="button"
+            :id="`faq-btn-${idx}`"
+            :aria-expanded="activeFaq === idx"
+            :aria-controls="`faq-panel-${idx}`"
+            class="w-full text-left p-6 flex items-center justify-between gap-4 font-bold dark:text-slate-100 text-slate-900 text-base cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ee2824]/50 focus-visible:ring-inset"
+            @click="activeFaq = activeFaq === idx ? null : idx"
+          >
             <span>{{ faq.question }}</span>
-            <ChevronDown class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] transition-transform" :class="activeFaq === idx ? 'rotate-180' : ''" />
-          </div>
-          <div v-if="activeFaq === idx" class="mt-4 text-sm dark:text-slate-300 text-slate-600 leading-relaxed pt-3 border-t dark:border-slate-800/80 border-slate-200 animate-in fade-in duration-200">
-            {{ faq.answer }}
+            <ChevronDown
+              class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] transition-transform shrink-0"
+              :class="activeFaq === idx ? 'rotate-180' : ''"
+            />
+          </button>
+          <div
+            v-show="activeFaq === idx"
+            :id="`faq-panel-${idx}`"
+            role="region"
+            :aria-labelledby="`faq-btn-${idx}`"
+            class="px-6 pb-6 text-sm dark:text-slate-300 text-slate-600 leading-relaxed"
+          >
+            <div class="border-t dark:border-slate-800/80 border-slate-200 pt-4">
+              {{ faq.answer }}
+            </div>
           </div>
         </div>
       </div>
@@ -214,6 +240,8 @@ import { useRegistrationStore } from '../stores/registration'
 
 const router = useRouter()
 const registrationStore = useRegistrationStore()
+const availablePlans = computed(() => registrationStore.availablePlans)
+const isLoadingPlans = computed(() => registrationStore.isLoadingPlans)
 const featuredPlans = computed(() => registrationStore.availablePlans.slice(0, 3))
 const minPlanPrice = computed(() => {
   if (!registrationStore.availablePlans.length) return 699
@@ -241,7 +269,7 @@ const faqs = [
 ]
 
 function handlePlanSelect(plan) {
-  registrationStore.openModal(plan.id)
-  router.push('/register')
+  registrationStore.selectPlan(plan)
+  router.push({ path: '/register', query: { plan: plan.id } })
 }
 </script>

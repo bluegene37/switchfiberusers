@@ -16,15 +16,19 @@
     <!-- Search Input Box -->
     <div class="glass-card p-6 md:p-8 rounded-3xl border dark:border-slate-800 border-slate-200 space-y-4 max-w-xl mx-auto">
       <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase">Reference Code <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-      <div class="flex gap-3">
-        <input 
-          v-model="inputCode" 
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input
+          v-model="inputCode"
           @keyup.enter="handleSearch"
-          type="text" 
-          placeholder="e.g. SF-2026-8942" 
-          class="input-field uppercase font-mono text-lg py-3"
+          type="text"
+          inputmode="text"
+          autocapitalize="characters"
+          autocomplete="off"
+          placeholder="e.g. SF-2026-8942"
+          aria-label="Application reference code"
+          class="input-field uppercase font-mono text-base sm:text-lg py-3"
         />
-        <button @click="handleSearch" class="btn-primary py-3 px-6 whitespace-nowrap">
+        <button @click="handleSearch" class="btn-primary py-3 px-6 whitespace-nowrap shrink-0">
           <span>Search</span>
           <Search class="w-4 h-4" />
         </button>

@@ -1,4 +1,8 @@
 <template>
+  <!-- Teleported to body: ancestors using backdrop-filter (.glass-panel) become
+       the containing block for position:fixed, which would anchor this overlay
+       inside the panel instead of the viewport. -->
+  <Teleport to="body">
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
     <div class="glass-panel w-full max-w-4xl max-h-[90vh] rounded-3xl border border-[#ee2824]/40 shadow-2xl flex flex-col dark:bg-slate-900 bg-white overflow-hidden relative">
       
@@ -103,6 +107,7 @@
 
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script setup>

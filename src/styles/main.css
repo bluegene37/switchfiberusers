@@ -126,29 +126,33 @@ html.light ::-webkit-scrollbar-track {
   background: #ee2824;
 }
 
-/* Form Controls */
+/* Form Controls
+   Structural properties live in @layer components so Tailwind utilities
+   (pl-11, py-3, ...) can still override them. Only the theme-dependent
+   colors are scoped to html.dark / html.light. */
+@layer components {
+  .input-field {
+    width: 100%;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+}
+
 html.dark .input-field {
-  width: 100%;
   background: rgba(18, 20, 29, 0.9) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
+  border-color: rgba(255, 255, 255, 0.12) !important;
   color: #f8fafc !important;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  outline: none;
 }
 
 html.light .input-field {
-  width: 100%;
   background: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
+  border-color: #cbd5e1 !important;
   color: #0f172a !important;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  outline: none;
 }
 
 .input-field:focus {
@@ -164,22 +168,39 @@ html.light .input-field::placeholder {
   color: #94a3b8;
 }
 
-/* Buttons */
+/* Buttons
+   Same split as .input-field: layout/spacing in @layer components so
+   utility classes like py-4 px-8 still win, colors scoped per theme. */
+@layer components {
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    font-weight: 700;
+    border: none;
+  }
+
+  .btn-secondary {
+    font-weight: 600;
+    border-width: 1px;
+    border-style: solid;
+  }
+}
+
 .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
   background: linear-gradient(135deg, #ee2824 0%, #d61f1c 50%, #b31513 100%);
   color: #ffffff !important;
-  font-weight: 700;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.25s ease;
   box-shadow: 0 4px 18px rgba(238, 40, 36, 0.35);
-  text-decoration: none;
 }
 
 .btn-primary:hover {
@@ -189,41 +210,30 @@ html.light .input-field::placeholder {
 }
 
 html.dark .btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
   background: rgba(255, 255, 255, 0.05) !important;
   color: #f8fafc !important;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-decoration: none;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 html.light .btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
   background: #ffffff !important;
   color: #0f172a !important;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  border: 1px solid #cbd5e1 !important;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-decoration: none;
+  border-color: #cbd5e1 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary:hover {
   border-color: rgba(238, 40, 36, 0.5) !important;
   transform: translateY(-2px);
+}
+
+/* Disabled state was previously unstyled — buttons looked clickable while busy */
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Badge */
@@ -265,4 +275,44 @@ html.light .badge-neon {
 
 .animate-pulse-glow {
   animation: pulse-glow 3s infinite ease-in-out;
+}
+
+/* Visible keyboard focus ring on every interactive element.
+   Mouse clicks stay clean because this targets :focus-visible only.
+   .input-field is excluded — it already draws its own focus ring. */
+a:focus-visible,
+button:focus-visible,
+input:not(.input-field):focus-visible,
+select:not(.input-field):focus-visible,
+textarea:not(.input-field):focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #ee2824;
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+/* Respect the OS "reduce motion" setting — the site leans on
+   pulsing glows, spinners and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .glass-card:hover {
+    transform: none;
+  }
+
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none;
+  }
 }

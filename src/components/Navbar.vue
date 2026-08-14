@@ -309,30 +309,54 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { 
-  Home, 
-  Info, 
-  Zap, 
-  MapPin, 
-  Search, 
-  CreditCard, 
-  Wrench, 
-  PhoneCall, 
-  Users, 
-  Sparkles, 
-  Menu, 
-  X, 
-  Sun, 
-  Moon, 
-  Facebook, 
-  Instagram, 
-  MessageCircle 
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  Home,
+  Info,
+  Zap,
+  MapPin,
+  Search,
+  CreditCard,
+  Wrench,
+  PhoneCall,
+  Users,
+  Sparkles,
+  Menu,
+  X,
+  Sun,
+  Moon,
+  Facebook,
+  Instagram,
+  MessageCircle
 } from 'lucide-vue-next'
 import { useThemeStore } from '../stores/theme'
 import { useRegistrationStore } from '../stores/registration'
 
 const themeStore = useThemeStore()
 const registrationStore = useRegistrationStore()
+const route = useRoute()
 const mobileMenuOpen = ref(false)
+
+// Close the drawer on any navigation, including browser back/forward
+watch(() => route.fullPath, () => {
+  mobileMenuOpen.value = false
+})
+
+// Lock background scroll while the drawer is open
+watch(mobileMenuOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
+function onKeydown(e) {
+  if (e.key === 'Escape' && mobileMenuOpen.value) {
+    mobileMenuOpen.value = false
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
 </script>

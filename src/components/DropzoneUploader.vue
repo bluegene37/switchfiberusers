@@ -108,7 +108,9 @@
 
     </div>
 
-    <!-- Lightbox Modal -->
+    <!-- Lightbox Modal — teleported to body so the surrounding .glass-panel's
+         backdrop-filter doesn't become the containing block for position:fixed -->
+    <Teleport to="body">
     <div v-if="isLightboxOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200" @click="closeLightbox">
       <div class="relative max-w-4xl max-h-[90vh] p-2 bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden" @click.stop>
         <button 
@@ -123,6 +125,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 

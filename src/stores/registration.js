@@ -25,10 +25,10 @@ export const useRegistrationStore = defineStore('registration', () => {
     installationAddress: '',
     landmark: '',
     
-    // Plan
-    desiredPlan: 'SwitchConnect Plan (₱799/mo)',
-    selectedPlanId: 'connect-799',
-    selectedPlanPrice: 799,
+    // Plan — populated from the live plan list by syncSelectedPlan()
+    desiredPlan: '',
+    selectedPlanId: '',
+    selectedPlanPrice: 0,
     applicablePromo: 'Standard Free Installation',
 
     // Document File Strings & ID Types
@@ -86,7 +86,8 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }, { deep: true })
 
-  const defaultPlans = [
+  // Offline fallback used only when the Plans API is unreachable.
+  const fallbackPlanSeeds = [
     {
       id: '1',
       rawId: 1,
@@ -149,46 +150,105 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   ]
 
+  // Run the fallback plans through the same derivation as API plans so the
+  // comparison tables look identical whether or not the API responded.
+  const defaultPlans = fallbackPlanSeeds.map(p => ({
+    ...p,
+    ...deriveComparisonAttributes(p, `${p.features.join(', ')} ${p.speed} ${p.lockIn}`, p.price)
+  }))
+
   const isLoadingPlans = ref(false)
   const plansError = ref(null)
+  const plansLastFetched = ref(null)
   const plansList = ref([...defaultPlans])
 
+  // Comparison attributes the /api/Plans payload doesn't expose directly.
+  // Derived once here from the API description/price so every screen
+  // (plans page, wizard, compare modal) renders the same values, and so a
+  // future API field can simply override the fallback.
+  function deriveComparisonAttributes(item, desc, price) {
+    const haystack = `${item.name || item.title || ''} ${desc}`.toLowerCase()
+
+    const dataCap = item.dataCap || (
+      /no data cap|unlimited/.test(haystack) ? 'Unlimited' : 'Fair Use Policy'
+    )
+
+    let router = item.router || ''
+    if (!router) {
+      if (/wi-?fi\s*6|wifi6/.test(haystack)) router = 'Wi-Fi 6 Dual Band'
+      else if (/mesh/.test(haystack)) router = 'Wi-Fi 6 Dual Band'
+      else router = price >= 1299 ? 'Wi-Fi 6 Dual Band' : 'Dual-Band ONU'
+    }
+
+    let mesh = item.mesh || ''
+    if (!mesh) {
+      const meshMatch = haystack.match(/(\d+)\s*x?\s*mesh|mesh\s*x?\s*(\d+)/)
+      if (meshMatch) {
+        const count = Number(meshMatch[1] || meshMatch[2])
+        mesh = `${count} Node${count > 1 ? 's' : ''}`
+      } else if (price >= 1499) mesh = '2 Nodes'
+      else if (price >= 1299) mesh = '1 Node'
+      else mesh = 'Optional Add-on'
+    }
+
+    const support = item.support || (
+      /priority support/.test(haystack)
+        ? 'Priority 24/7'
+        : (price >= 799 ? 'Priority 24/7' : 'Standard 24/7')
+    )
+
+    return { dataCap, router, mesh, support }
+  }
+
   function formatApiPlan(item) {
-    const rawId = item.id
-    const price = typeof item.amount === 'number' ? item.amount : (parseFloat(item.amount) || 0)
-    const name = item.name || 'Switch Fiber Plan'
-    const desc = item.description || ''
+    const rawId = item.id ?? item.Id ?? item.planId ?? item.rawId
+    const price = typeof item.amount === 'number' 
+      ? item.amount 
+      : (typeof item.price === 'number' 
+          ? item.price 
+          : (parseFloat(item.amount || item.price || item.monthlyFee || 0) || 0))
+    const name = (item.name || item.planName || item.title || 'Switch Fiber Plan').trim()
+    const desc = (item.description || item.desc || '').trim()
 
     // Dynamically derive speed string (e.g. "50 Mbps - Turbo-Speed..." -> "Turbo Speed (50 Mbps)")
-    let speed = ''
-    const speedMatch = (desc + ' ' + name).match(/(\d+\+?\s*(?:Mbps|Gbps|Gb|Mb))/i)
-    if (speedMatch) {
-      speed = `Turbo Speed (${speedMatch[1]})`
-    } else {
-      if (price <= 700) speed = 'Turbo Speed (50 Mbps)'
-      else if (price <= 850) speed = 'Turbo Speed (90 Mbps)'
-      else if (price <= 1100) speed = 'Turbo Speed (120 Mbps)'
-      else if (price <= 1350) speed = 'Turbo Speed (150 Mbps)'
-      else speed = 'Turbo Speed (200 Mbps)'
+    let speed = (item.speed || '').trim()
+    if (!speed) {
+      const speedMatch = (desc + ' ' + name).match(/(\d+\+?\s*(?:Mbps|Gbps|Gb|Mb))/i)
+      if (speedMatch) {
+        speed = `Turbo Speed (${speedMatch[1]})`
+      } else {
+        if (price <= 700) speed = 'Turbo Speed (50 Mbps)'
+        else if (price <= 850) speed = 'Turbo Speed (90 Mbps)'
+        else if (price <= 1100) speed = 'Turbo Speed (120 Mbps)'
+        else if (price <= 1350) speed = 'Turbo Speed (150 Mbps)'
+        else speed = 'Turbo Speed (200 Mbps)'
+      }
+    } else if (!speed.toLowerCase().startsWith('turbo speed')) {
+      speed = `Turbo Speed (${speed.replace(/[()]/g, '')})`
     }
 
     // Lock-in period
-    let lockIn = '1 Year Lock-In'
-    if (desc.toLowerCase().includes('lock-in')) {
-      const lockMatch = desc.match(/(\d+\s*(?:Year|Yr|Month|Mo)s?\s*Lock-In)/i)
-      if (lockMatch) lockIn = lockMatch[1]
+    let lockIn = (item.lockIn || item.lockInPeriod || '').trim()
+    if (!lockIn) {
+      if (desc.toLowerCase().includes('lock-in')) {
+        const lockMatch = desc.match(/(\d+\s*(?:Year|Yr|Month|Mo)s?\s*Lock-In)/i)
+        if (lockMatch) lockIn = lockMatch[1]
+      }
+      if (!lockIn) lockIn = '1 Year Lock-In'
     }
 
     // Recommended badge
     const recommended = Boolean(
       item.recommended ||
+      item.isRecommended ||
+      item.isPopular ||
       desc.toLowerCase().includes('popular') ||
       name.toLowerCase().includes('connect') ||
       price === 799
     )
 
     // Dynamic Tag assignment
-    let tag = item.tag || ''
+    let tag = (item.tag || item.badge || '').trim()
     if (!tag) {
       if (price <= 700) tag = 'Best Budget'
       else if (price <= 850 || recommended) tag = 'Most Popular'
@@ -197,15 +257,16 @@ export const useRegistrationStore = defineStore('registration', () => {
       else tag = 'Ultimate Power'
     }
 
-    // Clean features list from description
+    // Clean features list from description or array
     let features = []
-    if (desc) {
+    if (Array.isArray(item.features) && item.features.length > 0) {
+      features = item.features.map(f => String(f).trim()).filter(Boolean)
+    } else if (desc) {
       const parts = desc.split(',').map(s => s.trim()).filter(Boolean)
       features = parts.map(p => {
         return p.replace(/\s*\(Popular!\)/gi, '').trim()
       }).filter(p => {
         if (!p) return false
-        // Exclude redundant lock-in item if already shown as badge
         if (p.toLowerCase().includes('lock-in')) return false
         return true
       })
@@ -216,7 +277,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.round(price)
-    const id = String(rawId)
+    const id = String(rawId || slug)
 
     return {
       id,
@@ -228,11 +289,13 @@ export const useRegistrationStore = defineStore('registration', () => {
       lockIn,
       tag,
       recommended,
-      features
+      features,
+      isActive: item.isActive !== false && item.status !== 'Inactive',
+      ...deriveComparisonAttributes(item, desc, price)
     }
   }
 
-  async function fetchPlans() {
+  async function fetchPlans(force = false) {
     isLoadingPlans.value = true
     plansError.value = null
     try {
@@ -257,7 +320,14 @@ export const useRegistrationStore = defineStore('registration', () => {
 
       const data = await response.json()
       if (Array.isArray(data) && data.length > 0) {
-        plansList.value = data.map(formatApiPlan)
+        const formatted = data
+          .map(formatApiPlan)
+          .filter(p => p.isActive !== false)
+
+        if (formatted.length > 0) {
+          plansList.value = formatted
+          plansLastFetched.value = new Date().toISOString()
+        }
       }
     } catch (err) {
       console.warn('API fetch failed for Plans endpoint, using cached defaults:', err)
@@ -271,6 +341,45 @@ export const useRegistrationStore = defineStore('registration', () => {
   fetchPlans()
 
   const availablePlans = computed(() => plansList.value)
+
+  function findPlan(identifier) {
+    if (identifier === null || identifier === undefined || identifier === '') return null
+    if (typeof identifier === 'object' && identifier.id) {
+      return findPlan(identifier.id) || identifier
+    }
+    const key = String(identifier).trim().toLowerCase()
+    return plansList.value.find(p => {
+      if (String(p.id).toLowerCase() === key) return true
+      if (String(p.rawId).toLowerCase() === key) return true
+      if (p.slug && p.slug.toLowerCase() === key) return true
+      if (p.title && p.title.toLowerCase() === key) return true
+      if (p.title && p.title.toLowerCase().replace(/\s+plan$/i, '') === key.replace(/\s+plan$/i, '')) return true
+      return false
+    }) || null
+  }
+
+  function applyPlanToForm(plan) {
+    if (!plan) return
+    formData.value.selectedPlanId = String(plan.id)
+    formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
+    formData.value.selectedPlanPrice = plan.price
+  }
+
+  // Keeps the form's plan in step with the live API list.
+  function syncSelectedPlan() {
+    if (!plansList.value.length) return
+    const current = findPlan(formData.value.selectedPlanId) || (formData.value.desiredPlan ? findPlan(formData.value.desiredPlan) : null)
+    if (current) {
+      // Refresh the label/price in case the plan was renamed or repriced upstream
+      applyPlanToForm(current)
+      return
+    }
+    const fallback = plansList.value.find(p => p.recommended) || plansList.value[0]
+    applyPlanToForm(fallback)
+  }
+
+  // Reconcile whenever the plan list changes (initial fetch, manual refresh)
+  watch(plansList, () => syncSelectedPlan(), { immediate: true })
 
   const regionsList = [
     'Region IV-A (CALABARZON)',
@@ -397,6 +506,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     currentStep.value = 1
     formData.value = getInitialFormData()
     apiError.value = null
+    syncSelectedPlan()
     try {
       localStorage.removeItem('switch_registration_draft')
     } catch (e) {}
@@ -405,12 +515,7 @@ export const useRegistrationStore = defineStore('registration', () => {
   function openModal(planId = null) {
     resetForm()
     if (planId) {
-      const plan = availablePlans.value.find(p => String(p.id) === String(planId) || p.slug === planId || String(p.rawId) === String(planId))
-      if (plan) {
-        formData.value.selectedPlanId = plan.id
-        formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
-        formData.value.selectedPlanPrice = plan.price
-      }
+      selectPlan(planId)
     }
     isModalOpen.value = true
   }
@@ -431,10 +536,12 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
-  function selectPlan(plan) {
-    formData.value.selectedPlanId = plan.id
-    formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
-    formData.value.selectedPlanPrice = plan.price
+  function selectPlan(planOrId) {
+    if (!planOrId) return
+    const plan = typeof planOrId === 'object' && planOrId.id ? planOrId : findPlan(planOrId)
+    if (plan) {
+      applyPlanToForm(plan)
+    }
   }
 
   async function submitApplication() {
@@ -557,10 +664,14 @@ export const useRegistrationStore = defineStore('registration', () => {
     isSubmitting,
     isLoadingPlans,
     plansError,
+    plansLastFetched,
     fetchPlans,
+    findPlan,
+    applyPlanToForm,
     apiError,
     formData,
     availablePlans,
+    plansList,
     regionsList,
     citiesList,
     barangaysList,
