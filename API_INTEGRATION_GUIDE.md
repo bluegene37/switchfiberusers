@@ -31,8 +31,10 @@ The application follows a **Modern Component-Driven Single Page Application (SPA
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                 Data & API Integration                      │
-│  - REST API (https://103.249.198.43:8090/api/Applications)   │
-│  - LocalStorage Fallback                                    │
+│  - Dev Proxy (vite.config.js -> https://103.249.198.43:8090)│
+│  - Prod Proxy (Vercel Serverless api/ -> HTTPS Node Agent)  │
+│  - Endpoints (/api/Plans, /api/Applications)               │
+│  - LocalStorage Offline Fallback                            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -64,7 +66,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     apiError.value = null
 
     try {
-      const response = await fetch(`https://103.249.198.43:8090/api/Applications/${referenceCode}`, {
+      const response = await fetch(`/api/Applications/${referenceCode}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
@@ -153,7 +155,7 @@ localStorage.setItem('switch_applications', JSON.stringify(submittedApplications
 
 // Then send POST request
 try {
-  await fetch('https://103.249.198.43:8090/api/Applications', {
+  await fetch('/api/Applications', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(apiPayload)

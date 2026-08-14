@@ -295,24 +295,20 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
+  const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+
   async function fetchPlans(force = false) {
     isLoadingPlans.value = true
     plansError.value = null
     try {
-      let response
-      // Try fetching via local Vite proxy first, fallback to direct HTTPS API URL
-      try {
-        response = await fetch('/api/Plans', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        })
-        if (!response.ok) throw new Error(`Proxy HTTP ${response.status}`)
-      } catch (proxyErr) {
-        response = await fetch('https://103.249.198.43:8090/api/Plans', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        })
-      }
+      const endpoint = `${API_BASE}/api/Plans`
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
 
       if (!response.ok) {
         throw new Error(`Server returned HTTP ${response.status}`)
@@ -327,6 +323,7 @@ export const useRegistrationStore = defineStore('registration', () => {
         if (formatted.length > 0) {
           plansList.value = formatted
           plansLastFetched.value = new Date().toISOString()
+          plansError.value = null
         }
       }
     } catch (err) {
@@ -626,12 +623,14 @@ export const useRegistrationStore = defineStore('registration', () => {
     submittedApplications.value.unshift(newApp)
     saveToLocalStorage()
 
-    // Attempt POST to backend API endpoint
+    // Attempt POST to backend API endpoint (proxied via /api/Applications)
     try {
-      const response = await fetch('https://103.249.198.43:8090/api/Applications', {
+      const endpoint = `${API_BASE}/api/Applications`
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(apiPayload)
       })
@@ -639,11 +638,11 @@ export const useRegistrationStore = defineStore('registration', () => {
       if (!response.ok) {
         console.warn('API returned non-OK status:', response.status)
       } else {
-        const result = await response.json()
+        const result = await response.json().catch(() => ({}))
         console.log('API application submitted successfully:', result)
       }
     } catch (err) {
-      console.warn('Backend API request encountered network/CORS error, saved locally:', err)
+      console.warn('Backend API request encountered network error, saved locally:', err)
       // Smooth fallback so client registration always completes
     } finally {
       isSubmitting.value = false
