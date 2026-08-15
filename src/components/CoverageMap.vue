@@ -131,8 +131,8 @@ let customerPinsLayer = null
 let circlesLayer = null
 let userMarker = null
 
-const RIZAL_DEFAULT_CENTER = [14.485, 121.185]
-const RIZAL_DEFAULT_ZOOM = 12
+const RIZAL_DEFAULT_CENTER = [14.4820, 121.1950]
+const RIZAL_DEFAULT_ZOOM = 13
 
 function initMap() {
   if (!mapElementRef.value || map) return
@@ -366,10 +366,10 @@ function renderCoverageItems() {
     // Soft coverage radius
     const circleColor = isHq ? '#ee2824' : (isAvailable ? '#10b981' : '#f59e0b')
     const circle = L.circle([item.lat, item.lng], {
-      radius: isHq ? 800 : 500,
+      radius: isHq ? 450 : 300,
       color: circleColor,
       fillColor: circleColor,
-      fillOpacity: 0.12,
+      fillOpacity: 0.10,
       weight: 1
     })
     circlesLayer.addLayer(circle)
