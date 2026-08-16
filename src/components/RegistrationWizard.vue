@@ -898,12 +898,44 @@ function syncPlanFromRouteQuery() {
   }
 }
 
+// Deep-link support for the coverage map / coverage cards, which link here as
+// /register?barangay=Batingan%20(HQ)&city=Binangonan. Without this the applicant
+// lands on an empty form after telling us exactly where they live.
+function canonicalPlace(value) {
+  return String(value || '')
+    .replace(/\([^)]*\)/g, '')   // drop "(HQ)", "(Binangonan)", "(Phase 2 & 3)"
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+}
+
+function syncLocationFromRouteQuery() {
+  const queryCity = route?.query?.city
+  const queryBarangay = route?.query?.barangay
+
+  if (queryCity) {
+    const city = citiesList.value.find(c => canonicalPlace(c) === canonicalPlace(queryCity))
+    if (city) formData.value.city = city
+  }
+
+  if (queryBarangay) {
+    const target = canonicalPlace(queryBarangay)
+    // Exact canonical match first, then a prefix match so "Darangan (Lower
+    // Phase 1)" still resolves to "Darangan" in the dropdown.
+    const barangay =
+      barangaysList.value.find(b => canonicalPlace(b) === target) ||
+      barangaysList.value.find(b => canonicalPlace(b).startsWith(target) || target.startsWith(canonicalPlace(b)))
+    if (barangay) formData.value.barangay = barangay
+  }
+}
+
 onMounted(() => {
   syncPlanFromRouteQuery()
+  syncLocationFromRouteQuery()
 })
 
 watch(() => route?.query, () => {
   syncPlanFromRouteQuery()
+  syncLocationFromRouteQuery()
 }, { deep: true })
 
 watch(availablePlans, () => {

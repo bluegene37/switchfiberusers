@@ -401,8 +401,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 13,
       name: 'Darangan (Lower Phase 1)',
       municipality: 'Binangonan',
-      lat: 14.4960,
-      lng: 121.1800,
+      lat: 14.49029,
+      lng: 121.18421,
       status: 'Available Now',
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
@@ -421,9 +421,9 @@ export const useCoverageStore = defineStore('coverage', () => {
         'Mabuhay Homes'
       ],
       subNodes: [
-        { name: 'Mabuhay Homes Phase 1 Drop', lat: 14.5055, lng: 121.1970, status: 'Active Subscriber Hub' },
-        { name: 'Kasinay St. Residential Node', lat: 14.4957, lng: 121.1895, status: 'Active Subscriber Hub' },
-        { name: 'Elbote & SDK Cluster', lat: 14.4970, lng: 121.1810, status: 'Active Subscriber Hub' }
+        { name: 'Mabuhay Homes Phase 1 Drop', lat: 14.49979, lng: 121.20121, status: 'Active Subscriber Hub' },
+        { name: 'Kasinay St. Residential Node', lat: 14.48999, lng: 121.19371, status: 'Active Subscriber Hub' },
+        { name: 'Elbote & SDK Cluster', lat: 14.49129, lng: 121.18521, status: 'Active Subscriber Hub' }
       ]
     },
 
@@ -465,8 +465,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 16,
       name: 'San Carlos',
       municipality: 'Binangonan',
-      lat: 14.5000,
-      lng: 121.1780,
+      lat: 14.51453,
+      lng: 121.16677,
       status: 'Available Now',
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
@@ -474,8 +474,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '12 NAP Terminals',
       coveredAreas: ['San Carlos Heights', 'Villa San Carlos', 'Grand Monaco Casa Royale', 'Palangoy Border'],
       subNodes: [
-        { name: 'San Carlos Heights Main Node', lat: 14.5005, lng: 121.1775, status: 'Active Subscriber Hub' },
-        { name: 'Villa San Carlos Subscriber Drop', lat: 14.4995, lng: 121.1785, status: 'Active Subscriber Hub' }
+        { name: 'San Carlos Heights Main Node', lat: 14.51503, lng: 121.16627, status: 'Active Subscriber Hub' },
+        { name: 'Villa San Carlos Subscriber Drop', lat: 14.51403, lng: 121.16727, status: 'Active Subscriber Hub' }
       ]
     },
     {
@@ -532,8 +532,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 20,
       name: 'Pag-asa',
       municipality: 'Binangonan',
-      lat: 14.4660,
-      lng: 121.1920,
+      lat: 14.52124,
+      lng: 121.1589,
       status: 'Available Now',
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
@@ -541,15 +541,17 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '10 NAP Terminals',
       coveredAreas: ['Pag-asa Village', 'Commercial Center', 'San Carlos Border'],
       subNodes: [
-        { name: 'Pag-asa Village Drop', lat: 14.4665, lng: 121.1915, status: 'Active Subscriber Hub' }
+        { name: 'Pag-asa Village Drop', lat: 14.52174, lng: 121.1584, status: 'Active Subscriber Hub' }
       ]
     },
     {
       id: 21,
       name: 'Kalinawan',
       municipality: 'Binangonan',
-      lat: 14.4320,
-      lng: 121.2060,
+      // Corrected: the previous 14.4320/121.2060 sat ~650 m offshore in Laguna
+      // de Bay. Verified against the OpenStreetMap place node for Kalinawan.
+      lat: 14.42679,
+      lng: 121.20878,
       status: 'Available Now',
       speed: 'Up to 500 Mbps',
       slots: 'High Demand',
@@ -557,7 +559,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '5 NAP Terminals',
       coveredAreas: ['Kalinawan Proper', 'Lakeside Residential Village', 'Pila-Pila Access Rd'],
       subNodes: [
-        { name: 'Kalinawan Proper Node', lat: 14.4325, lng: 121.2055, status: 'Active Subscriber Hub' }
+        { name: 'Kalinawan Proper Node', lat: 14.42719, lng: 121.20828, status: 'Active Subscriber Hub' }
       ]
     },
     
@@ -568,8 +570,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 22,
       name: 'Kalayaan',
       municipality: 'Angono',
-      lat: 14.5290,
-      lng: 121.1520,
+      lat: 14.52794,
+      lng: 121.14787,
       status: 'Expansion Active',
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
@@ -577,16 +579,16 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '10 NAP Terminals',
       coveredAreas: ['Kalayaan Park', 'Doña Aurora Subd.', 'Col. Guido St.', 'Angono Hwy'],
       subNodes: [
-        { name: 'Doña Aurora Subd. Hub', lat: 14.5295, lng: 121.1515, status: 'Active Subscriber Hub' },
-        { name: 'Col. Guido Street Drop', lat: 14.5285, lng: 121.1525, status: 'Active Subscriber Hub' }
+        { name: 'Doña Aurora Subd. Hub', lat: 14.52844, lng: 121.14737, status: 'Active Subscriber Hub' },
+        { name: 'Col. Guido Street Drop', lat: 14.52744, lng: 121.14837, status: 'Active Subscriber Hub' }
       ]
     },
     {
       id: 23,
       name: 'San Isidro',
       municipality: 'Angono',
-      lat: 14.5210,
-      lng: 121.1570,
+      lat: 14.53285,
+      lng: 121.15205,
       status: 'Expansion Active',
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
@@ -594,7 +596,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '9 NAP Terminals',
       coveredAreas: ['San Isidro Proper', 'Medialdea St.', 'Manila East Highway', 'M.L. Quezon Ave'],
       subNodes: [
-        { name: 'San Isidro Central Node', lat: 14.5215, lng: 121.1565, status: 'Active Subscriber Hub' }
+        { name: 'San Isidro Central Node', lat: 14.53335, lng: 121.15155, status: 'Active Subscriber Hub' }
       ]
     },
     {
@@ -617,8 +619,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 25,
       name: 'Poblacion Ibaba',
       municipality: 'Angono',
-      lat: 14.5220,
-      lng: 121.1530,
+      lat: 14.52231,
+      lng: 121.14801,
       status: 'Expansion Active',
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
@@ -626,7 +628,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '7 NAP Terminals',
       coveredAreas: ['Poblacion Ibaba Proper', 'Town Hall Area', 'Municipal Plaza'],
       subNodes: [
-        { name: 'Poblacion Ibaba Drop', lat: 14.5225, lng: 121.1525, status: 'Active Subscriber Hub' }
+        { name: 'Poblacion Ibaba Drop', lat: 14.52281, lng: 121.14751, status: 'Active Subscriber Hub' }
       ]
     },
     {
@@ -649,8 +651,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 27,
       name: 'San Vicente',
       municipality: 'Angono',
-      lat: 14.5310,
-      lng: 121.1590,
+      lat: 14.52351,
+      lng: 121.14658,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -658,15 +660,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['San Vicente Heights', 'Sitio Mahabang Parang link'],
       subNodes: [
-        { name: 'San Vicente Expansion Node', lat: 14.5315, lng: 121.1585, status: 'Expansion Feeder Node' }
+        { name: 'San Vicente Expansion Node', lat: 14.52401, lng: 121.14608, status: 'Expansion Feeder Node' }
       ]
     },
     {
       id: 28,
       name: 'Mahabang Parang',
       municipality: 'Angono',
-      lat: 14.5380,
-      lng: 121.1680,
+      lat: 14.54813,
+      lng: 121.19008,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -674,15 +676,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '2 NAP Terminals',
       coveredAreas: ['Overlook Valley', 'Sitio Mahabang Parang Angono'],
       subNodes: [
-        { name: 'Overlook Valley Feeder', lat: 14.5385, lng: 121.1675, status: 'Expansion Feeder Node' }
+        { name: 'Overlook Valley Feeder', lat: 14.54863, lng: 121.18958, status: 'Expansion Feeder Node' }
       ]
     },
     {
       id: 29,
       name: 'Santo Niño',
       municipality: 'Angono',
-      lat: 14.5280,
-      lng: 121.1630,
+      lat: 14.52585,
+      lng: 121.15078,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -690,7 +692,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['Santo Niño Village', 'Sitio Labahan'],
       subNodes: [
-        { name: 'Santo Niño Node', lat: 14.5285, lng: 121.1625, status: 'Expansion Feeder Node' }
+        { name: 'Santo Niño Node', lat: 14.52635, lng: 121.15028, status: 'Expansion Feeder Node' }
       ]
     },
     
@@ -701,8 +703,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 30,
       name: 'Dolores',
       municipality: 'Taytay',
-      lat: 14.5650,
-      lng: 121.1350,
+      lat: 14.56934,
+      lng: 121.13541,
       status: 'Expansion Active',
       speed: 'Up to 500 Mbps',
       slots: 'Inquire for Port',
@@ -710,15 +712,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '11 NAP Terminals',
       coveredAreas: ['Club Manila East vicinity', 'Dolores Proper', 'Tikling Highway'],
       subNodes: [
-        { name: 'Tikling / CME Drop', lat: 14.5655, lng: 121.1345, status: 'Active Subscriber Hub' }
+        { name: 'Tikling / CME Drop', lat: 14.56984, lng: 121.13491, status: 'Active Subscriber Hub' }
       ]
     },
     {
       id: 31,
       name: 'San Juan',
       municipality: 'Taytay',
-      lat: 14.5710,
-      lng: 121.1290,
+      lat: 14.55856,
+      lng: 121.13603,
       status: 'Expansion Active',
       speed: 'Up to 500 Mbps',
       slots: 'Inquire for Port',
@@ -726,7 +728,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '9 NAP Terminals',
       coveredAreas: ['San Juan Commercial', 'Tiangge Area', 'Manila East Rd'],
       subNodes: [
-        { name: 'San Juan Market Node', lat: 14.5715, lng: 121.1285, status: 'Active Subscriber Hub' }
+        { name: 'San Juan Market Node', lat: 14.55906, lng: 121.13553, status: 'Active Subscriber Hub' }
       ]
     },
     {
@@ -749,8 +751,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 33,
       name: 'San Isidro',
       municipality: 'Taytay',
-      lat: 14.5760,
-      lng: 121.1380,
+      lat: 14.57665,
+      lng: 121.13318,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -758,15 +760,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['San Isidro Village', 'Antipolo Link'],
       subNodes: [
-        { name: 'San Isidro Taytay Feeder', lat: 14.5765, lng: 121.1375, status: 'Expansion Feeder Node' }
+        { name: 'San Isidro Taytay Feeder', lat: 14.57715, lng: 121.13268, status: 'Expansion Feeder Node' }
       ]
     },
     {
       id: 34,
       name: 'Santa Ana',
       municipality: 'Taytay',
-      lat: 14.5580,
-      lng: 121.1320,
+      lat: 14.56542,
+      lng: 121.1268,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -774,7 +776,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '4 NAP Terminals',
       coveredAreas: ['Santa Ana Village', 'Lupang Arenda access'],
       subNodes: [
-        { name: 'Santa Ana Drop', lat: 14.5585, lng: 121.1315, status: 'Expansion Feeder Node' }
+        { name: 'Santa Ana Drop', lat: 14.56592, lng: 121.1263, status: 'Expansion Feeder Node' }
       ]
     },
     
@@ -801,8 +803,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 36,
       name: 'Dalig',
       municipality: 'Teresa',
-      lat: 14.5570,
-      lng: 121.2030,
+      lat: 14.56797,
+      lng: 121.23101,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -810,15 +812,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '2 NAP Terminals',
       coveredAreas: ['Dalig Proper', 'Sitio Quarry'],
       subNodes: [
-        { name: 'Dalig Teresa Drop', lat: 14.5575, lng: 121.2025, status: 'Expansion Feeder Node' }
+        { name: 'Dalig Teresa Drop', lat: 14.56847, lng: 121.23051, status: 'Expansion Feeder Node' }
       ]
     },
     {
       id: 37,
       name: 'San Gabriel',
       municipality: 'Teresa',
-      lat: 14.5690,
-      lng: 121.2180,
+      lat: 14.55633,
+      lng: 121.21136,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -826,7 +828,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '2 NAP Terminals',
       coveredAreas: ['San Gabriel Village', 'Morong Boundary'],
       subNodes: [
-        { name: 'San Gabriel Node', lat: 14.5695, lng: 121.2175, status: 'Expansion Feeder Node' }
+        { name: 'San Gabriel Node', lat: 14.55683, lng: 121.21086, status: 'Expansion Feeder Node' }
       ]
     },
 
@@ -837,8 +839,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 38,
       name: 'Calahan',
       municipality: 'Cardona',
-      lat: 14.4850,
-      lng: 121.2310,
+      lat: 14.49436,
+      lng: 121.23483,
       status: 'Expansion Active',
       speed: 'Up to 500 Mbps',
       slots: 'Inquire for Port',
@@ -846,15 +848,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '6 NAP Terminals',
       coveredAreas: ['Calahan Proper', 'Cardona Highway Strip', 'Binangonan Boundary'],
       subNodes: [
-        { name: 'Calahan Highway Drop', lat: 14.4855, lng: 121.2305, status: 'Active Subscriber Hub' }
+        { name: 'Calahan Highway Drop', lat: 14.49486, lng: 121.23433, status: 'Active Subscriber Hub' }
       ]
     },
     {
       id: 39,
       name: 'Looc',
       municipality: 'Cardona',
-      lat: 14.4780,
-      lng: 121.2280,
+      lat: 14.47916,
+      lng: 121.22412,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -862,15 +864,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['Looc Coastal Strip', 'Sitio Baybay'],
       subNodes: [
-        { name: 'Looc Coastal Drop', lat: 14.4785, lng: 121.2275, status: 'Expansion Feeder Node' }
+        { name: 'Looc Coastal Drop', lat: 14.47966, lng: 121.22362, status: 'Expansion Feeder Node' }
       ]
     },
     {
       id: 40,
       name: 'Real (Poblacion)',
       municipality: 'Cardona',
-      lat: 14.4840,
-      lng: 121.2270,
+      lat: 14.48511,
+      lng: 121.23105,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -878,7 +880,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['Cardona Municipal Hall', 'Real Town Proper'],
       subNodes: [
-        { name: 'Cardona Town Proper Drop', lat: 14.4845, lng: 121.2265, status: 'Expansion Feeder Node' }
+        { name: 'Cardona Town Proper Drop', lat: 14.48561, lng: 121.23055, status: 'Expansion Feeder Node' }
       ]
     },
 
@@ -905,8 +907,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 42,
       name: 'San Pedro',
       municipality: 'Morong',
-      lat: 14.5100,
-      lng: 121.2420,
+      lat: 14.5081,
+      lng: 121.2369,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -914,7 +916,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['San Pedro Residential', 'Lakeside bypass'],
       subNodes: [
-        { name: 'San Pedro Morong Drop', lat: 14.5105, lng: 121.2415, status: 'Expansion Feeder Node' }
+        { name: 'San Pedro Morong Drop', lat: 14.5086, lng: 121.2364, status: 'Expansion Feeder Node' }
       ]
     },
 
@@ -941,8 +943,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 44,
       name: 'San Jose',
       municipality: 'Baras',
-      lat: 14.5180,
-      lng: 121.2660,
+      lat: 14.61944,
+      lng: 121.28194,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -950,7 +952,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '2 NAP Terminals',
       coveredAreas: ['Baras Town Plaza', 'San Jose St.'],
       subNodes: [
-        { name: 'San Jose Baras Node', lat: 14.5185, lng: 121.2655, status: 'Expansion Feeder Node' }
+        { name: 'San Jose Baras Node', lat: 14.61994, lng: 121.28144, status: 'Expansion Feeder Node' }
       ]
     },
 
@@ -961,8 +963,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 45,
       name: 'Plaza Aldea',
       municipality: 'Tanay',
-      lat: 14.4990,
-      lng: 121.2870,
+      lat: 14.509,
+      lng: 121.30104,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -970,7 +972,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['Plaza Aldea Proper', 'Tanay Commercial Hub'],
       subNodes: [
-        { name: 'Plaza Aldea Tanay Drop', lat: 14.4995, lng: 121.2865, status: 'Expansion Feeder Node' }
+        { name: 'Plaza Aldea Tanay Drop', lat: 14.5095, lng: 121.30054, status: 'Expansion Feeder Node' }
       ]
     },
     {
@@ -997,8 +999,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 47,
       name: 'Dela Paz',
       municipality: 'Antipolo',
-      lat: 14.5860,
-      lng: 121.1780,
+      lat: 14.58867,
+      lng: 121.17398,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -1006,7 +1008,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '4 NAP Terminals',
       coveredAreas: ['Dela Paz Proper', 'Sumulong Highway corridor', 'Antipolo Cathedral vicinity'],
       subNodes: [
-        { name: 'Dela Paz Cathedral Node', lat: 14.5865, lng: 121.1775, status: 'Expansion Feeder Node' }
+        { name: 'Dela Paz Cathedral Node', lat: 14.58917, lng: 121.17348, status: 'Expansion Feeder Node' }
       ]
     },
     {
@@ -1029,8 +1031,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 49,
       name: 'Santa Cruz',
       municipality: 'Antipolo',
-      lat: 14.5920,
-      lng: 121.1850,
+      lat: 14.61606,
+      lng: 121.16979,
       status: 'Expansion Active',
       speed: 'Up to 300 Mbps',
       slots: 'Inquire for Port',
@@ -1038,7 +1040,7 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '4 NAP Terminals',
       coveredAreas: ['Santa Cruz Proper', 'C-6 Access link', 'Residential Subdivisions'],
       subNodes: [
-        { name: 'Santa Cruz Antipolo Node', lat: 14.5925, lng: 121.1845, status: 'Expansion Feeder Node' }
+        { name: 'Santa Cruz Antipolo Node', lat: 14.61656, lng: 121.16929, status: 'Expansion Feeder Node' }
       ]
     }
   ])

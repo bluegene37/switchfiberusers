@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PlansView from '../views/PlansView.vue'
-import CoverageView from '../views/CoverageView.vue'
 
 const SITE_NAME = 'Switch Fiber'
 
@@ -38,7 +37,8 @@ const routes = [
   {
     path: '/coverage',
     name: 'Coverage',
-    component: CoverageView,
+    // Lazy: this view pulls in Leaflet and the boundary data
+    component: () => import('../views/CoverageView.vue'),
     meta: {
       title: 'Area Coverage in Rizal',
       description: 'Check whether Switch Fiber is available in your barangay across Binangonan, Angono, Taytay, Antipolo and the rest of Rizal.'
