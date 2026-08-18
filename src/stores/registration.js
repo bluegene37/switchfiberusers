@@ -6,6 +6,8 @@ export const useRegistrationStore = defineStore('registration', () => {
   const isModalOpen = ref(false)
   const isSubmitting = ref(false)
   const apiError = ref(null)
+  // Full technical detail of the last failed submit, for support/debugging
+  const lastSubmitError = ref(null)
 
   // Initial Form State Template
   const getInitialFormData = () => ({
@@ -699,7 +701,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       referrersAccountNumber: '',
       // Matches the values already present in the Applications table
       applyingFor: formData.value.applyingFor || 'Residential Fiber',
-      status: 'Pending',
+      status: 'In Progress',
       visitBy: '',
       visitWith: '',
       visitWithOther: '',
@@ -743,25 +745,63 @@ export const useRegistrationStore = defineStore('registration', () => {
       })
 
       if (!response.ok) {
-        throw new Error(`Server returned HTTP ${response.status}`)
+        // The server's body usually carries the real cause (validation errors,
+        // column overflow, etc). Read it as text so we keep it even when the
+        // response isn't JSON.
+        const body = await response.text().catch(() => '')
+        const err = new Error(`HTTP ${response.status} ${response.statusText || ''}`.trim())
+        err.httpStatus = response.status
+        err.responseBody = body
+        throw err
       }
       await response.json().catch(() => ({}))
       newApp.delivered = true
+      lastSubmitError.value = null
     } catch (err) {
       // The application is kept locally so nothing the applicant typed is lost,
       // but we must NOT report success — previously a failed POST still showed
       // a reference code and confetti while the backend never received it.
-      console.warn('Application POST failed; held locally for retry:', err)
+      const detail = {
+        at: new Date().toISOString(),
+        referenceCode: randomCode,
+        endpoint: `${API_BASE}/api/Applications`,
+        httpStatus: err.httpStatus ?? null,
+        message: err.message || String(err),
+        // A network/TLS failure surfaces as an opaque "Failed to fetch"
+        likelyCause: err.httpStatus
+          ? 'Server rejected the request — see responseBody.'
+          : 'Request never reached the server (network, CORS, or TLS certificate).',
+        responseBody: (err.responseBody || '').slice(0, 2000),
+        payloadSizeKb: Math.round(JSON.stringify(apiPayload).length / 1024)
+      }
+      lastSubmitError.value = detail
+
+      console.error(
+        '[Switch Fiber] Application submit FAILED\n' +
+        `  reference : ${detail.referenceCode}\n` +
+        `  endpoint  : ${detail.endpoint}\n` +
+        `  http      : ${detail.httpStatus ?? '(no response)'}\n` +
+        `  message   : ${detail.message}\n` +
+        `  cause     : ${detail.likelyCause}\n` +
+        `  payload   : ${detail.payloadSizeKb} KB\n` +
+        `  body      : ${detail.responseBody || '(empty)'}`
+      )
+
       newApp.delivered = false
       newApp.status = 'Not yet submitted'
       newApp.notes = 'Saved on this device only — our server did not confirm receipt. Please contact us with this reference so we can complete it.'
+      newApp.errorDetail = detail
       apiError.value = 'We could not reach our servers, so your application has not been received yet.'
     } finally {
       saveToLocalStorage()
       isSubmitting.value = false
     }
 
-    return { referenceCode: randomCode, delivered: newApp.delivered === true }
+    return {
+      referenceCode: randomCode,
+      delivered: newApp.delivered === true,
+      error: lastSubmitError.value
+    }
   }
 
   function findApplicationByCode(code) {
@@ -789,6 +829,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     barangaysList,
     referrersList,
     derivedPromo,
+    lastSubmitError,
     submittedApplications,
     resetForm,
     openModal,

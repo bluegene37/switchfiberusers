@@ -665,9 +665,36 @@
         <!-- Validation Error Alert Banner -->
         <div v-if="submissionError" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300">
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
-          <div class="space-y-1">
+          <div class="space-y-1 min-w-0 flex-1">
             <h4 class="font-bold text-sm">Application Cannot Be Submitted Yet</h4>
             <p>{{ submissionError }}</p>
+
+            <!-- Technical detail, so the cause is visible without devtools -->
+            <details v-if="lastSubmitError" class="mt-2">
+              <summary class="cursor-pointer font-bold underline underline-offset-2 select-none">
+                Show technical details
+              </summary>
+              <dl class="mt-2 space-y-1 font-mono text-[11px] font-normal dark:text-slate-300 text-slate-700">
+                <div><span class="opacity-70">time:</span> {{ lastSubmitError.at }}</div>
+                <div><span class="opacity-70">ref:</span> {{ lastSubmitError.referenceCode }}</div>
+                <div class="break-all"><span class="opacity-70">endpoint:</span> {{ lastSubmitError.endpoint }}</div>
+                <div><span class="opacity-70">http:</span> {{ lastSubmitError.httpStatus ?? 'no response' }}</div>
+                <div class="break-all"><span class="opacity-70">message:</span> {{ lastSubmitError.message }}</div>
+                <div><span class="opacity-70">cause:</span> {{ lastSubmitError.likelyCause }}</div>
+                <div><span class="opacity-70">payload:</span> {{ lastSubmitError.payloadSizeKb }} KB</div>
+                <div v-if="lastSubmitError.responseBody" class="break-all">
+                  <span class="opacity-70">body:</span> {{ lastSubmitError.responseBody }}
+                </div>
+              </dl>
+              <button
+                type="button"
+                @click="copyErrorDetail"
+                class="mt-2 btn-secondary py-1.5 px-3 text-[11px]"
+              >
+                <Copy class="w-3.5 h-3.5" />
+                <span>{{ errorCopied ? 'Copied' : 'Copy details' }}</span>
+              </button>
+            </details>
           </div>
         </div>
 
@@ -933,6 +960,18 @@ const isCompareModalOpen = ref(false)
 const isMapModalOpen = ref(false)
 const showCopyToast = ref(false)
 const submissionError = ref('')
+const errorCopied = ref(false)
+const lastSubmitError = computed(() => registrationStore.lastSubmitError)
+
+async function copyErrorDetail() {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(lastSubmitError.value, null, 2))
+    errorCopied.value = true
+    setTimeout(() => { errorCopied.value = false }, 2000)
+  } catch (e) {
+    console.warn('Clipboard unavailable:', e)
+  }
+}
 const wasDelivered = ref(true)
 
 function handleMapConfirm(data) {
