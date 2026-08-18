@@ -581,7 +581,6 @@
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">4. First Nearest Landmark Photo <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <DropzoneUploader 
             v-model="formData.firstNearestLandmark"
-            optional
             v-model:fileName="formData.firstNearestLandmarkName"
             :error="isFieldInvalid('firstNearestLandmark')"
             @change="touchField('firstNearestLandmark')"
