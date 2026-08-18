@@ -689,8 +689,8 @@ export const useRegistrationStore = defineStore('registration', () => {
       governmentValidId: formData.value.governmentValidId || '',
       secondGovernmentValidId: formData.value.secondGovernmentValidId || '',
       houseFrontPicture: formData.value.houseFrontPicture || '',
-      // Backend stores the literal string "Agreed" — not "true"/"false"
-      termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Agreed' : '',
+      // Backend stores the literal string "Yes, I Agree" if checked, or empty string if unchecked
+      termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Yes, I Agree' : '',
       firstNearestLandmark: formData.value.firstNearestLandmark || '',
       secondNearestLandmark: formData.value.secondNearestLandmark || '',
       applicablePromo: formData.value.applicablePromo || derivedPromo.value || '',

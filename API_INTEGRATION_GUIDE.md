@@ -121,7 +121,7 @@ const apiPayload = {
   governmentValidId: formData.value.governmentValidId || '',
   secondGovernmentValidId: formData.value.secondGovernmentValidId || '',
   houseFrontPicture: formData.value.houseFrontPicture || '',
-  termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'true' : 'false',
+  termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Yes, I Agree' : '',
   firstNearestLandmark: formData.value.firstNearestLandmark || '',
   secondNearestLandmark: formData.value.secondNearestLandmark || '',
   applicablePromo: formData.value.applicablePromo || 'Standard Installation',
