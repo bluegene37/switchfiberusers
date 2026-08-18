@@ -666,8 +666,20 @@
         <div v-if="submissionError" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300">
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
           <div class="space-y-1 min-w-0 flex-1">
-            <h4 class="font-bold text-sm">Application Cannot Be Submitted Yet</h4>
+            <h4 class="font-bold text-sm">
+              {{ failedReferenceCode ? 'Application NOT Submitted' : 'Application Cannot Be Submitted Yet' }}
+            </h4>
             <p>{{ submissionError }}</p>
+
+            <div v-if="failedReferenceCode" class="mt-2 space-y-1 font-normal dark:text-slate-200 text-slate-700">
+              <p v-if="friendlyCause" class="font-semibold">{{ friendlyCause }}</p>
+              <p>
+                Please try again, or call
+                <a href="tel:09154077565" class="font-bold underline">0915 407 7565</a>
+                and quote reference
+                <span class="font-mono font-bold">{{ failedReferenceCode }}</span>.
+              </p>
+            </div>
 
             <!-- Technical detail, so the cause is visible without devtools -->
             <details v-if="lastSubmitError" class="mt-2">
@@ -961,6 +973,24 @@ const isMapModalOpen = ref(false)
 const showCopyToast = ref(false)
 const submissionError = ref('')
 const errorCopied = ref(false)
+const failedReferenceCode = ref('')
+
+// Turn known backend failures into something a human can act on.
+const friendlyCause = computed(() => {
+  const e = lastSubmitError.value
+  if (!e) return ''
+  const body = e.responseBody || ''
+  if (/would be truncated|Error Number:8152/i.test(body)) {
+    return 'Your uploaded photos are too large for our system to store. ' +
+           'Try again with smaller photos, or apply without the optional uploads.'
+  }
+  if (e.httpStatus === null) {
+    return 'We could not reach our servers. Please check your connection and try again.'
+  }
+  if (e.httpStatus >= 500) return 'Our server had a problem saving your application.'
+  if (e.httpStatus === 400) return 'Some of the details were rejected by our system.'
+  return ''
+})
 const lastSubmitError = computed(() => registrationStore.lastSubmitError)
 
 async function copyErrorDetail() {
@@ -1200,20 +1230,21 @@ async function handleSubmit() {
 
   try {
     const result = await registrationStore.submitApplication()
-    submittedCode.value = result.referenceCode
     wasDelivered.value = result.delivered
 
-    // Only celebrate when the server actually confirmed receipt
     if (result.delivered) {
+      // Only the confirmed path reaches the success screen
+      submittedCode.value = result.referenceCode
       confetti({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 }
       })
     } else {
+      // Stay on the form and show the failure panel — never the success screen
+      failedReferenceCode.value = result.referenceCode
       submissionError.value =
-        "We saved your details but our server hasn't confirmed receipt yet. " +
-        'Please call 0915 407 7565 with your reference code so we can finish your application.'
+        'Your application was NOT submitted. Nothing has been received by our team yet.'
     }
   } catch (err) {
     console.error('Submission failed:', err)
