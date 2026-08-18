@@ -189,6 +189,50 @@
       </div>
     </div>
 
+    <!-- Modem Warranty & Replacement Policy -->
+    <div class="max-w-6xl mx-auto space-y-5">
+      <div class="text-center space-y-2">
+        <h2 class="text-2xl font-extrabold font-heading dark:text-white text-slate-900">
+          Modem Warranty &amp; Replacement Policy
+        </h2>
+        <p class="text-xs dark:text-slate-400 text-slate-600 max-w-2xl mx-auto">
+          What is covered free of charge and what is chargeable if your Switch Fiber modem needs replacing.
+        </p>
+      </div>
+
+      <div class="glass-card rounded-3xl border dark:border-slate-800 border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <caption class="sr-only">Modem replacement conditions and their corresponding terms</caption>
+            <thead>
+              <tr class="border-b dark:border-slate-800 border-slate-200 dark:bg-slate-900/60 bg-slate-50">
+                <th scope="col" class="py-3 px-4 font-bold dark:text-white text-slate-900 w-1/2">Condition</th>
+                <th scope="col" class="py-3 px-4 font-bold dark:text-white text-slate-900">Terms</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y dark:divide-slate-800/70 divide-slate-200 dark:text-slate-300 text-slate-600 align-top">
+              <tr v-for="row in warrantyPolicy" :key="row.condition">
+                <th scope="row" class="py-3 px-4 text-left font-semibold dark:text-slate-200 text-slate-800">
+                  {{ row.condition }}
+                  <ul v-if="row.examples" class="mt-2 space-y-1 font-normal list-[lower-alpha] list-inside dark:text-slate-400 text-slate-500">
+                    <li v-for="ex in row.examples" :key="ex">{{ ex }}</li>
+                  </ul>
+                </th>
+                <td class="py-3 px-4">
+                  <p v-for="(line, i) in row.terms" :key="i" :class="i > 0 ? 'mt-2' : ''">{{ line }}</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="text-[11px] dark:text-slate-500 text-slate-500 text-center">
+        Replacement requests must be submitted through our customer support at
+        <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a>.
+      </p>
+    </div>
+
     <!-- Official Customer Care & Walk-in Office Details -->
     <div class="glass-panel p-8 sm:p-12 rounded-3xl border border-[#ee2824]/30 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
       <div class="space-y-4">
@@ -236,4 +280,52 @@
 
 <script setup>
 import { HelpCircle, Globe, Key, Wifi, Info, FileText, CheckCircle2, AlertCircle, PhoneCall } from 'lucide-vue-next'
+
+// Transcribed from the official Switch Fiber modem warranty policy table.
+const warrantyPolicy = [
+  {
+    condition: 'Manufacturing defect from the modem',
+    terms: ['Free replacement']
+  },
+  {
+    condition: 'Damage due to misuse, liquid, fire, etc.',
+    terms: ['Paid replacement by the client at standard market cost']
+  },
+  {
+    condition: 'Fortuitous Events (Force Majeure) are defined as acts, events, or occurrences beyond the reasonable control of the Company, including but not limited to:',
+    examples: [
+      'Natural disasters (earthquakes, floods, hurricanes, etc.)',
+      'Fire, explosions, or severe weather conditions',
+      'War, acts of terrorism, civil unrest, or military actions',
+      'Epidemics, pandemics, or government-imposed quarantines',
+      'Power failures, cyberattacks, or infrastructure disruptions',
+      'Strikes, labor disputes, or disruptions in transportation or supply chains'
+    ],
+    terms: [
+      'Paid replacement by the client at standard market cost',
+      'Any warranty on equipment may be voided in cases of damage caused by force majeure events.',
+      'Switch will not be responsible for losses, including data loss, arising from hardware failure due to force majeure.'
+    ]
+  },
+  {
+    condition: 'Out-of-warranty issue',
+    terms: ['Paid replacement by the client at standard market cost']
+  },
+  {
+    condition: 'Theft or loss',
+    terms: [
+      'Customer must report to Switch Fiber',
+      'Full device cost payable for replacement.',
+      'Replacement requests must be submitted through our customer support.'
+    ]
+  },
+  {
+    condition: 'Damaged by external factors (weather, pests, power surge)',
+    terms: ['Paid replacement by the client at standard market cost']
+  },
+  {
+    condition: 'User negligence (e.g., cutting wires, improper storage)',
+    terms: ['Paid replacement by the client at standard market cost']
+  }
+]
 </script>

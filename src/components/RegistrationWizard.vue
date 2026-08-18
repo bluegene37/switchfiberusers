@@ -199,15 +199,15 @@
           </p>
         </div>
 
-        <!-- Referred By -->
+        <!-- Referred By — same agent list as the official application form -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Referred By (Sales Agent / Friend Name)</label>
-          <input 
-            v-model="formData.referredBy" 
-            type="text" 
-            placeholder="e.g. Maria Santos / Agent ID (Optional)" 
-            class="input-field" 
-          />
+          <label for="referred-by" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
+            Referred By (Sales Agent)
+          </label>
+          <select id="referred-by" v-model="formData.referredBy" class="input-field">
+            <option value="">Choose</option>
+            <option v-for="name in referrersList" :key="name" :value="name">{{ name }}</option>
+          </select>
         </div>
       </div>
     </div>
@@ -500,8 +500,16 @@
           </div>
         </div>
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Applicable Promo</label>
-          <input v-model="formData.applicablePromo" type="text" placeholder="e.g. Free Standard Installation" class="input-field" />
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
+            Applicable Promo
+          </label>
+          <div class="input-field flex items-center gap-2 cursor-default dark:!bg-slate-900/60 !bg-slate-100 dark:!text-slate-200 !text-slate-700">
+            <Gift class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span class="font-semibold truncate">{{ formData.applicablePromo || derivedPromo }}</span>
+          </div>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500 mt-1">
+            Included automatically with your selected plan.
+          </p>
         </div>
       </div>
     </div>
@@ -535,12 +543,12 @@
 
         <!-- 2. 1st Government Valid ID -->
         <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('governmentValidId')">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">2. Primary Government ID <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <select v-model="formData.primaryGovtIdType" class="text-xs py-1 px-2 rounded-lg dark:bg-slate-800 bg-slate-100 border dark:border-slate-700 border-slate-300 font-semibold text-[#ee2824] dark:text-[#ff6b67]">
-              <option v-for="idType in govtIdTypes" :key="idType" :value="idType">{{ idType }}</option>
-            </select>
-          </div>
+          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
+            2. Primary Government ID <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span>
+          </label>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
+            Any valid government-issued ID. Make sure the photo is clear — not blurry and not cropped.
+          </p>
           <DropzoneUploader 
             v-model="formData.governmentValidId" 
             v-model:fileName="formData.governmentValidIdName"
@@ -554,15 +562,15 @@
 
         <!-- 3. 2nd Government Valid ID -->
         <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">3. 2nd Government ID (Optional)</label>
-            <select v-model="formData.secondaryGovtIdType" class="text-xs py-1 px-2 rounded-lg dark:bg-slate-800 bg-slate-100 border dark:border-slate-700 border-slate-300 font-semibold text-slate-400">
-              <option value="">Select ID Type</option>
-              <option v-for="idType in govtIdTypes" :key="idType" :value="idType">{{ idType }}</option>
-            </select>
-          </div>
+          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
+            3. 2nd Government ID (Optional)
+          </label>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
+            Optional second ID if you have one handy.
+          </p>
           <DropzoneUploader 
-            v-model="formData.secondGovernmentValidId" 
+            v-model="formData.secondGovernmentValidId"
+            optional
             v-model:fileName="formData.secondGovernmentValidIdName"
             @change="touchField('secondGovernmentValidId')"
           />
@@ -572,7 +580,8 @@
         <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('firstNearestLandmark')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">4. First Nearest Landmark Photo <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <DropzoneUploader 
-            v-model="formData.firstNearestLandmark" 
+            v-model="formData.firstNearestLandmark"
+            optional
             v-model:fileName="formData.firstNearestLandmarkName"
             :error="isFieldInvalid('firstNearestLandmark')"
             @change="touchField('firstNearestLandmark')"
@@ -586,7 +595,8 @@
         <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">5. Second Nearest Landmark Photo</label>
           <DropzoneUploader 
-            v-model="formData.secondNearestLandmark" 
+            v-model="formData.secondNearestLandmark"
+            optional
             v-model:fileName="formData.secondNearestLandmarkName"
             @change="touchField('secondNearestLandmark')"
           />
@@ -643,12 +653,11 @@
 
             <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5 flex flex-col justify-between">
               <div>
-                <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px] block mb-1">Primary Document ID</span>
-                <span class="font-bold dark:text-slate-300 text-slate-800 text-xs block">{{ formData.primaryGovtIdType }}</span>
+                <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px] block mb-1">Government ID</span>
                 <span class="text-[11px] dark:text-slate-400 text-slate-500 block truncate">{{ formData.governmentValidIdName || 'Photo Attached' }}</span>
               </div>
-              <div v-if="formData.secondaryGovtIdType" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
-                2nd ID: {{ formData.secondaryGovtIdType }} ({{ formData.secondGovernmentValidIdName || 'Attached' }})
+              <div v-if="formData.secondGovernmentValidId" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
+                2nd ID: {{ formData.secondGovernmentValidIdName || 'Attached' }}
               </div>
             </div>
           </div>
@@ -661,27 +670,6 @@
             <h4 class="font-bold text-sm">Application Cannot Be Submitted Yet</h4>
             <p>{{ submissionError }}</p>
           </div>
-        </div>
-
-        <!-- Digital Signature Pad -->
-        <div 
-          class="p-4 rounded-2xl border space-y-2 transition-all"
-          :class="[
-            touched['digitalSignature'] && (!formData.digitalSignature || formData.digitalSignature.trim().length === 0)
-              ? 'border-[#ee2824] bg-rose-500/10 ring-2 ring-[#ee2824]/20'
-              : 'dark:border-slate-800 border-slate-200'
-          ]"
-        >
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase">Applicant Digital Signature <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <SignaturePad 
-            v-model="formData.digitalSignature" 
-            :applicantName="`${formData.firstName} ${formData.lastName}`"
-            @change="touchField('digitalSignature'); submissionError = ''"
-          />
-          <p v-if="touched['digitalSignature'] && (!formData.digitalSignature || formData.digitalSignature.trim().length === 0)" class="text-[11px] text-[#ee2824] font-medium flex items-center gap-1">
-            <AlertCircle class="w-3.5 h-3.5" />
-            <span>Digital signature is required before submitting.</span>
-          </p>
         </div>
 
         <!-- Terms Agreement Checkbox & Read Terms Modal Link -->
@@ -836,12 +824,10 @@ import confetti from 'canvas-confetti'
 import { 
   Sparkles, Check, User, MapPin, Wifi, FileText, 
   UploadCloud, CheckCircle2, AlertCircle, Search, ArrowLeft, ArrowRight, 
-  RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap 
-} from 'lucide-vue-next'
+  RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap, Gift} from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 import DropzoneUploader from './DropzoneUploader.vue'
 import TermsModal from './TermsModal.vue'
-import SignaturePad from './SignaturePad.vue'
 import PlanCompareModal from './PlanCompareModal.vue'
 import MapLocationPicker from './MapLocationPicker.vue'
 
@@ -853,7 +839,8 @@ const availablePlans = computed(() => registrationStore.availablePlans)
 const regionsList = computed(() => registrationStore.regionsList)
 const citiesList = computed(() => registrationStore.citiesList)
 const barangaysList = computed(() => registrationStore.barangaysList)
-const govtIdTypes = computed(() => registrationStore.govtIdTypes)
+const referrersList = computed(() => registrationStore.referrersList)
+const derivedPromo = computed(() => registrationStore.derivedPromo)
 const isSubmitting = computed(() => registrationStore.isSubmitting)
 const isLoadingPlans = computed(() => registrationStore.isLoadingPlans)
 const plansError = computed(() => registrationStore.plansError)
@@ -947,6 +934,7 @@ const isCompareModalOpen = ref(false)
 const isMapModalOpen = ref(false)
 const showCopyToast = ref(false)
 const submissionError = ref('')
+const wasDelivered = ref(true)
 
 function handleMapConfirm(data) {
   if (data.barangay) {
@@ -1163,7 +1151,6 @@ function printReceipt() {
 
 async function handleSubmit() {
   touchField('termsAndConditionsAgreement')
-  touchField('digitalSignature')
 
   // Check terms agreement
   if (!formData.value.termsAndConditionsAgreement) {
@@ -1174,14 +1161,22 @@ async function handleSubmit() {
   submissionError.value = ''
 
   try {
-    const code = await registrationStore.submitApplication()
-    submittedCode.value = code
+    const result = await registrationStore.submitApplication()
+    submittedCode.value = result.referenceCode
+    wasDelivered.value = result.delivered
 
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 }
-    })
+    // Only celebrate when the server actually confirmed receipt
+    if (result.delivered) {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      })
+    } else {
+      submissionError.value =
+        "We saved your details but our server hasn't confirmed receipt yet. " +
+        'Please call 0915 407 7565 with your reference code so we can finish your application.'
+    }
   } catch (err) {
     console.error('Submission failed:', err)
     submissionError.value = 'Failed to submit application. Please check your network connection.'

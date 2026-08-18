@@ -529,6 +529,22 @@ export const useCoverageStore = defineStore('coverage', () => {
       ]
     },
     {
+      // Listed on the official Switch Fiber area-coverage material but missing
+      // from this list. Coordinates verified against the OpenStreetMap place node.
+      id: 50,
+      name: 'Bilibiran',
+      municipality: 'Binangonan',
+      lat: 14.498,
+      lng: 121.17516,
+      status: 'Available Now',
+      speed: 'Up to 500 Mbps',
+      slots: 'Ready for Dispatch',
+      connectedHomes: 'Connected Subscribers',
+      activeNodes: 'Fiber Terminal Active',
+      coveredAreas: ['Bilibiran Proper', 'Manila East Road corridor'],
+      subNodes: []
+    },
+    {
       id: 20,
       name: 'Pag-asa',
       municipality: 'Binangonan',

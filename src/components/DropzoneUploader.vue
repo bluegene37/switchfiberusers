@@ -18,8 +18,10 @@
           : fileName 
             ? 'border-emerald-500/60 dark:border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-500/10' 
             : error 
-              ? 'border-[#ee2824] bg-[#ee2824]/5 dark:border-[#ee2824]/60' 
-              : 'dark:border-slate-700 border-slate-300 dark:bg-slate-900/60 bg-slate-50 hover:border-[#ee2824]/60 dark:hover:border-[#ee2824]/60 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              ? 'border-[#ee2824] bg-[#ee2824]/5 dark:border-[#ee2824]/60'
+              : optional
+                ? 'dark:border-slate-700 border-slate-300 dark:bg-slate-900/60 bg-slate-50 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                : 'dark:border-slate-700 border-slate-300 dark:bg-slate-900/60 bg-slate-50 hover:border-[#ee2824]/60 dark:hover:border-[#ee2824]/60 hover:bg-slate-100 dark:hover:bg-slate-800/60'
       ]"
       @dragover.prevent="onDragOver"
       @dragleave.prevent="onDragLeave"
@@ -84,7 +86,15 @@
       <!-- State 2: Default Empty / Dragging Dropzone prompt -->
       <div v-else class="space-y-2 py-2">
         <div class="flex items-center justify-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-[#ee2824]/10 dark:bg-[#ee2824]/20 text-[#ee2824] dark:text-[#ff6b67] flex items-center justify-center transition-transform duration-200" :class="isDragging ? 'scale-125' : ''">
+          <div
+            class="w-10 h-10 rounded-full flex items-center justify-center transition-transform duration-200"
+            :class="[
+              isDragging ? 'scale-125' : '',
+              optional
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                : 'bg-[#ee2824]/10 dark:bg-[#ee2824]/20 text-[#ee2824] dark:text-[#ff6b67]'
+            ]"
+          >
             <UploadCloud class="w-5 h-5" />
           </div>
           <button 
@@ -98,7 +108,12 @@
         </div>
         <div>
           <p class="text-xs font-bold dark:text-slate-200 text-slate-800">
-            <span class="text-[#ee2824] dark:text-[#ff6b67] underline underline-offset-2">Click to upload</span> or drag and drop
+            <span
+              class="underline underline-offset-2"
+              :class="optional
+                ? 'text-slate-600 dark:text-slate-300'
+                : 'text-[#ee2824] dark:text-[#ff6b67]'"
+            >Click to upload</span> or drag and drop
           </p>
           <p class="text-[11px] dark:text-slate-400 text-slate-500 mt-0.5">
             JPG, PNG, WEBP or PDF (MAX 10MB)
@@ -137,7 +152,11 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   fileName: { type: String, default: '' },
   accept: { type: String, default: 'image/*,.pdf' },
-  error: { type: Boolean, default: false }
+  error: { type: Boolean, default: false },
+  // Optional uploads render in neutral slate. The brand red reads as
+  // "required" (or worse, as an error), which is misleading on a field
+  // the applicant can safely skip.
+  optional: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue', 'update:fileName', 'change'])

@@ -19,7 +19,9 @@ export const useRegistrationStore = defineStore('registration', () => {
     referredBy: '',
     
     // Address Details
-    region: 'Region IV-A (CALABARZON)',
+    // Backend records region as "Rizal"
+    region: 'Rizal',
+    applyingFor: 'Residential Fiber',
     city: 'Binangonan',
     barangay: '',
     installationAddress: '',
@@ -29,17 +31,15 @@ export const useRegistrationStore = defineStore('registration', () => {
     desiredPlan: '',
     selectedPlanId: '',
     selectedPlanPrice: 0,
-    applicablePromo: 'Standard Free Installation',
+    applicablePromo: '',   // derived from the selected plan
 
     // Document File Strings & ID Types
     houseFrontPicture: '',
     houseFrontName: '',
     governmentValidId: '',
     governmentValidIdName: '',
-    primaryGovtIdType: 'National ID (Philsys)',
     secondGovernmentValidId: '',
     secondGovernmentValidIdName: '',
-    secondaryGovtIdType: '',
     firstNearestLandmark: '',
     firstNearestLandmarkName: '',
     secondNearestLandmark: '',
@@ -48,26 +48,49 @@ export const useRegistrationStore = defineStore('registration', () => {
     // Option Features
     expressInstallation: false,
 
-    // Agreement & Signature
+    // Agreement
     termsAndConditionsAgreement: false,
-    signatureName: '',
-    digitalSignature: '',
     applicationReferenceCode: '',
     submissionDate: ''
   })
 
   // Registration Form State with localStorage draft auto-recovery
+  // Bump when the form's field set or default values change, so a returning
+  // visitor's saved draft can't keep posting values the backend no longer uses
+  // (e.g. the old region default of "Region IV-A (CALABARZON)").
+  const DRAFT_VERSION = 2
+
   const getSavedDraft = () => {
     try {
       const saved = localStorage.getItem('switch_registration_draft')
-      return saved ? JSON.parse(saved) : null
+      if (!saved) return null
+      const parsed = JSON.parse(saved)
+      if (parsed?.__v !== DRAFT_VERSION) {
+        localStorage.removeItem('switch_registration_draft')
+        return null
+      }
+      delete parsed.__v
+      return parsed
     } catch (e) {
       return null
     }
   }
 
   const initialDraft = getSavedDraft()
-  const formData = ref(initialDraft ? { ...getInitialFormData(), ...initialDraft } : getInitialFormData())
+
+  // Only restore keys the current form actually defines. Without this, fields
+  // removed from the form (e.g. the government-ID type pickers) would live on
+  // in returning visitors' drafts indefinitely.
+  function mergeDraft(draft) {
+    const base = getInitialFormData()
+    if (!draft) return base
+    for (const key of Object.keys(base)) {
+      if (draft[key] !== undefined) base[key] = draft[key]
+    }
+    return base
+  }
+
+  const formData = ref(mergeDraft(initialDraft))
 
   // Automatically save form history as user types
   watch(formData, (newVal) => {
@@ -79,7 +102,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       draft.secondGovernmentValidId = ''
       draft.firstNearestLandmark = ''
       draft.secondNearestLandmark = ''
-      draft.digitalSignature = ''
+      draft.__v = DRAFT_VERSION
       localStorage.setItem('switch_registration_draft', JSON.stringify(draft))
     } catch (e) {
       console.warn('Failed to save registration draft history:', e)
@@ -355,11 +378,58 @@ export const useRegistrationStore = defineStore('registration', () => {
     }) || null
   }
 
+  // ── Applicable promo ──────────────────────────────────────────────────────
+  // The promo is an entitlement tied to the chosen plan, not something the
+  // applicant picks. Every value below already exists in the Applications
+  // table, so nothing new is introduced into the ops vocabulary.
+  //
+  // Time-limited campaigns are matched first and are date-gated: an expired
+  // campaign can never attach itself to a new application. Add campaigns here
+  // with their real published windows.
+  const promoCampaigns = [
+    // Example of the shape — inactive, kept as the template for the next one.
+    // {
+    //   promo: 'Free 1st Month Subscription',
+    //   startsOn: '2026-09-01',
+    //   endsOn: '2026-12-31',
+    //   appliesToPlanTitles: ['SwitchNet Plan', 'SwitchSpeed Plan', 'SwitchUltra Plan']
+    // }
+  ]
+
+  // Baseline entitlement, derived from what the plan itself already includes.
+  // Mirrors the inclusions shown on the plan cards so the applicant sees the
+  // same promise on the form that they saw on the pricing page.
+  function baselinePromoForPlan(plan) {
+    if (!plan) return 'Free Installation Promo'
+    if (/node/i.test(plan.mesh || '')) return 'Free Mesh Wi-Fi Router'
+    if (/wi-?fi\s*6/i.test(plan.router || '')) return 'Free Dual-Band Wi-Fi 6 Router'
+    return 'Free Installation Promo'
+  }
+
+  function isCampaignActive(c, now = Date.now()) {
+    const start = new Date(`${c.startsOn}T00:00:00`).valueOf()
+    const end = new Date(`${c.endsOn}T23:59:59`).valueOf()
+    return Number.isFinite(start) && Number.isFinite(end) && now >= start && now <= end
+  }
+
+  function derivePromoForPlan(plan) {
+    if (!plan) return 'Free Installation Promo'
+    const campaign = promoCampaigns.find(c =>
+      isCampaignActive(c) &&
+      (!c.appliesToPlanTitles || c.appliesToPlanTitles.includes(plan.title))
+    )
+    return campaign ? campaign.promo : baselinePromoForPlan(plan)
+  }
+
+  // Read-only in the UI; recomputed whenever the plan changes.
+  const derivedPromo = computed(() => derivePromoForPlan(findPlan(formData.value.selectedPlanId)))
+
   function applyPlanToForm(plan) {
     if (!plan) return
     formData.value.selectedPlanId = String(plan.id)
     formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
     formData.value.selectedPlanPrice = plan.price
+    formData.value.applicablePromo = derivePromoForPlan(plan)
   }
 
   // Keeps the form's plan in step with the live API list.
@@ -419,27 +489,63 @@ export const useRegistrationStore = defineStore('registration', () => {
     'Tayuman'
   ]
 
-  const govtIdTypes = [
-    'National ID (Philsys)',
-    'LTO Driver’s License',
-    'Passport',
-    'Unified Multi Purpose (UMID)',
-    'SSS ID',
-    'Philhealth ID',
-    'BIR TIN ID',
-    'PRC ID',
-    'Postal ID (2019 onwards)',
-    'Senior Citizen ID'
+  // Referrer list transcribed from the official Switch Fiber application form.
+  // 'None' is the default; the rest are active sales agents / partners.
+  const referrersList = [
+    "None",
+    "SWITCH GAISANO",
+    "PRECIOUS GAISANO",
+    "Norwina A. Armas",
+    "Mariane Talento Puyot",
+    "Nicolas Marinay Occidental Jr.",
+    "Paula Marie T. Fermanis",
+    "Emylinda B. Biasca",
+    "Precious Ann Vergonio",
+    "Maria Nympha Vergonio",
+    "Jonalyn Perez Agsalon",
+    "Menandro B. Albao",
+    "Vilma S. Divinagracia",
+    "Anthony Francis N. Samar",
+    "Keanu C. Nido",
+    "Severino L. Cervo",
+    "Bernadette  Delos Santos",
+    "Gladiola Veron Lico",
+    "Shania Manalo",
+    "Ria Gielen Paclibare",
+    "Cheryll Briones",
+    "Vea Vianca Delos Reyes",
+    "John Rainier Cernero",
+    "Mark Paner",
+    "Heatherlynn Hernandez",
+    "Gibson Lizardo",
+    "Elmer Tuyor Jr.",
+    "Jordan Cerrero",
+    "Carina Añonuevo",
+    "Lealyn Bayos",
+    "Lhen Ambao",
+    "Jennylyn Calle",
+    "Dan Onia",
+    "Christopher George Cajes",
+    "Baltazar Masucol",
+    "Jennelyn Rufino",
+    "Ofelia Ceñidoza",
+    "Rainier Ubana",
+    "Jonalyn Delima",
+    "Arvin Mateo",
+    "Manuel Pangilinan Jr.",
+    "Regina Casano",
+    "Peter Dominic Ojeda",
+    "Reina Jane Ferido",
+    "Sygel Landicho",
+    "Jennyzell Ceñidoza"
   ]
+
 
   // Safe LocalStorage Persist Helper to prevent QuotaExceededError with base64 data
   function saveToLocalStorage() {
     try {
       const sanitizedApps = submittedApplications.value.map(app => {
         const copy = { ...app }
-        if (copy.digitalSignature && copy.digitalSignature.length > 200) {
-          copy.digitalSignature = '[Digital Signature Captured]'
-        }
         if (copy.payload) {
           const payloadCopy = { ...copy.payload }
           if (payloadCopy.houseFrontPicture?.length > 200) payloadCopy.houseFrontPicture = '[Uploaded Photo]'
@@ -574,26 +680,30 @@ export const useRegistrationStore = defineStore('registration', () => {
       secondaryMobileNumber: formData.value.secondaryMobileNumber || '',
       installationAddress: formData.value.installationAddress,
       landmark: formData.value.landmark || '',
-      desiredPlan: formData.value.desiredPlan,
+      // Backend stores the bare plan name ("SwitchConnect Plan"), not the
+      // display string with the price appended.
+      desiredPlan: (formData.value.desiredPlan || '').replace(/\s*\(₱[^)]*\)\s*$/, '').trim(),
       proofOfBilling: '',
       governmentValidId: formData.value.governmentValidId || '',
       secondGovernmentValidId: formData.value.secondGovernmentValidId || '',
       houseFrontPicture: formData.value.houseFrontPicture || '',
-      termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'true' : 'false',
+      // Backend stores the literal string "Agreed" — not "true"/"false"
+      termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Agreed' : '',
       firstNearestLandmark: formData.value.firstNearestLandmark || '',
       secondNearestLandmark: formData.value.secondNearestLandmark || '',
-      applicablePromo: formData.value.applicablePromo || 'Standard Installation',
+      applicablePromo: formData.value.applicablePromo || derivedPromo.value || '',
       documentPicture: '',
       barangay1: '',
       barangay2: '',
       pictureofstatmentbillingfromotherprovider: '',
       referrersAccountNumber: '',
-      applyingFor: 'New Fiber Connection',
+      // Matches the values already present in the Applications table
+      applyingFor: formData.value.applyingFor || 'Residential Fiber',
       status: 'Pending',
       visitBy: '',
       visitWith: '',
       visitWithOther: '',
-      remarks: `Online Application ${randomCode} | ID: ${formData.value.primaryGovtIdType}${formData.value.digitalSignature ? ' | Signed' : ''}`,
+      remarks: `Online Application ${randomCode}`,
       modifiedBy: '0',
       modifiedDate: '',
       userEmail: formData.value.emailAddress
@@ -609,9 +719,6 @@ export const useRegistrationStore = defineStore('registration', () => {
       city: formData.value.city,
       barangay: formData.value.barangay,
       streetAddress: formData.value.installationAddress,
-      primaryGovtIdType: formData.value.primaryGovtIdType,
-      secondaryGovtIdType: formData.value.secondaryGovtIdType,
-      digitalSignature: formData.value.digitalSignature,
       expressInstallation: formData.value.expressInstallation,
       date: new Date().toISOString().split('T')[0],
       status: 'Application Submitted',
@@ -636,19 +743,25 @@ export const useRegistrationStore = defineStore('registration', () => {
       })
 
       if (!response.ok) {
-        console.warn('API returned non-OK status:', response.status)
-      } else {
-        const result = await response.json().catch(() => ({}))
-        console.log('API application submitted successfully:', result)
+        throw new Error(`Server returned HTTP ${response.status}`)
       }
+      await response.json().catch(() => ({}))
+      newApp.delivered = true
     } catch (err) {
-      console.warn('Backend API request encountered network error, saved locally:', err)
-      // Smooth fallback so client registration always completes
+      // The application is kept locally so nothing the applicant typed is lost,
+      // but we must NOT report success — previously a failed POST still showed
+      // a reference code and confetti while the backend never received it.
+      console.warn('Application POST failed; held locally for retry:', err)
+      newApp.delivered = false
+      newApp.status = 'Not yet submitted'
+      newApp.notes = 'Saved on this device only — our server did not confirm receipt. Please contact us with this reference so we can complete it.'
+      apiError.value = 'We could not reach our servers, so your application has not been received yet.'
     } finally {
+      saveToLocalStorage()
       isSubmitting.value = false
     }
 
-    return randomCode
+    return { referenceCode: randomCode, delivered: newApp.delivered === true }
   }
 
   function findApplicationByCode(code) {
@@ -674,7 +787,8 @@ export const useRegistrationStore = defineStore('registration', () => {
     regionsList,
     citiesList,
     barangaysList,
-    govtIdTypes,
+    referrersList,
+    derivedPromo,
     submittedApplications,
     resetForm,
     openModal,
