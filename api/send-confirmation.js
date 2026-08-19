@@ -203,11 +203,14 @@ export async function sendConfirmationEmail(data) {
     })
   })
 
-  const resData = await response.json()
+  const resData = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(resData?.message || 'Failed to dispatch email via Resend API')
+    const errorMsg = resData?.message || `Resend API Error (HTTP ${response.status})`
+    console.error('[Resend Dispatch Error]:', errorMsg, resData)
+    throw new Error(errorMsg)
   }
 
+  console.log(`[Resend Service] Live email successfully dispatched to: ${recipientEmail} (ID: ${resData?.id})`)
   return {
     success: true,
     id: resData?.id,

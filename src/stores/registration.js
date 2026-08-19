@@ -846,8 +846,19 @@ export const useRegistrationStore = defineStore('registration', () => {
               firstNearestLandmark: formData.value.firstNearestLandmark,
               originUrl
             })
-          }).catch(mailErr => {
-            console.warn('[Confirmation Email Notice]:', mailErr)
+          })
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) {
+              console.warn('[Confirmation Email Notice]:', data.error || data)
+            } else if (data.simulated) {
+              console.info('[Confirmation Email Notice]: Simulated email (No RESEND_API_KEY set). Add RESEND_API_KEY to send real emails.')
+            } else {
+              console.info('[Confirmation Email Success]: Email delivered to', data.recipientEmail, '(ID:', data.id, ')')
+            }
+          })
+          .catch(mailErr => {
+            console.warn('[Confirmation Email Network Notice]:', mailErr)
           })
         } catch (e) {
           console.warn('[Confirmation Email Dispatch]:', e)
