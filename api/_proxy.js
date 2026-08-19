@@ -80,7 +80,31 @@ export async function proxyRequest(req, res, targetPath = null) {
 
       // Send request body if provided (for POST / PUT / PATCH)
       if (req.body) {
-        const payload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body)
+        let bodyObj = typeof req.body === 'object' && req.body !== null ? { ...req.body } : null
+        if (!bodyObj && typeof req.body === 'string') {
+          try {
+            bodyObj = JSON.parse(req.body)
+          } catch (e) {}
+        }
+
+        // If posting an application and not explicitly testing base64, ensure files are safe from SQL truncation
+        if (bodyObj && cleanPath.includes('/api/Applications') && req.headers['x-switch-payload-mode'] !== 'base64') {
+          const fileFields = [
+            ['houseFrontPicture', 'house_front_photo.jpg'],
+            ['governmentValidId', 'government_valid_id.jpg'],
+            ['secondGovernmentValidId', 'second_valid_id.jpg'],
+            ['firstNearestLandmark', 'first_nearest_landmark.jpg'],
+            ['secondNearestLandmark', 'second_nearest_landmark.jpg']
+          ]
+          for (const [field, fallback] of fileFields) {
+            if (bodyObj[field] && typeof bodyObj[field] === 'string' && (bodyObj[field].startsWith('data:') || bodyObj[field].length > 150)) {
+              bodyObj[field] = fallback
+            }
+          }
+        }
+
+        const payload = bodyObj ? JSON.stringify(bodyObj) : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body))
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(payload))
         proxyReq.write(payload)
       } else if (req.readable) {
         req.pipe(proxyReq)

@@ -57,6 +57,59 @@
       </div>
     </div>
 
+    <!-- Developer Testing Tools (For QA & Internal Testing Only) -->
+    <div v-if="!submittedCode" class="mb-8 p-3 sm:p-4 rounded-2xl border border-amber-500/40 dark:border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/5 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Prominent Testing Notice Tag -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px] uppercase tracking-wider border border-amber-500/30">
+          <FlaskConical class="w-3.5 h-3.5" />
+          <span>Developer Testing Tool</span>
+        </span>
+
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-slate-700 dark:text-slate-300">Format:</span>
+          <div class="inline-flex rounded-xl p-0.5 bg-slate-200/80 dark:bg-slate-800 border border-slate-300/80 dark:border-slate-700">
+            <button 
+              type="button" 
+              @click="registrationStore.setUploadPayloadMode('filename')"
+              class="px-2.5 py-1 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              :class="uploadPayloadMode === 'filename' 
+                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm font-bold' 
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+              title="File Names mode sends safe filenames to avoid SQL column limits"
+            >
+              <FileCheck class="w-3.5 h-3.5" />
+              <span>File Names (Safe)</span>
+            </button>
+            <button 
+              type="button" 
+              @click="registrationStore.setUploadPayloadMode('base64')"
+              class="px-2.5 py-1 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              :class="uploadPayloadMode === 'base64' 
+                ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm font-bold' 
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+              title="Base64 mode sends raw data strings for testing backend VARCHAR/NVARCHAR capacity"
+            >
+              <Binary class="w-3.5 h-3.5" />
+              <span>Raw Base64 (Testing)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          @click="registrationStore.fillSampleApplication()"
+          type="button"
+          class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/40 hover:border-amber-500 text-slate-800 dark:text-slate-200 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all font-semibold flex items-center gap-1.5 text-xs shadow-sm cursor-pointer"
+          title="Auto-fill all 5 steps with realistic test data (Developer & QA testing only)"
+        >
+          <Zap class="w-3.5 h-3.5 text-amber-500" />
+          <span>1-Click Test Fill</span>
+        </button>
+      </div>
+    </div>
+
     <!-- STEP 1: Personal Information -->
     <div v-if="currentStep === 1 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
@@ -862,7 +915,8 @@ import confetti from 'canvas-confetti'
 import { 
   Sparkles, Check, User, MapPin, Wifi, FileText, 
   UploadCloud, CheckCircle2, AlertCircle, Search, ArrowLeft, ArrowRight, 
-  RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap, Gift} from 'lucide-vue-next'
+  RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap, Gift,
+  FileCheck, Binary, FlaskConical } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 import DropzoneUploader from './DropzoneUploader.vue'
 import TermsModal from './TermsModal.vue'
@@ -871,6 +925,7 @@ import MapLocationPicker from './MapLocationPicker.vue'
 
 const route = useRoute()
 const registrationStore = useRegistrationStore()
+const uploadPayloadMode = computed(() => registrationStore.uploadPayloadMode)
 const currentStep = computed(() => registrationStore.currentStep)
 const formData = computed(() => registrationStore.formData)
 const availablePlans = computed(() => registrationStore.availablePlans)
@@ -1025,13 +1080,23 @@ const stepLabels = [
   'Review & Submit'
 ]
 
-const submittedCode = ref('')
+const submittedCode = computed(() => registrationStore.submittedCode)
 
 function resetWizard() {
-  submittedCode.value = ''
-  Object.keys(touched).forEach(key => delete touched[key])
   registrationStore.resetForm()
+  submissionError.value = ''
+  failedReferenceCode.value = ''
+  Object.keys(touched).forEach(key => delete touched[key])
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+// Automatically reset wizard validation, touched fields & error state when resetForm is called from anywhere (e.g. Navbar Apply Online)
+watch(() => registrationStore.resetSignal, () => {
+  submissionError.value = ''
+  failedReferenceCode.value = ''
+  Object.keys(touched).forEach(key => delete touched[key])
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
 
 // Track touched fields for instant blur validation
 const touched = reactive({})
@@ -1234,7 +1299,6 @@ async function handleSubmit() {
 
     if (result.delivered) {
       // Only the confirmed path reaches the success screen
-      submittedCode.value = result.referenceCode
       confetti({
         particleCount: 80,
         spread: 70,

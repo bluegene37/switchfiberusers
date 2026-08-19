@@ -41,7 +41,7 @@
             <li><router-link to="/plans" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
             <li><router-link to="/coverage" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
             <li><router-link to="/contact" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
-            <li><router-link to="/register" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
+            <li><router-link to="/register" @click="registrationStore.resetForm()" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
             <li><router-link to="/status" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
           </ul>
         </div>
@@ -58,42 +58,32 @@
         </div>
 
         <!-- Hotlines & Office Hours -->
-        <div>
-          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Direct Contact</h4>
-          <ul class="space-y-3 text-sm dark:text-slate-400 text-slate-600">
-            <li class="flex items-start gap-2.5">
-              <PhoneCall class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-0.5" />
-              <div>
-                <span class="block text-xs font-semibold dark:text-slate-300 text-slate-700">Customer Care Hotlines:</span>
-                <a href="tel:09154077565" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67]">0915 407 7565</a> / <a href="tel:09178762440" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67]">0917 876 2440</a>
-              </div>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <CreditCard class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-0.5" />
-              <div>
-                <span class="block text-xs font-semibold dark:text-slate-300 text-slate-700">Billing Support Hotline:</span>
-                <a href="tel:09154077555" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67]">0915 407 7555</a>
-              </div>
-            </li>
-            <li class="flex items-start gap-2.5">
-              <Clock class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-0.5" />
-              <div>
-                <span class="block text-xs font-semibold dark:text-slate-300 text-slate-700">Business Hours:</span>
-                <span>Mon - Sat: 8:00 AM - 5:00 PM</span>
-              </div>
-            </li>
-          </ul>
+        <div class="space-y-4">
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase">Hotline & Office</h4>
+          <div class="space-y-2 text-xs dark:text-slate-400 text-slate-600">
+            <div class="flex items-center gap-2">
+              <PhoneCall class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
+              <a href="tel:09154077565" class="font-bold dark:text-white text-slate-900 hover:text-[#ee2824]">0915 407 7565</a>
+            </div>
+            <div class="flex items-center gap-2">
+              <Clock class="w-3.5 h-3.5 text-blue-500" />
+              <span>Mon - Sat: 8:00 AM - 5:00 PM</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <CreditCard class="w-3.5 h-3.5 text-emerald-500" />
+              <span>GCash • Maya • Bayad • 7-Eleven</span>
+            </div>
+          </div>
         </div>
 
       </div>
 
       <!-- Footer Bottom -->
       <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs dark:text-slate-500 text-slate-500 gap-4">
-        <p>© 2026 Switch Internet Services Co. All Rights Reserved. Sister Company of Switch Group.</p>
         <div class="flex items-center gap-6">
           <span>Binangonan, Rizal, Philippines</span>
           <span>•</span>
-          <router-link to="/register" class="text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
+          <router-link to="/register" @click="registrationStore.resetForm()" class="text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
         </div>
       </div>
 
@@ -103,4 +93,7 @@
 
 <script setup>
 import { Zap, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock } from 'lucide-vue-next'
+import { useRegistrationStore } from '../stores/registration'
+
+const registrationStore = useRegistrationStore()
 </script>

@@ -117,10 +117,25 @@
         </nav>
 
         <!-- Apply Online CTA Button adjacent to menu items -->
-        <router-link to="/register" @click="registrationStore.resetForm()" class="btn-primary py-2 px-4 text-xs font-bold shadow-md ml-1 whitespace-nowrap">
+        <router-link 
+          v-if="$route.path !== '/register'" 
+          to="/register" 
+          @click="registrationStore.resetForm()" 
+          class="btn-primary py-2 px-4 text-xs font-bold shadow-md ml-1 whitespace-nowrap"
+        >
           <Sparkles class="w-3.5 h-3.5" />
           <span>Apply Online</span>
         </router-link>
+        <button 
+          v-else 
+          disabled 
+          type="button"
+          class="py-2 px-3.5 text-xs font-bold rounded-xl border border-slate-300/80 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 cursor-default ml-1 flex items-center gap-1.5 whitespace-nowrap shadow-inner select-none opacity-80"
+          title="You are currently filling out an application"
+        >
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Applying Now</span>
+        </button>
       </div>
 
       <!-- Extreme Right Action (Light/Dark Mode Switch Pill for Desktop) -->
@@ -182,6 +197,7 @@
       >
         <!-- Prominent Online Application Button inside Mobile Drawer -->
         <router-link 
+          v-if="$route.path !== '/register'"
           to="/register" 
           @click="registrationStore.resetForm(); mobileMenuOpen = false"
           class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-[#ee2824] to-[#cc1814] shadow-md hover:opacity-95 transition-all text-sm"
@@ -189,6 +205,13 @@
           <Sparkles class="w-4 h-4" />
           <span>Apply Online Now</span>
         </router-link>
+        <div 
+          v-else 
+          class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm cursor-default shadow-inner select-none opacity-80"
+        >
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Currently in Application Flow</span>
+        </div>
 
         <div class="h-px bg-slate-200 dark:bg-slate-800/80 my-2"></div>
 

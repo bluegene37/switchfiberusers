@@ -6,8 +6,28 @@ export const useRegistrationStore = defineStore('registration', () => {
   const isModalOpen = ref(false)
   const isSubmitting = ref(false)
   const apiError = ref(null)
+  const submittedCode = ref('')
+  const resetSignal = ref(0)
   // Full technical detail of the last failed submit, for support/debugging
   const lastSubmitError = ref(null)
+
+  // Upload Transmission Mode:
+  // 'filename' (Default / Safe for SQL Server VARCHAR columns)
+  // 'base64' (Testing mode for full binary base64 data)
+  const savedPayloadMode = localStorage.getItem('switch_upload_payload_mode')
+  const uploadPayloadMode = ref(savedPayloadMode === 'base64' ? 'base64' : 'filename')
+
+  function setUploadPayloadMode(mode) {
+    if (mode === 'base64' || mode === 'filename') {
+      uploadPayloadMode.value = mode
+      localStorage.setItem('switch_upload_payload_mode', mode)
+    }
+  }
+
+  function toggleUploadPayloadMode() {
+    const nextMode = uploadPayloadMode.value === 'filename' ? 'base64' : 'filename'
+    setUploadPayloadMode(nextMode)
+  }
 
   // Initial Form State Template
   const getInitialFormData = () => ({
@@ -609,9 +629,12 @@ export const useRegistrationStore = defineStore('registration', () => {
 
   function resetForm() {
     currentStep.value = 1
+    submittedCode.value = ''
     formData.value = getInitialFormData()
     apiError.value = null
+    lastSubmitError.value = null
     syncSelectedPlan()
+    resetSignal.value++
     try {
       localStorage.removeItem('switch_registration_draft')
     } catch (e) {}
@@ -667,6 +690,60 @@ export const useRegistrationStore = defineStore('registration', () => {
     formData.value.submissionDate = now.toISOString()
     const randomCode = uniqueReferenceCode
 
+    const isFilenameMode = uploadPayloadMode.value === 'filename'
+
+    // Helper: Safely resolve document file values
+    // - Safe Mode (Default): Returns a clean, short filename string (<100 chars, never data: URI)
+    // - Base64 Mode (Testing): Returns the raw data URI string for testing DB NVARCHAR(MAX) support
+    function sanitizePayloadFile(name, dataUri, fallbackName, allowBase64 = false) {
+      if (allowBase64 && dataUri && typeof dataUri === 'string' && dataUri.startsWith('data:')) {
+        return dataUri
+      }
+      if (name && typeof name === 'string' && !name.startsWith('data:') && name.length < 120) {
+        const clean = name.replace(/^.*[\\\/]/, '').trim()
+        if (clean.length > 0 && clean.length < 120) return clean
+      }
+      if ((dataUri && typeof dataUri === 'string' && dataUri.length > 0) || (name && typeof name === 'string' && name.length > 0)) {
+        return fallbackName
+      }
+      return ''
+    }
+
+    const houseFrontVal = sanitizePayloadFile(
+      formData.value.houseFrontName,
+      formData.value.houseFrontPicture,
+      'house_front_photo.jpg',
+      !isFilenameMode
+    )
+
+    const governmentValidIdVal = sanitizePayloadFile(
+      formData.value.governmentValidIdName,
+      formData.value.governmentValidId,
+      'government_valid_id.jpg',
+      !isFilenameMode
+    )
+
+    const secondGovernmentValidIdVal = sanitizePayloadFile(
+      formData.value.secondGovernmentValidIdName,
+      formData.value.secondGovernmentValidId,
+      'second_valid_id.jpg',
+      !isFilenameMode
+    )
+
+    const firstNearestLandmarkVal = sanitizePayloadFile(
+      formData.value.firstNearestLandmarkName,
+      formData.value.firstNearestLandmark,
+      'first_nearest_landmark.jpg',
+      !isFilenameMode
+    )
+
+    const secondNearestLandmarkVal = sanitizePayloadFile(
+      formData.value.secondNearestLandmarkName,
+      formData.value.secondNearestLandmark,
+      'second_nearest_landmark.jpg',
+      !isFilenameMode
+    )
+
     // Construct exact JSON API Payload requested by user
     const apiPayload = {
       timestamp: formData.value.submissionDate,
@@ -686,13 +763,13 @@ export const useRegistrationStore = defineStore('registration', () => {
       // display string with the price appended.
       desiredPlan: (formData.value.desiredPlan || '').replace(/\s*\(₱[^)]*\)\s*$/, '').trim(),
       proofOfBilling: '',
-      governmentValidId: formData.value.governmentValidId || '',
-      secondGovernmentValidId: formData.value.secondGovernmentValidId || '',
-      houseFrontPicture: formData.value.houseFrontPicture || '',
+      governmentValidId: governmentValidIdVal,
+      secondGovernmentValidId: secondGovernmentValidIdVal,
+      houseFrontPicture: houseFrontVal,
       // Backend stores the literal string "Yes, I Agree" if checked, or empty string if unchecked
       termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Yes, I Agree' : '',
-      firstNearestLandmark: formData.value.firstNearestLandmark || '',
-      secondNearestLandmark: formData.value.secondNearestLandmark || '',
+      firstNearestLandmark: firstNearestLandmarkVal,
+      secondNearestLandmark: secondNearestLandmarkVal,
       applicablePromo: formData.value.applicablePromo || derivedPromo.value || '',
       documentPicture: '',
       barangay1: '',
@@ -739,7 +816,8 @@ export const useRegistrationStore = defineStore('registration', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-Switch-Payload-Mode': uploadPayloadMode.value
         },
         body: JSON.stringify(apiPayload)
       })
@@ -757,6 +835,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       await response.json().catch(() => ({}))
       newApp.delivered = true
       lastSubmitError.value = null
+      submittedCode.value = randomCode
     } catch (err) {
       // The application is kept locally so nothing the applicant typed is lost,
       // but we must NOT report success — previously a failed POST still showed
@@ -810,6 +889,67 @@ export const useRegistrationStore = defineStore('registration', () => {
     return submittedApplications.value.find(app => app.referenceCode.toUpperCase() === cleanCode)
   }
 
+  // Pre-fill realistic sample data for instant 1-click test submission
+  function fillSampleApplication() {
+    const randomNum = Math.floor(1000 + Math.random() * 9000)
+    
+    // Sample simulated lightweight base64 photo for previews
+    const sampleCanvas = document.createElement('canvas')
+    sampleCanvas.width = 400
+    sampleCanvas.height = 300
+    const ctx = sampleCanvas.getContext('2d')
+    if (ctx) {
+      ctx.fillStyle = '#0f172a'
+      ctx.fillRect(0, 0, 400, 300)
+      ctx.fillStyle = '#ee2824'
+      ctx.font = 'bold 18px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText('SAMPLE UPLOAD PHOTO', 200, 140)
+      ctx.fillStyle = '#94a3b8'
+      ctx.font = '12px sans-serif'
+      ctx.fillText(`Test Ref #${randomNum}`, 200, 170)
+    }
+    const sampleBase64 = sampleCanvas.toDataURL('image/jpeg', 0.8)
+
+    formData.value.firstName = 'Juan'
+    formData.value.middleName = 'Santos'
+    formData.value.lastName = `Dela Cruz ${randomNum}`
+    formData.value.emailAddress = `test.applicant.${randomNum}@switchfiber.ph`
+    formData.value.mobileNumber = '09171234567'
+    formData.value.secondaryMobileNumber = '09187654321'
+    formData.value.referredBy = 'Paula Marie T. Fermanis'
+
+    formData.value.region = 'Rizal'
+    formData.value.city = 'Binangonan'
+    formData.value.barangay = 'Batingan'
+    formData.value.installationAddress = `Block ${Math.floor(1 + Math.random() * 20)} Lot ${Math.floor(1 + Math.random() * 30)} Sampaguita St.`
+    formData.value.landmark = 'Near Batingan Elementary School'
+    formData.value.applyingFor = 'Residential Fiber'
+
+    const plan = availablePlans.value?.[0] || {
+      id: '1',
+      title: 'SwitchLite Plan',
+      price: 699
+    }
+    formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
+    formData.value.selectedPlanId = String(plan.id)
+    formData.value.selectedPlanPrice = plan.price
+
+    formData.value.houseFrontPicture = sampleBase64
+    formData.value.houseFrontName = `house_front_${randomNum}.jpg`
+    formData.value.governmentValidId = sampleBase64
+    formData.value.governmentValidIdName = `national_id_${randomNum}.jpg`
+    formData.value.secondGovernmentValidId = sampleBase64
+    formData.value.secondGovernmentValidIdName = `passport_${randomNum}.jpg`
+    formData.value.firstNearestLandmark = sampleBase64
+    formData.value.firstNearestLandmarkName = `landmark_1_${randomNum}.jpg`
+    formData.value.secondNearestLandmark = sampleBase64
+    formData.value.secondNearestLandmarkName = `landmark_2_${randomNum}.jpg`
+
+    formData.value.termsAndConditionsAgreement = true
+    currentStep.value = 5
+  }
+
   return {
     currentStep,
     isModalOpen,
@@ -831,6 +971,12 @@ export const useRegistrationStore = defineStore('registration', () => {
     derivedPromo,
     lastSubmitError,
     submittedApplications,
+    submittedCode,
+    resetSignal,
+    uploadPayloadMode,
+    setUploadPayloadMode,
+    toggleUploadPayloadMode,
+    fillSampleApplication,
     resetForm,
     openModal,
     closeModal,
