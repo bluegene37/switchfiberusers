@@ -3,6 +3,14 @@ dist
 dist-ssr
 *.local
 
+# Environment variables & API Keys (DO NOT COMMIT)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.preview
+.env.development
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

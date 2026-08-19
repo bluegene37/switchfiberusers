@@ -99,13 +99,13 @@
 
       <div class="flex items-center gap-2">
         <button 
-          @click="registrationStore.fillSampleApplication()"
+          @click="handleTestFillCurrentStep"
           type="button"
           class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/40 hover:border-amber-500 text-slate-800 dark:text-slate-200 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all font-semibold flex items-center gap-1.5 text-xs shadow-sm cursor-pointer"
-          title="Auto-fill all 5 steps with realistic test data (Developer & QA testing only)"
+          :title="`Auto-fill Step ${currentStep} fields with test data`"
         >
           <Zap class="w-3.5 h-3.5 text-amber-500" />
-          <span>1-Click Test Fill</span>
+          <span>1-Click Test Fill (Step {{ currentStep }})</span>
         </button>
       </div>
     </div>
@@ -368,15 +368,49 @@
         </p>
       </div>
 
-      <!-- Landmark -->
-      <div>
-        <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Nearest Text Landmark</label>
-        <input 
-          v-model="formData.landmark" 
-          type="text" 
-          placeholder="e.g. Beside Barangay Hall / Near Water Refilling Station" 
-          class="input-field" 
-        />
+      <!-- Nearest Landmarks (1st & 2nd Text Descriptions - Expandable) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- 1st Nearest Landmark -->
+        <div>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
+            First Nearest Landmark <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span>
+          </label>
+          <div class="relative">
+            <textarea 
+              v-model="formData.firstNearestLandmark" 
+              @blur="touchField('firstNearestLandmark')"
+              rows="2"
+              placeholder="e.g. Beside Barangay Hall / Near Water Refilling Station / Yellow gate" 
+              class="input-field resize-y" 
+              :class="getFieldStatusClass('firstNearestLandmark')"
+            ></textarea>
+          </div>
+          <p v-if="isFieldInvalid('firstNearestLandmark')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
+            First nearest landmark is required to help our dispatch crew locate your address.
+          </p>
+          <p v-else class="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
+            Notable nearby landmark or guide for dispatch technicians.
+          </p>
+        </div>
+
+        <!-- 2nd Nearest Landmark -->
+        <div>
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
+            Second Nearest Landmark (Optional)
+          </label>
+          <div class="relative">
+            <textarea 
+              v-model="formData.secondNearestLandmark" 
+              @blur="touchField('secondNearestLandmark')"
+              rows="2"
+              placeholder="e.g. Across from San Isidro Chapel / 2 houses after bakery" 
+              class="input-field resize-y" 
+            ></textarea>
+          </div>
+          <p class="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
+            Additional reference point or neighborhood description.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -567,7 +601,7 @@
       </div>
     </div>
 
-    <!-- STEP 4: Document & Landmark Photo Uploads -->
+    <!-- STEP 4: Document Uploads -->
     <div v-if="currentStep === 4 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
         <UploadCloud class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
@@ -619,38 +653,45 @@
             3. 2nd Government ID (Optional)
           </label>
           <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
-            Optional second ID if you have one handy.
+            Optional secondary ID (Passport, SSS, UMID, Driver's License).
           </p>
           <DropzoneUploader 
-            v-model="formData.secondGovernmentValidId"
+            v-model="formData.secondGovernmentValidId" 
             optional
             v-model:fileName="formData.secondGovernmentValidIdName"
             @change="touchField('secondGovernmentValidId')"
           />
         </div>
 
-        <!-- 4. 1st Nearest Landmark Photo -->
-        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('firstNearestLandmark')">
-          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">4. First Nearest Landmark Photo <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <DropzoneUploader 
-            v-model="formData.firstNearestLandmark"
-            v-model:fileName="formData.firstNearestLandmarkName"
-            :error="isFieldInvalid('firstNearestLandmark')"
-            @change="touchField('firstNearestLandmark')"
-          />
-          <p v-if="isFieldInvalid('firstNearestLandmark')" class="text-[11px] text-[#ee2824] font-medium">
-            First nearest landmark photo is required for installation dispatch.
+        <!-- 4. Proof of Billing -->
+        <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
+          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
+            4. Proof of Billing (Optional)
+          </label>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
+            Recent electric, water, internet, or credit card utility bill (Photo or PDF).
           </p>
+          <DropzoneUploader 
+            v-model="formData.proofOfBilling" 
+            optional
+            v-model:fileName="formData.proofOfBillingName"
+            @change="touchField('proofOfBilling')"
+          />
         </div>
 
-        <!-- 5. 2nd Nearest Landmark Photo -->
+        <!-- 5. Additional Supporting Document -->
         <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
-          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">5. Second Nearest Landmark Photo</label>
+          <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
+            5. Additional Supporting Document (Optional)
+          </label>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
+            Barangay certificate, lease contract, or authorization document (Photo or PDF).
+          </p>
           <DropzoneUploader 
-            v-model="formData.secondNearestLandmark"
+            v-model="formData.documentPicture" 
             optional
-            v-model:fileName="formData.secondNearestLandmarkName"
-            @change="touchField('secondNearestLandmark')"
+            v-model:fileName="formData.documentPictureName"
+            @change="touchField('documentPicture')"
           />
         </div>
 
@@ -675,13 +716,17 @@
               <span class="block dark:text-slate-400 text-slate-600 mt-0.5">{{ formData.emailAddress }} | {{ formData.mobileNumber }}</span>
             </div>
             <div>
-              <span class="dark:text-slate-500 text-slate-500 uppercase block font-semibold mb-0.5">Installation Address:</span>
+              <span class="dark:text-slate-500 text-slate-500 uppercase block font-semibold mb-0.5">Installation Address & Landmarks:</span>
               <span class="font-bold dark:text-slate-200 text-slate-900 text-sm">{{ formData.barangay }}, {{ formData.city }}, {{ formData.region }}</span>
               <span class="block dark:text-slate-400 text-slate-600 mt-0.5">{{ formData.installationAddress }}</span>
+              <span v-if="formData.firstNearestLandmark" class="block text-[11px] text-[#ee2824] dark:text-[#ff6b67] font-medium mt-1">
+                Landmark 1: {{ formData.firstNearestLandmark }}
+                <span v-if="formData.secondNearestLandmark" class="dark:text-slate-400 text-slate-500 font-normal"> | Landmark 2: {{ formData.secondNearestLandmark }}</span>
+              </span>
             </div>
           </div>
 
-          <!-- Dynamic Plan Details Box & Primary ID Row -->
+          <!-- Dynamic Plan Details Box & Uploaded Documents Row -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5">
               <div class="flex items-center justify-between">
@@ -705,11 +750,17 @@
 
             <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5 flex flex-col justify-between">
               <div>
-                <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px] block mb-1">Government ID</span>
-                <span class="text-[11px] dark:text-slate-400 text-slate-500 block truncate">{{ formData.governmentValidIdName || 'Photo Attached' }}</span>
+                <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px] block mb-1">Attached Documents</span>
+                <span class="text-[11px] dark:text-slate-400 text-slate-500 block truncate">ID: {{ formData.governmentValidIdName || 'Photo Attached' }}</span>
               </div>
               <div v-if="formData.secondGovernmentValidId" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
                 2nd ID: {{ formData.secondGovernmentValidIdName || 'Attached' }}
+              </div>
+              <div v-if="formData.proofOfBilling" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
+                Billing: {{ formData.proofOfBillingName || 'Attached' }}
+              </div>
+              <div v-if="formData.documentPicture" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
+                Document: {{ formData.documentPictureName || 'Attached' }}
               </div>
             </div>
           </div>
@@ -989,6 +1040,10 @@ function canonicalPlace(value) {
 }
 
 function syncLocationFromRouteQuery() {
+  if (!formData.value.region || !regionsList.value.includes(formData.value.region)) {
+    formData.value.region = regionsList.value[0] || 'Region IV-A (CALABARZON)'
+  }
+
   const queryCity = route?.query?.city
   const queryBarangay = route?.query?.barangay
 
@@ -1076,7 +1131,7 @@ const stepLabels = [
   'Personal Info',
   'Installation Address',
   'Plan Selection',
-  'Photo & Document Uploads',
+  'Document Uploads',
   'Review & Submit'
 ]
 
@@ -1103,6 +1158,30 @@ const touched = reactive({})
 
 function touchField(fieldKey) {
   touched[fieldKey] = true
+}
+
+function handleTestFillCurrentStep() {
+  registrationStore.fillStep(currentStep.value)
+  if (currentStep.value === 1) {
+    touchField('firstName')
+    touchField('lastName')
+    touchField('emailAddress')
+    touchField('mobileNumber')
+  } else if (currentStep.value === 2) {
+    touchField('region')
+    touchField('city')
+    touchField('barangay')
+    touchField('installationAddress')
+    touchField('firstNearestLandmark')
+  } else if (currentStep.value === 4) {
+    touchField('houseFrontPicture')
+    touchField('governmentValidId')
+    touchField('secondGovernmentValidId')
+    touchField('proofOfBilling')
+    touchField('documentPicture')
+  } else if (currentStep.value === 5) {
+    touchField('termsAndConditionsAgreement')
+  }
 }
 
 function onMobileInput(key) {
@@ -1171,6 +1250,9 @@ async function useCurrentLocation() {
         registrationStore.formData.installationAddress = addressParts.join(', ')
         if (data.display_name) {
           registrationStore.formData.landmark = `GPS Location: ${data.display_name.split(',').slice(0, 3).join(',')}`
+          if (!registrationStore.formData.firstNearestLandmark) {
+            registrationStore.formData.firstNearestLandmark = `Near ${detectedRoad || detectedSub || 'GPS location'}`
+          }
         }
       } else {
         registrationStore.formData.installationAddress = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
@@ -1205,7 +1287,8 @@ function validateValue(key) {
   if (key === 'secondaryMobileNumber') return val.length === 0 || (val.length === 11 && /^\d+$/.test(val))
   if (key === 'region' || key === 'city' || key === 'barangay') return val.length > 0
   if (key === 'installationAddress') return val.length >= 3
-  if (key === 'houseFrontPicture' || key === 'governmentValidId' || key === 'firstNearestLandmark') {
+  if (key === 'firstNearestLandmark') return val.length >= 2
+  if (key === 'houseFrontPicture' || key === 'governmentValidId') {
     return val.length > 0 || nameVal.length > 0
   }
   
@@ -1250,8 +1333,9 @@ function handleNextStep() {
     touchField('city')
     touchField('barangay')
     touchField('installationAddress')
+    touchField('firstNearestLandmark')
 
-    if (!validateValue('region') || !validateValue('city') || !validateValue('barangay') || !validateValue('installationAddress')) {
+    if (!validateValue('region') || !validateValue('city') || !validateValue('barangay') || !validateValue('installationAddress') || !validateValue('firstNearestLandmark')) {
       return
     }
   }
@@ -1259,9 +1343,8 @@ function handleNextStep() {
   if (currentStep.value === 4) {
     touchField('houseFrontPicture')
     touchField('governmentValidId')
-    touchField('firstNearestLandmark')
 
-    if (!validateValue('houseFrontPicture') || !validateValue('governmentValidId') || !validateValue('firstNearestLandmark')) {
+    if (!validateValue('houseFrontPicture') || !validateValue('governmentValidId')) {
       return
     }
   }

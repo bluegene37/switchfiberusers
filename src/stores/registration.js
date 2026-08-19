@@ -1,6 +1,98 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 
+export const regionsList = [
+  'Region IV-A (CALABARZON)',
+  'National Capital Region (NCR)',
+  'Region III (Central Luzon)'
+]
+
+export const citiesList = [
+  'Binangonan',
+  'Angono',
+  'Taytay',
+  'Teresa',
+  'Cardona',
+  'Morong',
+  'Baras',
+  'Tanay',
+  'Antipolo',
+  'San Mateo',
+  'Rodriguez'
+]
+
+export const barangaysList = [
+  'Batingan',
+  'Bilibiran',
+  'Calumpang',
+  'Darangan',
+  'Layunan',
+  'Libid',
+  'Libis',
+  'Lunsad',
+  'Macamot',
+  'Mahabang Parang (Binangonan)',
+  'Mambog',
+  'Palangoy',
+  'Pag-asa',
+  'Pantok',
+  'Pila-pila',
+  'Tagpos',
+  'Tatala',
+  'Tayuman'
+]
+
+// Referrer list transcribed from the official Switch Fiber application form.
+// 'None' is the default; the rest are active sales agents / partners.
+export const referrersList = [
+  "None",
+  "SWITCH GAISANO",
+  "PRECIOUS GAISANO",
+  "Norwina A. Armas",
+  "Mariane Talento Puyot",
+  "Nicolas Marinay Occidental Jr.",
+  "Paula Marie T. Fermanis",
+  "Emylinda B. Biasca",
+  "Precious Ann Vergonio",
+  "Maria Nympha Vergonio",
+  "Jonalyn Perez Agsalon",
+  "Menandro B. Albao",
+  "Vilma S. Divinagracia",
+  "Anthony Francis N. Samar",
+  "Keanu C. Nido",
+  "Severino L. Cervo",
+  "Bernadette  Delos Santos",
+  "Gladiola Veron Lico",
+  "Shania Manalo",
+  "Ria Gielen Paclibare",
+  "Cheryll Briones",
+  "Vea Vianca Delos Reyes",
+  "John Rainier Cernero",
+  "Mark Paner",
+  "Heatherlynn Hernandez",
+  "Gibson Lizardo",
+  "Elmer Tuyor Jr.",
+  "Jordan Cerrero",
+  "Carina Añonuevo",
+  "Lealyn Bayos",
+  "Lhen Ambao",
+  "Jennylyn Calle",
+  "Dan Onia",
+  "Christopher George Cajes",
+  "Baltazar Masucol",
+  "Jennelyn Rufino",
+  "Ofelia Ceñidoza",
+  "Rainier Ubana",
+  "Jonalyn Delima",
+  "Arvin Mateo",
+  "Manuel Pangilinan Jr.",
+  "Regina Casano",
+  "Peter Dominic Ojeda",
+  "Reina Jane Ferido",
+  "Sygel Landicho",
+  "Jennyzell Ceñidoza"
+]
+
 export const useRegistrationStore = defineStore('registration', () => {
   const currentStep = ref(1)
   const isModalOpen = ref(false)
@@ -41,13 +133,14 @@ export const useRegistrationStore = defineStore('registration', () => {
     referredBy: '',
     
     // Address Details
-    // Backend records region as "Rizal"
-    region: 'Rizal',
+    region: 'Region IV-A (CALABARZON)',
     applyingFor: 'Residential Fiber',
     city: 'Binangonan',
     barangay: '',
     installationAddress: '',
     landmark: '',
+    firstNearestLandmark: '',
+    secondNearestLandmark: '',
     
     // Plan — populated from the live plan list by syncSelectedPlan()
     desiredPlan: '',
@@ -62,10 +155,10 @@ export const useRegistrationStore = defineStore('registration', () => {
     governmentValidIdName: '',
     secondGovernmentValidId: '',
     secondGovernmentValidIdName: '',
-    firstNearestLandmark: '',
-    firstNearestLandmarkName: '',
-    secondNearestLandmark: '',
-    secondNearestLandmarkName: '',
+    proofOfBilling: '',
+    proofOfBillingName: '',
+    documentPicture: '',
+    documentPictureName: '',
 
     // Option Features
     expressInstallation: false,
@@ -78,9 +171,8 @@ export const useRegistrationStore = defineStore('registration', () => {
 
   // Registration Form State with localStorage draft auto-recovery
   // Bump when the form's field set or default values change, so a returning
-  // visitor's saved draft can't keep posting values the backend no longer uses
-  // (e.g. the old region default of "Region IV-A (CALABARZON)").
-  const DRAFT_VERSION = 2
+  // visitor's saved draft can't keep posting values the backend no longer uses.
+  const DRAFT_VERSION = 3
 
   const getSavedDraft = () => {
     try {
@@ -107,7 +199,10 @@ export const useRegistrationStore = defineStore('registration', () => {
     const base = getInitialFormData()
     if (!draft) return base
     for (const key of Object.keys(base)) {
-      if (draft[key] !== undefined) base[key] = draft[key]
+      if (draft[key] !== undefined && draft[key] !== '') base[key] = draft[key]
+    }
+    if (!regionsList.includes(base.region)) {
+      base.region = 'Region IV-A (CALABARZON)'
     }
     return base
   }
@@ -122,8 +217,8 @@ export const useRegistrationStore = defineStore('registration', () => {
       draft.houseFrontPicture = ''
       draft.governmentValidId = ''
       draft.secondGovernmentValidId = ''
-      draft.firstNearestLandmark = ''
-      draft.secondNearestLandmark = ''
+      draft.proofOfBilling = ''
+      draft.documentPicture = ''
       draft.__v = DRAFT_VERSION
       localStorage.setItem('switch_registration_draft', JSON.stringify(draft))
     } catch (e) {
@@ -470,99 +565,6 @@ export const useRegistrationStore = defineStore('registration', () => {
   // Reconcile whenever the plan list changes (initial fetch, manual refresh)
   watch(plansList, () => syncSelectedPlan(), { immediate: true })
 
-  const regionsList = [
-    'Region IV-A (CALABARZON)',
-    'National Capital Region (NCR)',
-    'Region III (Central Luzon)'
-  ]
-
-  const citiesList = [
-    'Binangonan',
-    'Angono',
-    'Taytay',
-    'Teresa',
-    'Cardona',
-    'Morong',
-    'Baras',
-    'Tanay',
-    'Antipolo',
-    'San Mateo',
-    'Rodriguez'
-  ]
-
-  const barangaysList = [
-    'Batingan',
-    'Bilibiran',
-    'Calumpang',
-    'Darangan',
-    'Layunan',
-    'Libid',
-    'Libis',
-    'Lunsad',
-    'Macamot',
-    'Mahabang Parang (Binangonan)',
-    'Mambog',
-    'Palangoy',
-    'Pag-asa',
-    'Pantok',
-    'Pila-pila',
-    'Tagpos',
-    'Tatala',
-    'Tayuman'
-  ]
-
-  // Referrer list transcribed from the official Switch Fiber application form.
-  // 'None' is the default; the rest are active sales agents / partners.
-  const referrersList = [
-    "None",
-    "SWITCH GAISANO",
-    "PRECIOUS GAISANO",
-    "Norwina A. Armas",
-    "Mariane Talento Puyot",
-    "Nicolas Marinay Occidental Jr.",
-    "Paula Marie T. Fermanis",
-    "Emylinda B. Biasca",
-    "Precious Ann Vergonio",
-    "Maria Nympha Vergonio",
-    "Jonalyn Perez Agsalon",
-    "Menandro B. Albao",
-    "Vilma S. Divinagracia",
-    "Anthony Francis N. Samar",
-    "Keanu C. Nido",
-    "Severino L. Cervo",
-    "Bernadette  Delos Santos",
-    "Gladiola Veron Lico",
-    "Shania Manalo",
-    "Ria Gielen Paclibare",
-    "Cheryll Briones",
-    "Vea Vianca Delos Reyes",
-    "John Rainier Cernero",
-    "Mark Paner",
-    "Heatherlynn Hernandez",
-    "Gibson Lizardo",
-    "Elmer Tuyor Jr.",
-    "Jordan Cerrero",
-    "Carina Añonuevo",
-    "Lealyn Bayos",
-    "Lhen Ambao",
-    "Jennylyn Calle",
-    "Dan Onia",
-    "Christopher George Cajes",
-    "Baltazar Masucol",
-    "Jennelyn Rufino",
-    "Ofelia Ceñidoza",
-    "Rainier Ubana",
-    "Jonalyn Delima",
-    "Arvin Mateo",
-    "Manuel Pangilinan Jr.",
-    "Regina Casano",
-    "Peter Dominic Ojeda",
-    "Reina Jane Ferido",
-    "Sygel Landicho",
-    "Jennyzell Ceñidoza"
-  ]
-
-
   // Safe LocalStorage Persist Helper to prevent QuotaExceededError with base64 data
   function saveToLocalStorage() {
     try {
@@ -573,8 +575,8 @@ export const useRegistrationStore = defineStore('registration', () => {
           if (payloadCopy.houseFrontPicture?.length > 200) payloadCopy.houseFrontPicture = '[Uploaded Photo]'
           if (payloadCopy.governmentValidId?.length > 200) payloadCopy.governmentValidId = '[Uploaded ID]'
           if (payloadCopy.secondGovernmentValidId?.length > 200) payloadCopy.secondGovernmentValidId = '[Uploaded ID]'
-          if (payloadCopy.firstNearestLandmark?.length > 200) payloadCopy.firstNearestLandmark = '[Uploaded Landmark]'
-          if (payloadCopy.secondNearestLandmark?.length > 200) payloadCopy.secondNearestLandmark = '[Uploaded Landmark]'
+          if (payloadCopy.proofOfBilling?.length > 200) payloadCopy.proofOfBilling = '[Uploaded Proof of Billing]'
+          if (payloadCopy.documentPicture?.length > 200) payloadCopy.documentPicture = '[Uploaded Document]'
           copy.payload = payloadCopy
         }
         return copy
@@ -610,22 +612,6 @@ export const useRegistrationStore = defineStore('registration', () => {
     console.warn('Error reading from localStorage:', err)
   }
   const submittedApplications = ref(initialApps)
-
-  if (submittedApplications.value.length === 0) {
-    submittedApplications.value.push({
-      referenceCode: 'SF-2026-8942',
-      applicantName: 'Juan Dela Cruz',
-      mobile: '09171234567',
-      plan: 'SwitchConnect Plan (₱799/mo)',
-      city: 'Binangonan',
-      barangay: 'Bilibiran',
-      date: '2026-08-01',
-      status: 'Installation Scheduled',
-      statusStep: 3,
-      notes: 'Account verification completed. Fiber drop cable installation scheduled for tomorrow morning.'
-    })
-    saveToLocalStorage()
-  }
 
   function resetForm() {
     currentStep.value = 1
@@ -730,19 +716,23 @@ export const useRegistrationStore = defineStore('registration', () => {
       !isFilenameMode
     )
 
-    const firstNearestLandmarkVal = sanitizePayloadFile(
-      formData.value.firstNearestLandmarkName,
-      formData.value.firstNearestLandmark,
-      'first_nearest_landmark.jpg',
+    const proofOfBillingVal = sanitizePayloadFile(
+      formData.value.proofOfBillingName,
+      formData.value.proofOfBilling,
+      'proof_of_billing.pdf',
       !isFilenameMode
     )
 
-    const secondNearestLandmarkVal = sanitizePayloadFile(
-      formData.value.secondNearestLandmarkName,
-      formData.value.secondNearestLandmark,
-      'second_nearest_landmark.jpg',
+    const documentPictureVal = sanitizePayloadFile(
+      formData.value.documentPictureName,
+      formData.value.documentPicture,
+      'supporting_document.pdf',
       !isFilenameMode
     )
+
+    const firstNearestLandmarkText = (formData.value.firstNearestLandmark || '').trim()
+    const secondNearestLandmarkText = (formData.value.secondNearestLandmark || '').trim()
+    const landmarkText = (formData.value.landmark || firstNearestLandmarkText).trim()
 
     // Construct exact JSON API Payload requested by user
     const apiPayload = {
@@ -758,20 +748,20 @@ export const useRegistrationStore = defineStore('registration', () => {
       mobileNumber: formData.value.mobileNumber,
       secondaryMobileNumber: formData.value.secondaryMobileNumber || '',
       installationAddress: formData.value.installationAddress,
-      landmark: formData.value.landmark || '',
+      landmark: landmarkText,
       // Backend stores the bare plan name ("SwitchConnect Plan"), not the
       // display string with the price appended.
       desiredPlan: (formData.value.desiredPlan || '').replace(/\s*\(₱[^)]*\)\s*$/, '').trim(),
-      proofOfBilling: '',
+      proofOfBilling: proofOfBillingVal,
       governmentValidId: governmentValidIdVal,
       secondGovernmentValidId: secondGovernmentValidIdVal,
       houseFrontPicture: houseFrontVal,
       // Backend stores the literal string "Yes, I Agree" if checked, or empty string if unchecked
       termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Yes, I Agree' : '',
-      firstNearestLandmark: firstNearestLandmarkVal,
-      secondNearestLandmark: secondNearestLandmarkVal,
+      firstNearestLandmark: firstNearestLandmarkText,
+      secondNearestLandmark: secondNearestLandmarkText,
       applicablePromo: formData.value.applicablePromo || derivedPromo.value || '',
-      documentPicture: '',
+      documentPicture: documentPictureVal,
       barangay1: '',
       barangay2: '',
       pictureofstatmentbillingfromotherprovider: '',
@@ -836,6 +826,33 @@ export const useRegistrationStore = defineStore('registration', () => {
       newApp.delivered = true
       lastSubmitError.value = null
       submittedCode.value = randomCode
+
+      // Dispatch applicant confirmation email via Resend service
+      if (formData.value.emailAddress && formData.value.emailAddress.includes('@')) {
+        try {
+          const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://switchfiber.ph'
+          fetch('/api/send-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipientEmail: formData.value.emailAddress,
+              applicantName: `${formData.value.firstName || ''} ${formData.value.lastName || ''}`.trim(),
+              referenceCode: randomCode,
+              desiredPlan: formData.value.desiredPlan,
+              installationAddress: formData.value.installationAddress,
+              barangay: formData.value.barangay,
+              city: formData.value.city,
+              mobileNumber: formData.value.mobileNumber,
+              firstNearestLandmark: formData.value.firstNearestLandmark,
+              originUrl
+            })
+          }).catch(mailErr => {
+            console.warn('[Confirmation Email Notice]:', mailErr)
+          })
+        } catch (e) {
+          console.warn('[Confirmation Email Dispatch]:', e)
+        }
+      }
     } catch (err) {
       // The application is kept locally so nothing the applicant typed is lost,
       // but we must NOT report success — previously a failed POST still showed
@@ -886,67 +903,94 @@ export const useRegistrationStore = defineStore('registration', () => {
   function findApplicationByCode(code) {
     if (!code) return null
     const cleanCode = code.trim().toUpperCase()
-    return submittedApplications.value.find(app => app.referenceCode.toUpperCase() === cleanCode)
+    const found = submittedApplications.value.find(app => app.referenceCode.toUpperCase() === cleanCode)
+    if (found) return found
+
+    // Built-in Demo Code for previewing the tracker UI
+    if (cleanCode === 'SF-2026-8942') {
+      return {
+        referenceCode: 'SF-2026-8942',
+        applicantName: 'Juan Dela Cruz (Demo)',
+        mobile: '09171234567',
+        plan: 'SwitchConnect Plan (₱799/mo)',
+        city: 'Binangonan',
+        barangay: 'Bilibiran',
+        date: '2026-08-01',
+        status: 'Installation Scheduled',
+        statusStep: 3,
+        notes: 'Account verification completed. Fiber drop cable installation scheduled for tomorrow morning.'
+      }
+    }
+
+    return null
   }
 
-  // Pre-fill realistic sample data for instant 1-click test submission
-  function fillSampleApplication() {
+  // Pre-fill realistic sample data for testing specific steps
+  function fillStep(step = currentStep.value) {
     const randomNum = Math.floor(1000 + Math.random() * 9000)
-    
-    // Sample simulated lightweight base64 photo for previews
-    const sampleCanvas = document.createElement('canvas')
-    sampleCanvas.width = 400
-    sampleCanvas.height = 300
-    const ctx = sampleCanvas.getContext('2d')
-    if (ctx) {
-      ctx.fillStyle = '#0f172a'
-      ctx.fillRect(0, 0, 400, 300)
-      ctx.fillStyle = '#ee2824'
-      ctx.font = 'bold 18px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('SAMPLE UPLOAD PHOTO', 200, 140)
-      ctx.fillStyle = '#94a3b8'
-      ctx.font = '12px sans-serif'
-      ctx.fillText(`Test Ref #${randomNum}`, 200, 170)
+
+    if (step === 1) {
+      formData.value.firstName = 'Juan'
+      formData.value.middleName = 'Santos'
+      formData.value.lastName = `Dela Cruz ${randomNum}`
+      formData.value.emailAddress = `test.applicant.${randomNum}@switchfiber.ph`
+      formData.value.mobileNumber = '09171234567'
+      formData.value.secondaryMobileNumber = '09187654321'
+      formData.value.referredBy = referrersList[0] || 'Paula Marie T. Fermanis'
+    } else if (step === 2) {
+      formData.value.region = 'Region IV-A (CALABARZON)'
+      formData.value.city = 'Binangonan'
+      formData.value.barangay = 'Batingan'
+      formData.value.installationAddress = `Block ${Math.floor(1 + Math.random() * 20)} Lot ${Math.floor(1 + Math.random() * 30)} Sampaguita St.`
+      formData.value.landmark = 'Near Batingan Elementary School'
+      formData.value.firstNearestLandmark = 'Beside Batingan Barangay Outpost (Red Gate)'
+      formData.value.secondNearestLandmark = 'In front of Nanay Rosa Sari-Sari Store'
+      formData.value.applyingFor = 'Residential Fiber'
+    } else if (step === 3) {
+      const plan = availablePlans.value?.[0] || {
+        id: '1',
+        title: 'SwitchLite Plan',
+        price: 699
+      }
+      selectPlan(plan)
+    } else if (step === 4) {
+      const sampleCanvas = document.createElement('canvas')
+      sampleCanvas.width = 400
+      sampleCanvas.height = 300
+      const ctx = sampleCanvas.getContext('2d')
+      if (ctx) {
+        ctx.fillStyle = '#0f172a'
+        ctx.fillRect(0, 0, 400, 300)
+        ctx.fillStyle = '#ee2824'
+        ctx.font = 'bold 18px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText('SAMPLE UPLOAD PHOTO', 200, 140)
+        ctx.fillStyle = '#94a3b8'
+        ctx.font = '12px sans-serif'
+        ctx.fillText(`Test Ref #${randomNum}`, 200, 170)
+      }
+      const sampleBase64 = sampleCanvas.toDataURL('image/jpeg', 0.8)
+
+      formData.value.houseFrontPicture = sampleBase64
+      formData.value.houseFrontName = `house_front_${randomNum}.jpg`
+      formData.value.governmentValidId = sampleBase64
+      formData.value.governmentValidIdName = `national_id_${randomNum}.jpg`
+      formData.value.secondGovernmentValidId = sampleBase64
+      formData.value.secondGovernmentValidIdName = `passport_${randomNum}.jpg`
+      formData.value.proofOfBilling = sampleBase64
+      formData.value.proofOfBillingName = `meralco_bill_${randomNum}.pdf`
+      formData.value.documentPicture = sampleBase64
+      formData.value.documentPictureName = `barangay_cert_${randomNum}.pdf`
+    } else if (step === 5) {
+      formData.value.termsAndConditionsAgreement = true
     }
-    const sampleBase64 = sampleCanvas.toDataURL('image/jpeg', 0.8)
+  }
 
-    formData.value.firstName = 'Juan'
-    formData.value.middleName = 'Santos'
-    formData.value.lastName = `Dela Cruz ${randomNum}`
-    formData.value.emailAddress = `test.applicant.${randomNum}@switchfiber.ph`
-    formData.value.mobileNumber = '09171234567'
-    formData.value.secondaryMobileNumber = '09187654321'
-    formData.value.referredBy = 'Paula Marie T. Fermanis'
-
-    formData.value.region = 'Rizal'
-    formData.value.city = 'Binangonan'
-    formData.value.barangay = 'Batingan'
-    formData.value.installationAddress = `Block ${Math.floor(1 + Math.random() * 20)} Lot ${Math.floor(1 + Math.random() * 30)} Sampaguita St.`
-    formData.value.landmark = 'Near Batingan Elementary School'
-    formData.value.applyingFor = 'Residential Fiber'
-
-    const plan = availablePlans.value?.[0] || {
-      id: '1',
-      title: 'SwitchLite Plan',
-      price: 699
+  // Pre-fill realistic sample data across all steps
+  function fillSampleApplication() {
+    for (let s = 1; s <= 5; s++) {
+      fillStep(s)
     }
-    formData.value.desiredPlan = `${plan.title} (₱${plan.price}/mo)`
-    formData.value.selectedPlanId = String(plan.id)
-    formData.value.selectedPlanPrice = plan.price
-
-    formData.value.houseFrontPicture = sampleBase64
-    formData.value.houseFrontName = `house_front_${randomNum}.jpg`
-    formData.value.governmentValidId = sampleBase64
-    formData.value.governmentValidIdName = `national_id_${randomNum}.jpg`
-    formData.value.secondGovernmentValidId = sampleBase64
-    formData.value.secondGovernmentValidIdName = `passport_${randomNum}.jpg`
-    formData.value.firstNearestLandmark = sampleBase64
-    formData.value.firstNearestLandmarkName = `landmark_1_${randomNum}.jpg`
-    formData.value.secondNearestLandmark = sampleBase64
-    formData.value.secondNearestLandmarkName = `landmark_2_${randomNum}.jpg`
-
-    formData.value.termsAndConditionsAgreement = true
     currentStep.value = 5
   }
 
@@ -976,6 +1020,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     uploadPayloadMode,
     setUploadPayloadMode,
     toggleUploadPayloadMode,
+    fillStep,
     fillSampleApplication,
     resetForm,
     openModal,

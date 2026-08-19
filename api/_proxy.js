@@ -93,8 +93,8 @@ export async function proxyRequest(req, res, targetPath = null) {
             ['houseFrontPicture', 'house_front_photo.jpg'],
             ['governmentValidId', 'government_valid_id.jpg'],
             ['secondGovernmentValidId', 'second_valid_id.jpg'],
-            ['firstNearestLandmark', 'first_nearest_landmark.jpg'],
-            ['secondNearestLandmark', 'second_nearest_landmark.jpg']
+            ['proofOfBilling', 'proof_of_billing.pdf'],
+            ['documentPicture', 'supporting_document.pdf']
           ]
           for (const [field, fallback] of fileFields) {
             if (bodyObj[field] && typeof bodyObj[field] === 'string' && (bodyObj[field].startsWith('data:') || bodyObj[field].length > 150)) {
