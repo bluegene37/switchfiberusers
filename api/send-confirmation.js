@@ -126,7 +126,7 @@ function generateEmailHtml({
                 Need help or have questions? Contact our customer support team:
               </p>
               <p style="margin: 0 0 16px; color: #94a3b8; font-weight: 600;">
-                Hotline: (02) 8000-SWITCH | Email: support@switchfiber.ph
+                Hotline: 0915 407 7565 (Globe) | Email: customercare@switchfiber.ph
               </p>
               <p style="margin: 0; font-size: 11px; color: #475569;">
                 &copy; ${currentYear} Switch Fiber Philippines. All rights reserved. Republic Act No. 10173 Compliant.
@@ -175,7 +175,32 @@ export async function sendConfirmationEmail(data) {
   const trackingUrl = `${baseOrigin}/status?code=${encodeURIComponent(referenceCode)}`
 
   const apiKey = process.env.RESEND_API_KEY
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Switch Fiber <onboarding@resend.dev>'
+
+  // Resend requires "email@example.com" or "Name <email@example.com>".
+  // A malformed RESEND_FROM_EMAIL (seen live: missing angle brackets) made
+  // every send fail with a 422 — normalize or fall back instead.
+  // Production sender on the company domain (must be Verified under
+  // Resend → Domains, via DKIM/SPF records at the DNS host). For test mode
+  // before verification, set RESEND_FROM_EMAIL to
+  // "Switch Fiber <onboarding@resend.dev>" — that sender only delivers to the
+  // Resend account owner's own inbox.
+  const DEFAULT_FROM = 'Switch Fiber <noreply@harmonyitc.com>'
+  let fromEmail = (process.env.RESEND_FROM_EMAIL || '').trim().replace(/^"|"$/g, '')
+  const validFrom = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(fromEmail) ||
+                    /^.+<[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>$/.test(fromEmail)
+  if (!validFrom) {
+    // Salvage "Name email@host" by wrapping the trailing address in <>.
+    const m = fromEmail.match(/^(.*?)\s*([^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/)
+    if (m && m[1].trim()) {
+      fromEmail = `${m[1].trim()} <${m[2]}>`
+      console.warn(`[Resend Service] RESEND_FROM_EMAIL was missing angle brackets — using "${fromEmail}"`)
+    } else {
+      if (fromEmail) {
+        console.warn(`[Resend Service] RESEND_FROM_EMAIL "${fromEmail}" is not a valid sender — falling back to ${DEFAULT_FROM}`)
+      }
+      fromEmail = DEFAULT_FROM
+    }
+  }
 
   if (!apiKey) {
     console.log(`[Resend Service] RESEND_API_KEY not set — skipped email to ${recipientEmail} for ${referenceCode}`)

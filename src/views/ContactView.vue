@@ -126,6 +126,25 @@
         
         <!-- Card 1: Understand Your Bill Easily -->
         <div class="glass-card p-6 sm:p-8 rounded-3xl border dark:border-slate-800 border-slate-200 space-y-4">
+          <button
+            type="button"
+            @click="openAdvisory(0)"
+            class="block w-full rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-200 relative cursor-zoom-in group/adv"
+            :aria-label="`View full size: ${advisories[0].title}`"
+          >
+            <img
+              :src="advisories[0].src"
+              :alt="advisories[0].alt"
+              class="w-full h-auto group-hover/adv:opacity-90 transition-opacity"
+              decoding="async"
+              width="1080"
+              height="1080"
+            />
+            <span class="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-slate-950/70 text-white text-[10px] font-semibold flex items-center gap-1 pointer-events-none">
+              <Maximize2 class="w-3 h-3" />
+              <span>View Full Size</span>
+            </span>
+          </button>
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#ee2824]/10 text-[#ee2824] flex items-center justify-center font-bold text-lg">1</div>
             <h3 class="font-bold font-heading text-lg dark:text-white text-slate-900">Understand Your Bill Easily</h3>
@@ -145,6 +164,25 @@
 
         <!-- Card 2: Ways to Know Your Account Balance -->
         <div class="glass-card p-6 sm:p-8 rounded-3xl border dark:border-slate-800 border-slate-200 space-y-4">
+          <button
+            type="button"
+            @click="openAdvisory(1)"
+            class="block w-full rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-200 relative cursor-zoom-in group/adv"
+            :aria-label="`View full size: ${advisories[1].title}`"
+          >
+            <img
+              :src="advisories[1].src"
+              :alt="advisories[1].alt"
+              class="w-full h-auto group-hover/adv:opacity-90 transition-opacity"
+              decoding="async"
+              width="1080"
+              height="1080"
+            />
+            <span class="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-slate-950/70 text-white text-[10px] font-semibold flex items-center gap-1 pointer-events-none">
+              <Maximize2 class="w-3 h-3" />
+              <span>View Full Size</span>
+            </span>
+          </button>
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#ee2824]/10 text-[#ee2824] flex items-center justify-center font-bold text-lg">2</div>
             <h3 class="font-bold font-heading text-lg dark:text-white text-slate-900">Ways to Know Your Account Balance</h3>
@@ -160,6 +198,25 @@
 
         <!-- Card 3: Switch Reminder - DO NOT RESET YOUR MODEM -->
         <div class="glass-card p-6 sm:p-8 rounded-3xl border border-[#ee2824]/30 bg-red-500/5 space-y-4">
+          <button
+            type="button"
+            @click="openAdvisory(2)"
+            class="block w-full rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-200 relative cursor-zoom-in group/adv"
+            :aria-label="`View full size: ${advisories[2].title}`"
+          >
+            <img
+              :src="advisories[2].src"
+              :alt="advisories[2].alt"
+              class="w-full h-auto group-hover/adv:opacity-90 transition-opacity"
+              decoding="async"
+              width="1080"
+              height="1080"
+            />
+            <span class="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-slate-950/70 text-white text-[10px] font-semibold flex items-center gap-1 pointer-events-none">
+              <Maximize2 class="w-3 h-3" />
+              <span>View Full Size</span>
+            </span>
+          </button>
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#ee2824] text-white flex items-center justify-center font-bold">
               <AlertTriangle class="w-5 h-5" />
@@ -179,6 +236,25 @@
 
         <!-- Card 4: NO PROCESSING FEE / NO APPLICATION FEE -->
         <div class="glass-card p-6 sm:p-8 rounded-3xl border border-[#ee2824]/30 bg-red-500/5 space-y-4">
+          <button
+            type="button"
+            @click="openAdvisory(3)"
+            class="block w-full rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-200 relative cursor-zoom-in group/adv"
+            :aria-label="`View full size: ${advisories[3].title}`"
+          >
+            <img
+              :src="advisories[3].src"
+              :alt="advisories[3].alt"
+              class="w-full h-auto group-hover/adv:opacity-90 transition-opacity"
+              decoding="async"
+              width="1080"
+              height="1080"
+            />
+            <span class="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-slate-950/70 text-white text-[10px] font-semibold flex items-center gap-1 pointer-events-none">
+              <Maximize2 class="w-3 h-3" />
+              <span>View Full Size</span>
+            </span>
+          </button>
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-[#ee2824] text-white flex items-center justify-center font-bold">
               <ShieldAlert class="w-5 h-5" />
@@ -247,22 +323,95 @@
 
         <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2">
           <Send class="w-4 h-4" />
-          <span>Submit Inquiry</span>
+          <span>Send Inquiry via Email</span>
         </button>
       </form>
 
       <div v-if="submitted" class="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-500 text-xs font-semibold flex items-center gap-2">
         <CheckCircle2 class="w-5 h-5 shrink-0" />
-        <span>Thank you! Your message has been sent to Switch Fiber support team. We will get back to you shortly.</span>
+        <span>
+          Your email app should now be open with your message ready to send — press <strong>Send</strong> there to deliver it.
+          If nothing opened, email us directly at
+          <a href="mailto:customercare@switchfiber.ph" class="underline font-bold">customercare@switchfiber.ph</a>.
+        </span>
       </div>
     </div>
+
+    <!-- Advisory Image Lightbox -->
+    <Teleport to="body">
+      <div
+        v-if="activeAdvisory !== null"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200"
+        @click="closeAdvisory"
+      >
+        <div class="relative max-w-3xl w-full max-h-[92vh] p-2 bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden" @click.stop>
+          <button
+            @click="closeAdvisory"
+            class="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-950/80 text-white hover:bg-[#ee2824] transition-colors"
+            aria-label="Close image viewer"
+          >
+            <X class="w-5 h-5" />
+          </button>
+          <img
+            :src="advisories[activeAdvisory].src"
+            :alt="advisories[activeAdvisory].alt"
+            class="max-h-[80vh] w-auto max-w-full rounded-2xl object-contain mx-auto"
+          />
+          <div class="p-3 text-center text-xs text-slate-300 font-semibold">
+            {{ advisories[activeAdvisory].title }}
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Headphones, Mail, MapPin, AlertTriangle, ShieldAlert, CheckCircle2, Send } from 'lucide-vue-next'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { Headphones, Mail, MapPin, AlertTriangle, ShieldAlert, CheckCircle2, Send, Maximize2, X } from 'lucide-vue-next'
+
+// Official advisory graphics from switchfiber.ph, served locally from
+// public/advisories/ (WebP, optimized from the originals).
+const advisories = [
+  {
+    src: '/advisories/billing-guide.webp',
+    title: 'Understand Your Bill Easily',
+    alt: 'Official Switch Fiber billing guide showing a sample Statement of Account with the Billing Information, Due Date, Total Amount Due and accepted payment methods highlighted'
+  },
+  {
+    src: '/advisories/account-balance.webp',
+    title: 'Ways to Know Your Account Balance',
+    alt: 'Official Switch Fiber guide listing three ways to check your account balance: billing reminder emails, the monthly Statement of Account sent every 23rd, and SMS reminders'
+  },
+  {
+    src: '/advisories/modem-warning.webp',
+    title: 'Switch Reminder: Do Not Reset Your Modem',
+    alt: 'Official Switch Fiber reminder warning not to press the modem reset button because reconfiguration costs 150 pesos; contact Customer Service 09154077565 for connection issues'
+  },
+  {
+    src: '/advisories/no-fee-advisory.webp',
+    title: 'No Processing Fee / No Application Fee',
+    alt: 'Official Switch Fiber advisory: technicians and sales agents are not authorized to collect any fees; report violations to hotlines Smart +63 919 386 9998 or Globe +63 915 407 7565'
+  }
+]
+
+const activeAdvisory = ref(null)
+
+function openAdvisory(index) {
+  activeAdvisory.value = index
+}
+
+function closeAdvisory() {
+  activeAdvisory.value = null
+}
+
+function onKeydown(e) {
+  if (e.key === 'Escape') closeAdvisory()
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 const form = ref({
   name: '',
@@ -275,8 +424,24 @@ const form = ref({
 
 const submitted = ref(false)
 
+// There is no inquiry backend, so the form composes an email in the visitor's
+// own mail app instead of pretending the message was delivered.
 function sendMessage() {
+  const typeLabels = {
+    customer_support: 'Customer Support Inquiry',
+    billing: 'Billing Concern',
+    general: 'General Inquiry',
+    sales: 'Sales & Marketing Inquiry'
+  }
+  const to = form.value.type === 'sales' ? 'sales@switchfiber.ph' : 'customercare@switchfiber.ph'
+  const subject = `[Website Inquiry] ${typeLabels[form.value.type] || 'Inquiry'} — ${form.value.name}`
+  const body =
+    `Name: ${form.value.name}\n` +
+    `Mobile: ${form.value.mobile}\n` +
+    `Email: ${form.value.email}\n` +
+    (form.value.location ? `Location: ${form.value.location}\n` : '') +
+    `\n${form.value.message}`
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   submitted.value = true
-  form.value = { name: '', mobile: '', email: '', type: 'customer_support', location: '', message: '' }
 }
 </script>
