@@ -120,7 +120,7 @@
         <router-link 
           v-if="$route.path !== '/register'" 
           to="/register" 
-          @click="registrationStore.resetForm()" 
+          @click="registrationStore.clearCompletedApplication()" 
           class="btn-primary py-2 px-4 text-xs font-bold shadow-md ml-1 whitespace-nowrap"
         >
           <Sparkles class="w-3.5 h-3.5" />
@@ -199,7 +199,7 @@
         <router-link 
           v-if="$route.path !== '/register'"
           to="/register" 
-          @click="registrationStore.resetForm(); mobileMenuOpen = false"
+          @click="registrationStore.clearCompletedApplication(); mobileMenuOpen = false"
           class="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-[#ee2824] to-[#cc1814] shadow-md hover:opacity-95 transition-all text-sm"
         >
           <Sparkles class="w-4 h-4" />

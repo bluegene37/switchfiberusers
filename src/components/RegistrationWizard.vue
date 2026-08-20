@@ -842,12 +842,26 @@
           <p class="text-[11px] dark:text-slate-400 text-slate-500">Save this reference code to check your real-time installation dispatch status.</p>
         </div>
 
-        <!-- No confirmation email is sent yet, so tell the applicant what to do
-             instead of implying one is on the way. -->
-        <div class="max-w-md mx-auto p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-200 flex items-start justify-center gap-2 text-left">
+        <!-- Email banner reflects what actually happened: green only when the
+             confirmation email was confirmed sent, amber otherwise so the
+             applicant knows to save the code themselves. -->
+        <div
+          v-if="emailStatus === 'sent'"
+          class="max-w-md mx-auto p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start justify-center gap-2 text-left"
+        >
+          <CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+          <span>
+            A copy of your reference code has been emailed to <strong>{{ formData.emailAddress }}</strong>.
+            Our team will also contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
+          </span>
+        </div>
+        <div
+          v-else
+          class="max-w-md mx-auto p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-200 flex items-start justify-center gap-2 text-left"
+        >
           <AlertCircle class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           <span>
-            Please save or screenshot your reference code — we do not email a copy yet.
+            Please save or screenshot your reference code.
             Our team will contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
           </span>
         </div>
@@ -957,6 +971,7 @@ const barangaysList = computed(() => registrationStore.barangaysList)
 const referrersList = computed(() => registrationStore.referrersList)
 const derivedPromo = computed(() => registrationStore.derivedPromo)
 const isSubmitting = computed(() => registrationStore.isSubmitting)
+const emailStatus = computed(() => registrationStore.emailStatus)
 const isLoadingPlans = computed(() => registrationStore.isLoadingPlans)
 const plansError = computed(() => registrationStore.plansError)
 
@@ -1035,6 +1050,12 @@ function syncLocationFromRouteQuery() {
 }
 
 onMounted(() => {
+  // A previously completed application must not greet the next visit to
+  // /register with a stale success screen. Handles the CTAs that link here
+  // directly (home, plan cards, coverage, 404); the navbar/footer links call
+  // the same helper for same-route clicks that never remount this component.
+  // In-progress drafts (no submittedCode yet) are left untouched either way.
+  registrationStore.clearCompletedApplication()
   syncPlanFromRouteQuery()
   syncLocationFromRouteQuery()
 })

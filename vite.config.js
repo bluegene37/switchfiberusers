@@ -8,7 +8,48 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, env)
 
   return {
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      {
+        // Mirrors the Vercel function api/send-confirmation.js in local dev.
+        // Registered as plugin middleware so it runs before the /api proxy —
+        // this route must never be forwarded to the fiber backend.
+        name: 'send-confirmation-dev-middleware',
+        configureServer(server) {
+          server.middlewares.use(async (req, res, next) => {
+            const cleanUrl = req.url?.split('?')[0]
+            if (cleanUrl !== '/api/send-confirmation') return next()
+            if (req.method !== 'POST') {
+              res.statusCode = 405
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ error: 'Method Not Allowed. Use POST.' }))
+              return
+            }
+
+            let body = ''
+            req.on('data', chunk => {
+              body += chunk
+              if (body.length > 64 * 1024) req.destroy()
+            })
+            req.on('end', async () => {
+              try {
+                const data = JSON.parse(body || '{}')
+                const { sendConfirmationEmail } = await import('./api/send-confirmation.js')
+                const result = await sendConfirmationEmail(data)
+                res.statusCode = 200
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify(result))
+              } catch (err) {
+                console.error('[send-confirmation dev]:', err)
+                res.statusCode = 500
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ error: 'Email dispatch failed.' }))
+              }
+            })
+          })
+        }
+      }
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src')

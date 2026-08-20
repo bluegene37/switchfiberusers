@@ -41,7 +41,7 @@
             <li><router-link to="/plans" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
             <li><router-link to="/coverage" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
             <li><router-link to="/contact" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
-            <li><router-link to="/register" @click="registrationStore.resetForm()" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
+            <li><router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
             <li><router-link to="/status" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
           </ul>
         </div>
@@ -83,7 +83,7 @@
         <div class="flex items-center gap-6">
           <span>Binangonan, Rizal, Philippines</span>
           <span>•</span>
-          <router-link to="/register" @click="registrationStore.resetForm()" class="text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
+          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
+import { sendApplicationEmail } from '../services/emailService'
 
 export const regionsList = [
   'Region IV-A (CALABARZON)',
@@ -102,6 +103,12 @@ export const useRegistrationStore = defineStore('registration', () => {
   const resetSignal = ref(0)
   // Full technical detail of the last failed submit, for support/debugging
   const lastSubmitError = ref(null)
+
+  // Outcome of the post-submit confirmation email:
+  // 'idle' | 'sending' | 'sent' | 'failed'. The email is best-effort — it can
+  // never fail the application itself — but the success screen must only say
+  // "we emailed you a copy" when that actually happened.
+  const emailStatus = ref('idle')
 
   // Reference code for the in-flight application. Reused across retries so a
   // failed-then-retried submit does not hand the applicant a different code
@@ -606,11 +613,21 @@ export const useRegistrationStore = defineStore('registration', () => {
     apiError.value = null
     lastSubmitError.value = null
     pendingReferenceCode.value = ''
+    emailStatus.value = 'idle'
     syncSelectedPlan()
     resetSignal.value++
     try {
       localStorage.removeItem('switch_registration_draft')
     } catch (e) {}
+  }
+
+  // Entry links ("Apply Online" in the navbar/footer, plan cards, coverage
+  // pages) call this instead of resetForm(): a finished application is cleared
+  // so the next visit starts fresh, but an in-progress draft is never wiped.
+  function clearCompletedApplication() {
+    if (submittedCode.value) {
+      resetForm()
+    }
   }
 
   function openModal(planId = null) {
@@ -853,6 +870,28 @@ export const useRegistrationStore = defineStore('registration', () => {
       lastSubmitError.value = null
       submittedCode.value = randomCode
       pendingReferenceCode.value = ''
+
+      // Best-effort confirmation email — never blocks or fails the submission.
+      emailStatus.value = 'sending'
+      sendApplicationEmail({
+        recipientEmail: apiPayload.emailAddress,
+        applicantName: `${apiPayload.firstName} ${apiPayload.lastName}`.trim(),
+        referenceCode: randomCode,
+        desiredPlan: formData.value.desiredPlan,
+        installationAddress: apiPayload.installationAddress,
+        barangay: apiPayload.barangay,
+        city: apiPayload.city,
+        mobileNumber: apiPayload.mobileNumber,
+        firstNearestLandmark: apiPayload.firstNearestLandmark
+      }).then(result => {
+        emailStatus.value = result?.success ? 'sent' : 'failed'
+        if (!result?.success) {
+          console.warn('[Confirmation Email] Not sent:', result?.error || '(unknown)')
+        }
+      }).catch(err => {
+        emailStatus.value = 'failed'
+        console.warn('[Confirmation Email] Not sent:', err)
+      })
     } catch (err) {
       // Nothing reached the backend, so this must never look like a success.
       // The applicant's answers stay in the auto-saved draft, so retrying does
@@ -947,10 +986,12 @@ export const useRegistrationStore = defineStore('registration', () => {
     referrersList,
     derivedPromo,
     lastSubmitError,
+    emailStatus,
     submittedApplications,
     submittedCode,
     resetSignal,
     resetForm,
+    clearCompletedApplication,
     openModal,
     closeModal,
     nextStep,
