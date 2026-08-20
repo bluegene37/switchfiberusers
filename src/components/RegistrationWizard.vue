@@ -617,37 +617,69 @@
           />
         </div>
 
+        <!-- 4 & 5. Either-or requirement: Proof of Billing OR Supporting Document -->
+        <div
+          class="md:col-span-2 flex items-start gap-2 p-3 rounded-xl border text-[11px] font-medium leading-relaxed"
+          :class="eitherDocInvalid
+            ? 'border-[#ee2824] bg-[#ee2824]/5 text-[#ee2824]'
+            : eitherDocSatisfied
+              ? 'border-emerald-500/50 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+              : 'dark:border-slate-700 border-slate-300 dark:bg-slate-900/60 bg-slate-50 dark:text-slate-300 text-slate-600'"
+        >
+          <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold shrink-0">*</span>
+          <span v-if="eitherDocSatisfied">
+            Requirement met — you may still upload the other document if you have it.
+          </span>
+          <span v-else>
+            Upload <strong>at least one</strong> of the two documents below: Proof of Billing <strong>OR</strong> Additional Supporting Document. Only one is required.
+          </span>
+        </div>
+
         <!-- 4. Proof of Billing -->
-        <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
+        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getEitherDocCardClass('proofOfBilling')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
-            4. Proof of Billing (Optional)
+            4. Proof of Billing
+            <span class="ml-1 text-[10px] font-semibold normal-case px-1.5 py-0.5 rounded-full dark:bg-slate-800 bg-slate-200 dark:text-slate-300 text-slate-600">Either this or #5</span>
           </label>
           <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
             Recent electric, water, internet, or credit card utility bill (Photo or PDF).
           </p>
-          <DropzoneUploader 
-            v-model="formData.proofOfBilling" 
-            optional
+          <DropzoneUploader
+            v-model="formData.proofOfBilling"
+            :optional="eitherDocSatisfied"
+            :error="eitherDocInvalid"
             v-model:fileName="formData.proofOfBillingName"
             @change="touchField('proofOfBilling')"
           />
+          <p v-if="!hasUpload('proofOfBilling') && hasUpload('documentPicture')" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            Supporting document uploaded — this is no longer required.
+          </p>
         </div>
 
         <!-- 5. Additional Supporting Document -->
-        <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
+        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getEitherDocCardClass('documentPicture')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
-            5. Additional Supporting Document (Optional)
+            5. Additional Supporting Document
+            <span class="ml-1 text-[10px] font-semibold normal-case px-1.5 py-0.5 rounded-full dark:bg-slate-800 bg-slate-200 dark:text-slate-300 text-slate-600">Either this or #4</span>
           </label>
           <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
             Barangay certificate, lease contract, or authorization document (Photo or PDF).
           </p>
-          <DropzoneUploader 
-            v-model="formData.documentPicture" 
-            optional
+          <DropzoneUploader
+            v-model="formData.documentPicture"
+            :optional="eitherDocSatisfied"
+            :error="eitherDocInvalid"
             v-model:fileName="formData.documentPictureName"
             @change="touchField('documentPicture')"
           />
+          <p v-if="!hasUpload('documentPicture') && hasUpload('proofOfBilling')" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            Proof of billing uploaded — this is no longer required.
+          </p>
         </div>
+
+        <p v-if="eitherDocInvalid" class="md:col-span-2 text-[11px] text-[#ee2824] dark:text-[#ff6b67] font-medium">
+          Please upload either a Proof of Billing or an Additional Supporting Document to continue.
+        </p>
 
       </div>
     </div>
@@ -1291,6 +1323,26 @@ function isFieldInvalid(key) {
   return !validateValue(key)
 }
 
+// Either-or requirement: Proof of Billing OR Additional Supporting Document.
+// One of the two must be uploaded; uploading either satisfies both.
+function hasUpload(key) {
+  const val = (formData.value[key] || '').toString().trim()
+  const nameVal = (formData.value[key + 'Name'] || '').toString().trim()
+  return val.length > 0 || nameVal.length > 0
+}
+
+const eitherDocSatisfied = computed(() => hasUpload('proofOfBilling') || hasUpload('documentPicture'))
+
+const eitherDocInvalid = computed(() =>
+  (touched.proofOfBilling || touched.documentPicture) && !eitherDocSatisfied.value
+)
+
+function getEitherDocCardClass(key) {
+  if (hasUpload(key)) return '!border-emerald-500'
+  if (eitherDocInvalid.value) return '!border-[#ee2824] !shadow-sm !shadow-[#ee2824]/20'
+  return 'dark:border-slate-800 border-slate-200'
+}
+
 function getFieldStatusClass(key) {
   if (!touched[key]) return ''
   const val = (formData.value[key] || '').toString().trim()
@@ -1327,8 +1379,10 @@ function handleNextStep() {
   if (currentStep.value === 4) {
     touchField('houseFrontPicture')
     touchField('governmentValidId')
+    touchField('proofOfBilling')
+    touchField('documentPicture')
 
-    if (!validateValue('houseFrontPicture') || !validateValue('governmentValidId')) {
+    if (!validateValue('houseFrontPicture') || !validateValue('governmentValidId') || !eitherDocSatisfied.value) {
       return
     }
   }
