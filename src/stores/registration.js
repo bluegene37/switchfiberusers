@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { sendApplicationEmail } from '../services/emailService'
+import { sendApplicationSms } from '../services/smsService'
 
 export const regionsList = [
   'Region IV-A (CALABARZON)',
@@ -109,6 +110,13 @@ export const useRegistrationStore = defineStore('registration', () => {
   // never fail the application itself — but the success screen must only say
   // "we emailed you a copy" when that actually happened.
   const emailStatus = ref('idle')
+
+  // Outcome of the post-submit confirmation SMS — same contract as
+  // emailStatus: best-effort, never fails the application itself.
+  // Set to true to activate SMS confirmations via Semaphore (see
+  // api/send-sms.js and the SEMAPHORE_* entries in .env.example).
+  const SMS_CONFIRMATIONS_ENABLED = false
+  const smsStatus = ref('idle')
 
   // Reference code for the in-flight application. Reused across retries so a
   // failed-then-retried submit does not hand the applicant a different code
@@ -614,6 +622,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     lastSubmitError.value = null
     pendingReferenceCode.value = ''
     emailStatus.value = 'idle'
+    smsStatus.value = 'idle'
     syncSelectedPlan()
     resetSignal.value++
     try {
@@ -892,6 +901,26 @@ export const useRegistrationStore = defineStore('registration', () => {
         emailStatus.value = 'failed'
         console.warn('[Confirmation Email] Not sent:', err)
       })
+
+      // Best-effort confirmation SMS — parallel to the email, same rules.
+      // Disabled for now (Semaphore account not yet set up); flip
+      // SMS_CONFIRMATIONS_ENABLED below to true once SEMAPHORE_API_KEY is
+      // configured — the endpoint (api/send-sms.js) and UI are already wired.
+      if (SMS_CONFIRMATIONS_ENABLED) {
+        smsStatus.value = 'sending'
+        sendApplicationSms({
+          recipientNumber: apiPayload.mobileNumber,
+          referenceCode: randomCode
+        }).then(result => {
+          smsStatus.value = result?.success ? 'sent' : 'failed'
+          if (!result?.success) {
+            console.warn('[Confirmation SMS] Not sent:', result?.error || '(unknown)')
+          }
+        }).catch(err => {
+          smsStatus.value = 'failed'
+          console.warn('[Confirmation SMS] Not sent:', err)
+        })
+      }
     } catch (err) {
       // Nothing reached the backend, so this must never look like a success.
       // The applicant's answers stay in the auto-saved draft, so retrying does
@@ -987,6 +1016,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     derivedPromo,
     lastSubmitError,
     emailStatus,
+    smsStatus,
     submittedApplications,
     submittedCode,
     resetSignal,

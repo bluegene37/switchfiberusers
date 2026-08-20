@@ -842,17 +842,17 @@
           <p class="text-[11px] dark:text-slate-400 text-slate-500">Save this reference code to check your real-time installation dispatch status.</p>
         </div>
 
-        <!-- Email banner reflects what actually happened: green only when the
-             confirmation email was confirmed sent, amber otherwise so the
-             applicant knows to save the code themselves. -->
+        <!-- Delivery banner reflects what actually happened: green lists only
+             the channels (email / SMS) that confirmed sending, amber otherwise
+             so the applicant knows to save the code themselves. -->
         <div
-          v-if="emailStatus === 'sent'"
+          v-if="deliveredChannelsNote"
           class="max-w-md mx-auto p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start justify-center gap-2 text-left"
         >
           <CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
           <span>
-            A copy of your reference code has been emailed to <strong>{{ formData.emailAddress }}</strong>.
-            Our team will also contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
+            A copy of your reference code has been {{ deliveredChannelsNote }}.
+            Our team will contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
           </span>
         </div>
         <div
@@ -972,6 +972,16 @@ const referrersList = computed(() => registrationStore.referrersList)
 const derivedPromo = computed(() => registrationStore.derivedPromo)
 const isSubmitting = computed(() => registrationStore.isSubmitting)
 const emailStatus = computed(() => registrationStore.emailStatus)
+const smsStatus = computed(() => registrationStore.smsStatus)
+
+// Empty string when nothing was confirmed delivered (renders the amber
+// save-your-code note instead).
+const deliveredChannelsNote = computed(() => {
+  const parts = []
+  if (emailStatus.value === 'sent') parts.push(`emailed to ${formData.value.emailAddress}`)
+  if (smsStatus.value === 'sent') parts.push(`texted to ${formData.value.mobileNumber}`)
+  return parts.join(' and ')
+})
 const isLoadingPlans = computed(() => registrationStore.isLoadingPlans)
 const plansError = computed(() => registrationStore.plansError)
 

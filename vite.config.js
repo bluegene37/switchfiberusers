@@ -11,14 +11,23 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       {
-        // Mirrors the Vercel function api/send-confirmation.js in local dev.
-        // Registered as plugin middleware so it runs before the /api proxy —
-        // this route must never be forwarded to the fiber backend.
-        name: 'send-confirmation-dev-middleware',
+        // Mirrors the notification Vercel functions (api/send-confirmation.js,
+        // api/send-sms.js) in local dev. Registered as plugin middleware so it
+        // runs before the /api proxy — these routes must never be forwarded to
+        // the fiber backend.
+        name: 'notification-dev-middleware',
         configureServer(server) {
+          const routes = {
+            '/api/send-confirmation': async (data) =>
+              (await import('./api/send-confirmation.js')).sendConfirmationEmail(data),
+            '/api/send-sms': async (data) =>
+              (await import('./api/send-sms.js')).sendConfirmationSms(data)
+          }
+
           server.middlewares.use(async (req, res, next) => {
             const cleanUrl = req.url?.split('?')[0]
-            if (cleanUrl !== '/api/send-confirmation') return next()
+            const route = routes[cleanUrl]
+            if (!route) return next()
             if (req.method !== 'POST') {
               res.statusCode = 405
               res.setHeader('Content-Type', 'application/json')
@@ -34,16 +43,15 @@ export default defineConfig(({ mode }) => {
             req.on('end', async () => {
               try {
                 const data = JSON.parse(body || '{}')
-                const { sendConfirmationEmail } = await import('./api/send-confirmation.js')
-                const result = await sendConfirmationEmail(data)
+                const result = await route(data)
                 res.statusCode = 200
                 res.setHeader('Content-Type', 'application/json')
                 res.end(JSON.stringify(result))
               } catch (err) {
-                console.error('[send-confirmation dev]:', err)
+                console.error(`[${cleanUrl} dev]:`, err)
                 res.statusCode = 500
                 res.setHeader('Content-Type', 'application/json')
-                res.end(JSON.stringify({ error: 'Email dispatch failed.' }))
+                res.end(JSON.stringify({ error: 'Dispatch failed.' }))
               }
             })
           })
