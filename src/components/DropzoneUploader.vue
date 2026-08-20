@@ -44,8 +44,8 @@
       <div v-if="fileName" class="w-full flex items-center justify-between gap-3 px-2 py-1 animate-in fade-in duration-200">
         <div class="flex items-center gap-3 overflow-hidden">
           <!-- Thumbnail image or File icon -->
-          <div 
-            @click.stop="openLightbox" 
+          <div
+            @click.stop="openLightbox"
             class="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 border dark:border-slate-700 border-slate-300 relative group cursor-zoom-in"
             title="Click to view full preview"
           >
@@ -60,12 +60,25 @@
             <p class="text-xs font-bold dark:text-white text-slate-900 truncate max-w-[180px] sm:max-w-[240px]">
               {{ fileName }}
             </p>
-            <div class="flex items-center gap-2 mt-0.5">
+            <div class="flex items-center gap-2 mt-0.5 flex-wrap">
               <span class="text-[10px] font-semibold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full flex items-center gap-1">
                 <CheckCircle2 class="w-3 h-3" />
                 <span>Uploaded</span>
               </span>
-              <span v-if="fileSize" class="text-[10px] dark:text-slate-400 text-slate-500 font-mono">{{ fileSize }}</span>
+              <span v-if="fileSize" class="text-[10px] dark:text-slate-400 text-slate-500 font-mono">
+                {{ fileSize }}<template v-if="compressedSize"> → {{ compressedSize }}</template>
+              </span>
+              <span v-if="compressedSize" class="text-[10px] font-semibold text-sky-500 bg-sky-500/10 px-1.5 py-0.5 rounded-full">Compressed</span>
+            </div>
+            <div v-if="displayExif" class="flex items-center gap-2 mt-1 flex-wrap text-[10px] dark:text-slate-400 text-slate-500">
+              <span v-if="displayExif.lat !== null && displayExif.lat !== undefined" class="flex items-center gap-1 font-mono" title="GPS location embedded in the photo">
+                <MapPin class="w-3 h-3 text-[#ee2824] dark:text-[#ff6b67] shrink-0" />
+                {{ displayExif.lat.toFixed(5) }}, {{ displayExif.lng.toFixed(5) }}
+              </span>
+              <span v-if="displayExif.takenAt" class="flex items-center gap-1" title="Date the photo was taken">
+                <Clock class="w-3 h-3 shrink-0" />
+                {{ formatTakenAt(displayExif.takenAt) }}
+              </span>
             </div>
           </div>
         </div>
@@ -161,8 +174,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { UploadCloud, FileCheck, CheckCircle2, Trash2, Camera, Eye, Maximize2, X, AlertCircle } from 'lucide-vue-next'
+import { ref, computed, watch } from 'vue'
+import { UploadCloud, FileCheck, CheckCircle2, Trash2, Camera, Eye, Maximize2, X, AlertCircle, MapPin, Clock } from 'lucide-vue-next'
+import exifr from 'exifr'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -172,10 +186,13 @@ const props = defineProps({
   // Optional uploads render in neutral slate. The brand red reads as
   // "required" (or worse, as an error), which is misleading on a field
   // the applicant can safely skip.
-  optional: { type: Boolean, default: false }
+  optional: { type: Boolean, default: false },
+  // EXIF metadata extracted from the photo ({ lat, lng, takenAt, camera }).
+  // Held by the parent so it survives this component unmounting between steps.
+  exif: { type: Object, default: null }
 })
 
-const emit = defineEmits(['update:modelValue', 'update:fileName', 'change'])
+const emit = defineEmits(['update:modelValue', 'update:fileName', 'update:exif', 'change'])
 
 const fileInputRef = ref(null)
 const cameraInputRef = ref(null)
@@ -186,7 +203,26 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf']
 const filePreviewUrl = ref('')
 const fileSize = ref('')
+const compressedSize = ref('')
 const isLightboxOpen = ref(false)
+
+// Long edges beyond this add nothing for document review but multiply the
+// in-memory base64 payload; phones commonly produce 4000px+ photos.
+const COMPRESS_MAX_DIMENSION = 1600
+const COMPRESS_QUALITY = 0.8
+// Files already this small rarely shrink further; re-encoding them just
+// burns CPU and can even grow PNGs of text documents.
+const COMPRESS_THRESHOLD_BYTES = 300 * 1024
+
+const localExif = ref(null)
+const displayExif = computed(() => localExif.value || props.exif)
+
+function formatTakenAt(iso) {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }) +
+    ' ' + d.toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
+}
 
 // Initialize preview if modelValue has base64 data
 watch(() => props.modelValue, (newVal) => {
@@ -247,7 +283,78 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
-function processFile(file) {
+function readAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error('File could not be read'))
+    reader.onload = (e) => resolve(e.target?.result || '')
+    reader.readAsDataURL(file)
+  })
+}
+
+// Pull the metadata that matters for dispatch verification: where and when
+// the photo was taken, and on what device. Must run on the ORIGINAL file —
+// canvas re-encoding strips EXIF.
+async function extractExif(file) {
+  try {
+    const data = await exifr.parse(file, {
+      pick: ['DateTimeOriginal', 'CreateDate', 'Make', 'Model',
+             'GPSLatitude', 'GPSLongitude', 'GPSLatitudeRef', 'GPSLongitudeRef']
+    })
+    if (!data) return null
+    const dmsToDecimal = (dms, ref) => {
+      if (typeof dms === 'number') return (ref === 'S' || ref === 'W') ? -dms : dms
+      if (!Array.isArray(dms) || dms.length < 1) return null
+      const [d = 0, m = 0, s = 0] = dms
+      const dec = d + m / 60 + s / 3600
+      return (ref === 'S' || ref === 'W') ? -dec : dec
+    }
+    const lat = typeof data.latitude === 'number' ? data.latitude : dmsToDecimal(data.GPSLatitude, data.GPSLatitudeRef)
+    const lng = typeof data.longitude === 'number' ? data.longitude : dmsToDecimal(data.GPSLongitude, data.GPSLongitudeRef)
+    const rawDate = data.DateTimeOriginal || data.CreateDate || null
+    const takenAt = rawDate && !isNaN(new Date(rawDate).getTime()) ? new Date(rawDate).toISOString() : null
+    const camera = [data.Make, data.Model].filter(Boolean).join(' ').trim() || null
+    if (lat === null && !takenAt && !camera) return null
+    return { lat, lng, takenAt, camera }
+  } catch (e) {
+    // A photo without readable EXIF is still a perfectly good upload.
+    return null
+  }
+}
+
+async function compressImage(file) {
+  let bitmap
+  try {
+    // createImageBitmap applies EXIF orientation, so the re-encoded copy
+    // stays upright even though its metadata is gone.
+    bitmap = await createImageBitmap(file)
+  } catch (e) {
+    return null // undecodable here (e.g. HEIC on some browsers) — keep the original
+  }
+  try {
+    const scale = Math.min(1, COMPRESS_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height))
+    const w = Math.max(1, Math.round(bitmap.width * scale))
+    const h = Math.max(1, Math.round(bitmap.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    // JPEG has no alpha channel; without this a transparent PNG turns black.
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, w, h)
+    ctx.drawImage(bitmap, 0, 0, w, h)
+    return canvas.toDataURL('image/jpeg', COMPRESS_QUALITY)
+  } finally {
+    bitmap.close()
+  }
+}
+
+function approxDataUrlBytes(dataUrl) {
+  const base64Part = dataUrl.slice(dataUrl.indexOf(',') + 1)
+  return Math.round(base64Part.length * 3 / 4)
+}
+
+async function processFile(file) {
   if (!file) return
 
   // The dropzone advertises these limits; enforce them rather than letting a
@@ -265,34 +372,51 @@ function processFile(file) {
 
   rejectionMessage.value = ''
   fileSize.value = formatBytes(file.size)
+  compressedSize.value = ''
   const name = file.name
-  emit('update:fileName', name)
+  const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif)$/i.test(name || '')
 
-  const reader = new FileReader()
-  reader.onerror = () => {
-    rejectionMessage.value = 'We could not read that file. Please try another one.'
-  }
-  reader.onload = (e) => {
-    const base64 = e.target?.result || ''
-    if (file.type.startsWith('image/')) {
+  try {
+    let base64 = ''
+    let meta = null
+
+    if (isImage) {
+      meta = await extractExif(file)
+      const original = await readAsDataURL(file)
+      const compressed = file.size > COMPRESS_THRESHOLD_BYTES ? await compressImage(file) : null
+      if (compressed && compressed.length < original.length) {
+        base64 = compressed
+        compressedSize.value = formatBytes(approxDataUrlBytes(compressed))
+      } else {
+        base64 = original
+      }
       filePreviewUrl.value = base64
     } else {
+      base64 = await readAsDataURL(file)
       filePreviewUrl.value = ''
     }
+
+    localExif.value = meta
+    emit('update:fileName', name)
     emit('update:modelValue', base64)
-    emit('change', { name, base64, file })
+    emit('update:exif', meta)
+    emit('change', { name, base64, file, exif: meta })
+  } catch (e) {
+    rejectionMessage.value = 'We could not read that file. Please try another one.'
   }
-  reader.readAsDataURL(file)
 }
 
 function removeFile() {
   filePreviewUrl.value = ''
   fileSize.value = ''
+  compressedSize.value = ''
+  localExif.value = null
   if (fileInputRef.value) fileInputRef.value.value = ''
   if (cameraInputRef.value) cameraInputRef.value.value = ''
   rejectionMessage.value = ''
   emit('update:modelValue', '')
   emit('update:fileName', '')
-  emit('change', { name: '', base64: '', file: null })
+  emit('update:exif', null)
+  emit('change', { name: '', base64: '', file: null, exif: null })
 }
 </script>

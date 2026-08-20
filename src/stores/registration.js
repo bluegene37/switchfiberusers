@@ -172,6 +172,11 @@ export const useRegistrationStore = defineStore('registration', () => {
     documentPicture: '',
     documentPictureName: '',
 
+    // EXIF metadata extracted from uploaded photos, keyed by document field
+    // ({ lat, lng, takenAt, camera }). GPS from the house photo helps the
+    // dispatch team verify the installation address.
+    photoExif: {},
+
     // Option Features
     expressInstallation: false,
 
@@ -707,6 +712,22 @@ export const useRegistrationStore = defineStore('registration', () => {
     return limit ? str.slice(0, limit) : str
   }
 
+  // GPS coordinates read from the uploaded photos' EXIF, folded into the
+  // remarks column since the Applications table has no dedicated field for
+  // them. The house front photo wins — it is taken at the installation site.
+  function photoGpsNote() {
+    const exif = formData.value.photoExif || {}
+    const preferred = ['houseFrontPicture', 'governmentValidId', 'proofOfBilling', 'documentPicture']
+    for (const key of preferred) {
+      const meta = exif[key]
+      if (meta && typeof meta.lat === 'number' && typeof meta.lng === 'number') {
+        const label = key === 'houseFrontPicture' ? 'house photo' : 'photo'
+        return ` | GPS(${label}) ${meta.lat.toFixed(6)},${meta.lng.toFixed(6)}`
+      }
+    }
+    return ''
+  }
+
   // Documents travel as a short filename only — never a base64 data URI, which
   // the backend's nvarchar columns cannot hold.
   function documentFilename(name, dataUri, fallbackName) {
@@ -821,7 +842,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       visitBy: '',
       visitWith: '',
       visitWithOther: '',
-      remarks: cap('remarks', `Online Application ${randomCode}`),
+      remarks: cap('remarks', `Online Application ${randomCode}${photoGpsNote()}`),
       modifiedBy: '0',
       modifiedDate: '',
       userEmail: cap('emailAddress', formData.value.emailAddress)

@@ -564,6 +564,7 @@
 
       <p class="text-xs dark:text-slate-400 text-slate-600">
         Upload clear photos or document files (JPG, PNG, WEBP, or PDF format). You can also click the camera icon to snap a photo directly!
+        Large photos are compressed automatically, and location details embedded in your photos help our team verify the installation site.
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -571,10 +572,12 @@
         <!-- 1. House Front Picture (FULL WIDTH DROPZONE) -->
         <div class="glass-card p-5 rounded-2xl border space-y-3 md:col-span-2" :class="getFieldStatusClass('houseFrontPicture')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">1. House Front Picture <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <DropzoneUploader 
-            v-model="formData.houseFrontPicture" 
+          <DropzoneUploader
+            v-model="formData.houseFrontPicture"
             v-model:fileName="formData.houseFrontName"
+            :exif="getExif('houseFrontPicture')"
             :error="isFieldInvalid('houseFrontPicture')"
+            @update:exif="setExif('houseFrontPicture', $event)"
             @change="touchField('houseFrontPicture')"
           />
           <p v-if="isFieldInvalid('houseFrontPicture')" class="text-[11px] text-[#ee2824] font-medium">
@@ -590,10 +593,12 @@
           <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
             Any valid government-issued ID. Make sure the photo is clear — not blurry and not cropped.
           </p>
-          <DropzoneUploader 
-            v-model="formData.governmentValidId" 
+          <DropzoneUploader
+            v-model="formData.governmentValidId"
             v-model:fileName="formData.governmentValidIdName"
+            :exif="getExif('governmentValidId')"
             :error="isFieldInvalid('governmentValidId')"
+            @update:exif="setExif('governmentValidId', $event)"
             @change="touchField('governmentValidId')"
           />
           <p v-if="isFieldInvalid('governmentValidId')" class="text-[11px] text-[#ee2824] font-medium">
@@ -609,10 +614,12 @@
           <p class="text-[11px] dark:text-slate-400 text-slate-500 leading-relaxed">
             Optional secondary ID (Passport, SSS, UMID, Driver's License).
           </p>
-          <DropzoneUploader 
-            v-model="formData.secondGovernmentValidId" 
+          <DropzoneUploader
+            v-model="formData.secondGovernmentValidId"
             optional
             v-model:fileName="formData.secondGovernmentValidIdName"
+            :exif="getExif('secondGovernmentValidId')"
+            @update:exif="setExif('secondGovernmentValidId', $event)"
             @change="touchField('secondGovernmentValidId')"
           />
         </div>
@@ -649,6 +656,8 @@
             :optional="eitherDocSatisfied"
             :error="eitherDocInvalid"
             v-model:fileName="formData.proofOfBillingName"
+            :exif="getExif('proofOfBilling')"
+            @update:exif="setExif('proofOfBilling', $event)"
             @change="touchField('proofOfBilling')"
           />
           <p v-if="!hasUpload('proofOfBilling') && hasUpload('documentPicture')" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -670,6 +679,8 @@
             :optional="eitherDocSatisfied"
             :error="eitherDocInvalid"
             v-model:fileName="formData.documentPictureName"
+            :exif="getExif('documentPicture')"
+            @update:exif="setExif('documentPicture', $event)"
             @change="touchField('documentPicture')"
           />
           <p v-if="!hasUpload('documentPicture') && hasUpload('proofOfBilling')" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -747,6 +758,9 @@
               </div>
               <div v-if="formData.documentPicture" class="text-[11px] dark:text-slate-400 text-slate-500 border-t dark:border-slate-800 border-slate-100 pt-1">
                 Document: {{ formData.documentPictureName || 'Attached' }}
+              </div>
+              <div v-if="houseFrontGpsLabel" class="text-[11px] text-[#ee2824] dark:text-[#ff6b67] font-medium border-t dark:border-slate-800 border-slate-100 pt-1">
+                House Photo GPS: {{ houseFrontGpsLabel }}
               </div>
             </div>
           </div>
@@ -1199,6 +1213,23 @@ const touched = reactive({})
 function touchField(fieldKey) {
   touched[fieldKey] = true
 }
+
+// Photo EXIF metadata lives in formData so it survives step navigation and
+// travels with the submission (GPS is folded into the remarks column).
+function getExif(key) {
+  return (formData.value.photoExif || {})[key] || null
+}
+
+function setExif(key, meta) {
+  if (!formData.value.photoExif) formData.value.photoExif = {}
+  formData.value.photoExif[key] = meta || null
+}
+
+const houseFrontGpsLabel = computed(() => {
+  const meta = getExif('houseFrontPicture')
+  if (!meta || typeof meta.lat !== 'number' || typeof meta.lng !== 'number') return ''
+  return `${meta.lat.toFixed(5)}, ${meta.lng.toFixed(5)}`
+})
 
 function onMobileInput(key) {
   const currentVal = formData.value[key] || ''
