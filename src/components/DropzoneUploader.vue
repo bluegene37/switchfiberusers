@@ -9,6 +9,17 @@
       @change="onFileSelected" 
     />
 
+    <!-- Separate input so the camera button opens the real device camera
+         instead of the file browser -->
+    <input
+      ref="cameraInputRef"
+      type="file"
+      accept="image/*"
+      capture="environment"
+      class="hidden"
+      @change="onFileSelected"
+    />
+
     <!-- Dropzone Area (Dropzone.dev styling) -->
     <div 
       class="relative border-2 border-dashed rounded-2xl p-4 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center min-h-[120px] select-none"
@@ -123,6 +134,11 @@
 
     </div>
 
+    <p v-if="rejectionMessage" role="alert" class="text-[11px] text-[#ee2824] font-medium flex items-start gap-1">
+      <AlertCircle class="w-3.5 h-3.5 shrink-0 mt-px" />
+      <span>{{ rejectionMessage }}</span>
+    </p>
+
     <!-- Lightbox Modal — teleported to body so the surrounding .glass-panel's
          backdrop-filter doesn't become the containing block for position:fixed -->
     <Teleport to="body">
@@ -146,7 +162,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { UploadCloud, FileCheck, CheckCircle2, Trash2, Camera, Eye, Maximize2, X } from 'lucide-vue-next'
+import { UploadCloud, FileCheck, CheckCircle2, Trash2, Camera, Eye, Maximize2, X, AlertCircle } from 'lucide-vue-next'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -162,7 +178,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'update:fileName', 'change'])
 
 const fileInputRef = ref(null)
+const cameraInputRef = ref(null)
 const isDragging = ref(false)
+const rejectionMessage = ref('')
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf']
 const filePreviewUrl = ref('')
 const fileSize = ref('')
 const isLightboxOpen = ref(false)
@@ -182,28 +203,7 @@ function triggerFilePicker() {
 }
 
 function triggerCameraSnapshot() {
-  const simulatedName = `camera_photo_${Math.floor(1000 + Math.random() * 9000)}.jpg`
-  const canvas = document.createElement('canvas')
-  canvas.width = 600
-  canvas.height = 400
-  const ctx = canvas.getContext('2d')
-  if (ctx) {
-    ctx.fillStyle = '#1e293b'
-    ctx.fillRect(0, 0, 600, 400)
-    ctx.fillStyle = '#ee2824'
-    ctx.font = 'bold 22px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('SWITCH FIBER DOCUMENT PHOTO', 300, 180)
-    ctx.fillStyle = '#94a3b8'
-    ctx.font = '14px monospace'
-    ctx.fillText(`Captured: ${new Date().toLocaleString()}`, 300, 220)
-  }
-  const simulatedBase64 = canvas.toDataURL('image/jpeg')
-  filePreviewUrl.value = simulatedBase64
-  fileSize.value = '142 KB'
-  emit('update:fileName', simulatedName)
-  emit('update:modelValue', simulatedBase64)
-  emit('change', { name: simulatedName, base64: simulatedBase64, file: null })
+  cameraInputRef.value?.click()
 }
 
 function openLightbox() {
@@ -250,11 +250,28 @@ function formatBytes(bytes) {
 function processFile(file) {
   if (!file) return
 
+  // The dropzone advertises these limits; enforce them rather than letting a
+  // 40MB photo be read into memory and silently break the form.
+  const looksAccepted = ACCEPTED_TYPES.includes(file.type) ||
+    /\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(file.name || '')
+  if (!looksAccepted) {
+    rejectionMessage.value = 'That file type is not supported. Please upload a JPG, PNG, WEBP or PDF.'
+    return
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    rejectionMessage.value = `That file is ${formatBytes(file.size)}. Please upload a file under 10MB.`
+    return
+  }
+
+  rejectionMessage.value = ''
   fileSize.value = formatBytes(file.size)
   const name = file.name
   emit('update:fileName', name)
 
   const reader = new FileReader()
+  reader.onerror = () => {
+    rejectionMessage.value = 'We could not read that file. Please try another one.'
+  }
   reader.onload = (e) => {
     const base64 = e.target?.result || ''
     if (file.type.startsWith('image/')) {
@@ -272,6 +289,8 @@ function removeFile() {
   filePreviewUrl.value = ''
   fileSize.value = ''
   if (fileInputRef.value) fileInputRef.value.value = ''
+  if (cameraInputRef.value) cameraInputRef.value.value = ''
+  rejectionMessage.value = ''
   emit('update:modelValue', '')
   emit('update:fileName', '')
   emit('change', { name: '', base64: '', file: null })

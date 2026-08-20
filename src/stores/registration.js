@@ -103,23 +103,20 @@ export const useRegistrationStore = defineStore('registration', () => {
   // Full technical detail of the last failed submit, for support/debugging
   const lastSubmitError = ref(null)
 
-  // Upload Transmission Mode:
-  // 'filename' (Default / Safe for SQL Server VARCHAR columns)
-  // 'base64' (Testing mode for full binary base64 data)
-  const savedPayloadMode = localStorage.getItem('switch_upload_payload_mode')
-  const uploadPayloadMode = ref(savedPayloadMode === 'base64' ? 'base64' : 'filename')
+  // Reference code for the in-flight application. Reused across retries so a
+  // failed-then-retried submit does not hand the applicant a different code
+  // each time (and does not fill the backend with near-duplicate rows).
+  const pendingReferenceCode = ref('')
 
-  function setUploadPayloadMode(mode) {
-    if (mode === 'base64' || mode === 'filename') {
-      uploadPayloadMode.value = mode
-      localStorage.setItem('switch_upload_payload_mode', mode)
-    }
-  }
-
-  function toggleUploadPayloadMode() {
-    const nextMode = uploadPayloadMode.value === 'filename' ? 'base64' : 'filename'
-    setUploadPayloadMode(nextMode)
-  }
+  // Documents are transmitted as short filename strings only. The backend's
+  // Application table stores these in fixed-width nvarchar columns (~255), so
+  // posting a base64 data URI makes SQL Server raise
+  // "String or binary data would be truncated" (error 8152/2628) and the whole
+  // application is rejected. A previous build exposed a UI toggle for a raw
+  // base64 mode; it could only ever fail, so it is gone.
+  try {
+    localStorage.removeItem('switch_upload_payload_mode')
+  } catch (e) {}
 
   // Initial Form State Template
   const getInitialFormData = () => ({
@@ -568,19 +565,8 @@ export const useRegistrationStore = defineStore('registration', () => {
   // Safe LocalStorage Persist Helper to prevent QuotaExceededError with base64 data
   function saveToLocalStorage() {
     try {
-      const sanitizedApps = submittedApplications.value.map(app => {
-        const copy = { ...app }
-        if (copy.payload) {
-          const payloadCopy = { ...copy.payload }
-          if (payloadCopy.houseFrontPicture?.length > 200) payloadCopy.houseFrontPicture = '[Uploaded Photo]'
-          if (payloadCopy.governmentValidId?.length > 200) payloadCopy.governmentValidId = '[Uploaded ID]'
-          if (payloadCopy.secondGovernmentValidId?.length > 200) payloadCopy.secondGovernmentValidId = '[Uploaded ID]'
-          if (payloadCopy.proofOfBilling?.length > 200) payloadCopy.proofOfBilling = '[Uploaded Proof of Billing]'
-          if (payloadCopy.documentPicture?.length > 200) payloadCopy.documentPicture = '[Uploaded Document]'
-          copy.payload = payloadCopy
-        }
-        return copy
-      })
+      // Keep only the last 20 confirmed applications; the tracker never needs more.
+      const sanitizedApps = submittedApplications.value.slice(0, 20).map(({ payload, ...app }) => app)
       localStorage.setItem('switch_applications', JSON.stringify(sanitizedApps))
     } catch (err) {
       console.warn('LocalStorage quota exceeded, trimming older applications:', err)
@@ -619,6 +605,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     formData.value = getInitialFormData()
     apiError.value = null
     lastSubmitError.value = null
+    pendingReferenceCode.value = ''
     syncSelectedPlan()
     resetSignal.value++
     try {
@@ -658,100 +645,136 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
+  // Column widths probed against the live Application table. SQL Server
+  // rejects the entire insert when a value overflows its column, so cap here
+  // instead of letting the applicant lose a filled-in form to an HTTP 500.
+  const FIELD_LIMITS = {
+    firstName: 100,
+    middleName: 100,
+    lastName: 100,
+    emailAddress: 100,
+    mobileNumber: 20,
+    secondaryMobileNumber: 20,
+    region: 100,
+    city: 100,
+    barangay: 100,
+    installationAddress: 255,
+    landmark: 255,
+    firstNearestLandmark: 255,
+    secondNearestLandmark: 255,
+    desiredPlan: 100,
+    applicablePromo: 100,
+    applyingFor: 100,
+    referredBy: 150,
+    remarks: 255,
+    status: 50
+  }
+
+  // The backend has been observed taking >13s on a cold connection, so the
+  // ceiling is generous. Without one, a stalled request leaves the applicant
+  // staring at a spinner with no way to know it failed.
+  const SUBMIT_TIMEOUT_MS = 45000
+
+  function cap(key, value) {
+    const str = (value === null || value === undefined ? '' : String(value)).trim()
+    const limit = FIELD_LIMITS[key]
+    return limit ? str.slice(0, limit) : str
+  }
+
+  // Documents travel as a short filename only — never a base64 data URI, which
+  // the backend's nvarchar columns cannot hold.
+  function documentFilename(name, dataUri, fallbackName) {
+    if (name && typeof name === 'string' && !name.startsWith('data:')) {
+      const clean = name.replace(/^.*[\\\/]/, '').trim()
+      if (clean.length > 0) return clean.slice(0, 120)
+    }
+    const hasUpload = (typeof dataUri === 'string' && dataUri.length > 0) ||
+                      (typeof name === 'string' && name.length > 0)
+    return hasUpload ? fallbackName : ''
+  }
+
   async function submitApplication() {
+    // Guard against a double-click or an impatient second tap queueing a
+    // duplicate application while the first request is still open.
+    if (isSubmitting.value) {
+      return {
+        referenceCode: pendingReferenceCode.value,
+        delivered: false,
+        alreadyRunning: true,
+        error: lastSubmitError.value
+      }
+    }
+
     isSubmitting.value = true
     apiError.value = null
 
     const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
-    const seconds = String(now.getSeconds()).padStart(2, '0')
-    const randomSuffix = Math.floor(10 + Math.random() * 90)
 
-    const uniqueReferenceCode = `SF-${year}${month}${day}-${hours}${minutes}${seconds}-${randomSuffix}`
-    formData.value.applicationReferenceCode = uniqueReferenceCode
-    formData.value.submissionDate = now.toISOString()
-    const randomCode = uniqueReferenceCode
-
-    const isFilenameMode = uploadPayloadMode.value === 'filename'
-
-    // Helper: Safely resolve document file values
-    // - Safe Mode (Default): Returns a clean, short filename string (<100 chars, never data: URI)
-    // - Base64 Mode (Testing): Returns the raw data URI string for testing DB NVARCHAR(MAX) support
-    function sanitizePayloadFile(name, dataUri, fallbackName, allowBase64 = false) {
-      if (allowBase64 && dataUri && typeof dataUri === 'string' && dataUri.startsWith('data:')) {
-        return dataUri
-      }
-      if (name && typeof name === 'string' && !name.startsWith('data:') && name.length < 120) {
-        const clean = name.replace(/^.*[\\\/]/, '').trim()
-        if (clean.length > 0 && clean.length < 120) return clean
-      }
-      if ((dataUri && typeof dataUri === 'string' && dataUri.length > 0) || (name && typeof name === 'string' && name.length > 0)) {
-        return fallbackName
-      }
-      return ''
+    // Retrying a failed submit keeps the same reference code: the earlier
+    // attempt never created a row, and a fresh code each time would leave the
+    // applicant holding a code nobody can find.
+    if (!pendingReferenceCode.value) {
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const seconds = String(now.getSeconds()).padStart(2, '0')
+      const randomSuffix = Math.floor(10 + Math.random() * 90)
+      pendingReferenceCode.value = `SF-${year}${month}${day}-${hours}${minutes}${seconds}-${randomSuffix}`
     }
 
-    const houseFrontVal = sanitizePayloadFile(
+    const randomCode = pendingReferenceCode.value
+    formData.value.applicationReferenceCode = randomCode
+    formData.value.submissionDate = now.toISOString()
+
+    const houseFrontVal = documentFilename(
       formData.value.houseFrontName,
       formData.value.houseFrontPicture,
-      'house_front_photo.jpg',
-      !isFilenameMode
+      'house_front_photo.jpg'
     )
-
-    const governmentValidIdVal = sanitizePayloadFile(
+    const governmentValidIdVal = documentFilename(
       formData.value.governmentValidIdName,
       formData.value.governmentValidId,
-      'government_valid_id.jpg',
-      !isFilenameMode
+      'government_valid_id.jpg'
     )
-
-    const secondGovernmentValidIdVal = sanitizePayloadFile(
+    const secondGovernmentValidIdVal = documentFilename(
       formData.value.secondGovernmentValidIdName,
       formData.value.secondGovernmentValidId,
-      'second_valid_id.jpg',
-      !isFilenameMode
+      'second_valid_id.jpg'
     )
-
-    const proofOfBillingVal = sanitizePayloadFile(
+    const proofOfBillingVal = documentFilename(
       formData.value.proofOfBillingName,
       formData.value.proofOfBilling,
-      'proof_of_billing.pdf',
-      !isFilenameMode
+      'proof_of_billing.pdf'
     )
-
-    const documentPictureVal = sanitizePayloadFile(
+    const documentPictureVal = documentFilename(
       formData.value.documentPictureName,
       formData.value.documentPicture,
-      'supporting_document.pdf',
-      !isFilenameMode
+      'supporting_document.pdf'
     )
 
-    const firstNearestLandmarkText = (formData.value.firstNearestLandmark || '').trim()
-    const secondNearestLandmarkText = (formData.value.secondNearestLandmark || '').trim()
-    const landmarkText = (formData.value.landmark || firstNearestLandmarkText).trim()
+    const firstNearestLandmarkText = cap('firstNearestLandmark', formData.value.firstNearestLandmark)
+    const secondNearestLandmarkText = cap('secondNearestLandmark', formData.value.secondNearestLandmark)
+    const landmarkText = cap('landmark', formData.value.landmark || firstNearestLandmarkText)
 
-    // Construct exact JSON API Payload requested by user
     const apiPayload = {
       timestamp: formData.value.submissionDate,
-      emailAddress: formData.value.emailAddress,
-      region: formData.value.region,
-      city: formData.value.city,
-      barangay: formData.value.barangay,
-      referredBy: formData.value.referredBy || '',
-      firstName: formData.value.firstName,
-      middleName: formData.value.middleName || '',
-      lastName: formData.value.lastName,
-      mobileNumber: formData.value.mobileNumber,
-      secondaryMobileNumber: formData.value.secondaryMobileNumber || '',
-      installationAddress: formData.value.installationAddress,
+      emailAddress: cap('emailAddress', formData.value.emailAddress),
+      region: cap('region', formData.value.region),
+      city: cap('city', formData.value.city),
+      barangay: cap('barangay', formData.value.barangay),
+      referredBy: cap('referredBy', formData.value.referredBy),
+      firstName: cap('firstName', formData.value.firstName),
+      middleName: cap('middleName', formData.value.middleName),
+      lastName: cap('lastName', formData.value.lastName),
+      mobileNumber: cap('mobileNumber', formData.value.mobileNumber),
+      secondaryMobileNumber: cap('secondaryMobileNumber', formData.value.secondaryMobileNumber),
+      installationAddress: cap('installationAddress', formData.value.installationAddress),
       landmark: landmarkText,
       // Backend stores the bare plan name ("SwitchConnect Plan"), not the
       // display string with the price appended.
-      desiredPlan: (formData.value.desiredPlan || '').replace(/\s*\(₱[^)]*\)\s*$/, '').trim(),
+      desiredPlan: cap('desiredPlan', (formData.value.desiredPlan || '').replace(/\s*\(₱[^)]*\)\s*$/, '')),
       proofOfBilling: proofOfBillingVal,
       governmentValidId: governmentValidIdVal,
       secondGovernmentValidId: secondGovernmentValidIdVal,
@@ -760,56 +783,38 @@ export const useRegistrationStore = defineStore('registration', () => {
       termsAndConditionsAgreement: formData.value.termsAndConditionsAgreement ? 'Yes, I Agree' : '',
       firstNearestLandmark: firstNearestLandmarkText,
       secondNearestLandmark: secondNearestLandmarkText,
-      applicablePromo: formData.value.applicablePromo || derivedPromo.value || '',
+      applicablePromo: cap('applicablePromo', formData.value.applicablePromo || derivedPromo.value),
       documentPicture: documentPictureVal,
       barangay1: '',
       barangay2: '',
       pictureofstatmentbillingfromotherprovider: '',
       referrersAccountNumber: '',
       // Matches the values already present in the Applications table
-      applyingFor: formData.value.applyingFor || 'Residential Fiber',
+      applyingFor: cap('applyingFor', formData.value.applyingFor || 'Residential Fiber'),
       status: 'In Progress',
       visitBy: '',
       visitWith: '',
       visitWithOther: '',
-      remarks: `Online Application ${randomCode}`,
+      remarks: cap('remarks', `Online Application ${randomCode}`),
       modifiedBy: '0',
       modifiedDate: '',
-      userEmail: formData.value.emailAddress
+      userEmail: cap('emailAddress', formData.value.emailAddress)
     }
 
-    // Persist locally
-    const newApp = {
-      referenceCode: randomCode,
-      applicantName: `${formData.value.firstName} ${formData.value.middleName ? formData.value.middleName + ' ' : ''}${formData.value.lastName}`,
-      email: formData.value.emailAddress,
-      mobile: formData.value.mobileNumber,
-      plan: formData.value.desiredPlan,
-      city: formData.value.city,
-      barangay: formData.value.barangay,
-      streetAddress: formData.value.installationAddress,
-      expressInstallation: formData.value.expressInstallation,
-      date: new Date().toISOString().split('T')[0],
-      status: 'Application Submitted',
-      statusStep: 1,
-      notes: 'Application logged. Account officer is reviewing uploaded government IDs and signature.',
-      payload: apiPayload
-    }
+    const endpoint = `${API_BASE}/api/Applications`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS)
+    let delivered = false
 
-    submittedApplications.value.unshift(newApp)
-    saveToLocalStorage()
-
-    // Attempt POST to backend API endpoint (proxied via /api/Applications)
     try {
-      const endpoint = `${API_BASE}/api/Applications`
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Switch-Payload-Mode': uploadPayloadMode.value
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(apiPayload)
+        body: JSON.stringify(apiPayload),
+        signal: controller.signal
       })
 
       if (!response.ok) {
@@ -822,62 +827,50 @@ export const useRegistrationStore = defineStore('registration', () => {
         err.responseBody = body
         throw err
       }
+
       await response.json().catch(() => ({}))
-      newApp.delivered = true
+      delivered = true
+
+      // Only a confirmed insert becomes a trackable application.
+      submittedApplications.value.unshift({
+        referenceCode: randomCode,
+        applicantName: `${apiPayload.firstName} ${apiPayload.middleName ? apiPayload.middleName + ' ' : ''}${apiPayload.lastName}`.trim(),
+        email: apiPayload.emailAddress,
+        mobile: apiPayload.mobileNumber,
+        plan: formData.value.desiredPlan,
+        city: apiPayload.city,
+        barangay: apiPayload.barangay,
+        streetAddress: apiPayload.installationAddress,
+        expressInstallation: formData.value.expressInstallation,
+        date: now.toISOString().split('T')[0],
+        status: 'Application Submitted',
+        statusStep: 1,
+        notes: 'Application logged. Account officer is reviewing your submitted details.',
+        delivered: true
+      })
+      saveToLocalStorage()
+
       lastSubmitError.value = null
       submittedCode.value = randomCode
-
-      // Dispatch applicant confirmation email via Resend service
-      if (formData.value.emailAddress && formData.value.emailAddress.includes('@')) {
-        try {
-          const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://switchfiber.ph'
-          fetch('/api/send-confirmation', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              recipientEmail: formData.value.emailAddress,
-              applicantName: `${formData.value.firstName || ''} ${formData.value.lastName || ''}`.trim(),
-              referenceCode: randomCode,
-              desiredPlan: formData.value.desiredPlan,
-              installationAddress: formData.value.installationAddress,
-              barangay: formData.value.barangay,
-              city: formData.value.city,
-              mobileNumber: formData.value.mobileNumber,
-              firstNearestLandmark: formData.value.firstNearestLandmark,
-              originUrl
-            })
-          })
-          .then(async (res) => {
-            const data = await res.json().catch(() => ({}))
-            if (!res.ok) {
-              console.warn('[Confirmation Email Notice]:', data.error || data)
-            } else if (data.simulated) {
-              console.info('[Confirmation Email Notice]: Simulated email (No RESEND_API_KEY set). Add RESEND_API_KEY to send real emails.')
-            } else {
-              console.info('[Confirmation Email Success]: Email delivered to', data.recipientEmail, '(ID:', data.id, ')')
-            }
-          })
-          .catch(mailErr => {
-            console.warn('[Confirmation Email Network Notice]:', mailErr)
-          })
-        } catch (e) {
-          console.warn('[Confirmation Email Dispatch]:', e)
-        }
-      }
+      pendingReferenceCode.value = ''
     } catch (err) {
-      // The application is kept locally so nothing the applicant typed is lost,
-      // but we must NOT report success — previously a failed POST still showed
-      // a reference code and confetti while the backend never received it.
+      // Nothing reached the backend, so this must never look like a success.
+      // The applicant's answers stay in the auto-saved draft, so retrying does
+      // not mean retyping the form.
+      const aborted = err.name === 'AbortError'
       const detail = {
         at: new Date().toISOString(),
         referenceCode: randomCode,
-        endpoint: `${API_BASE}/api/Applications`,
+        endpoint,
         httpStatus: err.httpStatus ?? null,
-        message: err.message || String(err),
-        // A network/TLS failure surfaces as an opaque "Failed to fetch"
-        likelyCause: err.httpStatus
-          ? 'Server rejected the request — see responseBody.'
-          : 'Request never reached the server (network, CORS, or TLS certificate).',
+        message: aborted
+          ? `Timed out after ${Math.round(SUBMIT_TIMEOUT_MS / 1000)}s`
+          : (err.message || String(err)),
+        likelyCause: aborted
+          ? 'The server did not answer in time.'
+          : (err.httpStatus
+            ? 'Server rejected the request — see responseBody.'
+            : 'Request never reached the server (network, CORS, or TLS certificate).'),
         responseBody: (err.responseBody || '').slice(0, 2000),
         payloadSizeKb: Math.round(JSON.stringify(apiPayload).length / 1024)
       }
@@ -894,19 +887,15 @@ export const useRegistrationStore = defineStore('registration', () => {
         `  body      : ${detail.responseBody || '(empty)'}`
       )
 
-      newApp.delivered = false
-      newApp.status = 'Not yet submitted'
-      newApp.notes = 'Saved on this device only — our server did not confirm receipt. Please contact us with this reference so we can complete it.'
-      newApp.errorDetail = detail
       apiError.value = 'We could not reach our servers, so your application has not been received yet.'
     } finally {
-      saveToLocalStorage()
+      clearTimeout(timeoutId)
       isSubmitting.value = false
     }
 
     return {
       referenceCode: randomCode,
-      delivered: newApp.delivered === true,
+      delivered,
       error: lastSubmitError.value
     }
   }
@@ -914,7 +903,9 @@ export const useRegistrationStore = defineStore('registration', () => {
   function findApplicationByCode(code) {
     if (!code) return null
     const cleanCode = code.trim().toUpperCase()
-    const found = submittedApplications.value.find(app => app.referenceCode.toUpperCase() === cleanCode)
+    const found = submittedApplications.value.find(
+      app => app.referenceCode?.toUpperCase() === cleanCode && app.delivered !== false
+    )
     if (found) return found
 
     // Built-in Demo Code for previewing the tracker UI
@@ -934,75 +925,6 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
 
     return null
-  }
-
-  // Pre-fill realistic sample data for testing specific steps
-  function fillStep(step = currentStep.value) {
-    const randomNum = Math.floor(1000 + Math.random() * 9000)
-
-    if (step === 1) {
-      formData.value.firstName = 'Juan'
-      formData.value.middleName = 'Santos'
-      formData.value.lastName = `Dela Cruz ${randomNum}`
-      formData.value.emailAddress = `test.applicant.${randomNum}@switchfiber.ph`
-      formData.value.mobileNumber = '09171234567'
-      formData.value.secondaryMobileNumber = '09187654321'
-      formData.value.referredBy = referrersList[0] || 'Paula Marie T. Fermanis'
-    } else if (step === 2) {
-      formData.value.region = 'Region IV-A (CALABARZON)'
-      formData.value.city = 'Binangonan'
-      formData.value.barangay = 'Batingan'
-      formData.value.installationAddress = `Block ${Math.floor(1 + Math.random() * 20)} Lot ${Math.floor(1 + Math.random() * 30)} Sampaguita St.`
-      formData.value.landmark = 'Near Batingan Elementary School'
-      formData.value.firstNearestLandmark = 'Beside Batingan Barangay Outpost (Red Gate)'
-      formData.value.secondNearestLandmark = 'In front of Nanay Rosa Sari-Sari Store'
-      formData.value.applyingFor = 'Residential Fiber'
-    } else if (step === 3) {
-      const plan = availablePlans.value?.[0] || {
-        id: '1',
-        title: 'SwitchLite Plan',
-        price: 699
-      }
-      selectPlan(plan)
-    } else if (step === 4) {
-      const sampleCanvas = document.createElement('canvas')
-      sampleCanvas.width = 400
-      sampleCanvas.height = 300
-      const ctx = sampleCanvas.getContext('2d')
-      if (ctx) {
-        ctx.fillStyle = '#0f172a'
-        ctx.fillRect(0, 0, 400, 300)
-        ctx.fillStyle = '#ee2824'
-        ctx.font = 'bold 18px sans-serif'
-        ctx.textAlign = 'center'
-        ctx.fillText('SAMPLE UPLOAD PHOTO', 200, 140)
-        ctx.fillStyle = '#94a3b8'
-        ctx.font = '12px sans-serif'
-        ctx.fillText(`Test Ref #${randomNum}`, 200, 170)
-      }
-      const sampleBase64 = sampleCanvas.toDataURL('image/jpeg', 0.8)
-
-      formData.value.houseFrontPicture = sampleBase64
-      formData.value.houseFrontName = `house_front_${randomNum}.jpg`
-      formData.value.governmentValidId = sampleBase64
-      formData.value.governmentValidIdName = `national_id_${randomNum}.jpg`
-      formData.value.secondGovernmentValidId = sampleBase64
-      formData.value.secondGovernmentValidIdName = `passport_${randomNum}.jpg`
-      formData.value.proofOfBilling = sampleBase64
-      formData.value.proofOfBillingName = `meralco_bill_${randomNum}.pdf`
-      formData.value.documentPicture = sampleBase64
-      formData.value.documentPictureName = `barangay_cert_${randomNum}.pdf`
-    } else if (step === 5) {
-      formData.value.termsAndConditionsAgreement = true
-    }
-  }
-
-  // Pre-fill realistic sample data across all steps
-  function fillSampleApplication() {
-    for (let s = 1; s <= 5; s++) {
-      fillStep(s)
-    }
-    currentStep.value = 5
   }
 
   return {
@@ -1028,11 +950,6 @@ export const useRegistrationStore = defineStore('registration', () => {
     submittedApplications,
     submittedCode,
     resetSignal,
-    uploadPayloadMode,
-    setUploadPayloadMode,
-    toggleUploadPayloadMode,
-    fillStep,
-    fillSampleApplication,
     resetForm,
     openModal,
     closeModal,

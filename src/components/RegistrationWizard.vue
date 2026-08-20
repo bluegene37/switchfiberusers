@@ -57,59 +57,6 @@
       </div>
     </div>
 
-    <!-- Developer Testing Tools (For QA & Internal Testing Only) -->
-    <div v-if="!submittedCode" class="mb-8 p-3 sm:p-4 rounded-2xl border border-amber-500/40 dark:border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/5 flex flex-wrap items-center justify-between gap-3 text-xs">
-      <div class="flex items-center gap-3 flex-wrap">
-        <!-- Prominent Testing Notice Tag -->
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px] uppercase tracking-wider border border-amber-500/30">
-          <FlaskConical class="w-3.5 h-3.5" />
-          <span>Developer Testing Tool</span>
-        </span>
-
-        <div class="flex items-center gap-2">
-          <span class="font-semibold text-slate-700 dark:text-slate-300">Format:</span>
-          <div class="inline-flex rounded-xl p-0.5 bg-slate-200/80 dark:bg-slate-800 border border-slate-300/80 dark:border-slate-700">
-            <button 
-              type="button" 
-              @click="registrationStore.setUploadPayloadMode('filename')"
-              class="px-2.5 py-1 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-              :class="uploadPayloadMode === 'filename' 
-                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm font-bold' 
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
-              title="File Names mode sends safe filenames to avoid SQL column limits"
-            >
-              <FileCheck class="w-3.5 h-3.5" />
-              <span>File Names (Safe)</span>
-            </button>
-            <button 
-              type="button" 
-              @click="registrationStore.setUploadPayloadMode('base64')"
-              class="px-2.5 py-1 rounded-lg text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-              :class="uploadPayloadMode === 'base64' 
-                ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm font-bold' 
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
-              title="Base64 mode sends raw data strings for testing backend VARCHAR/NVARCHAR capacity"
-            >
-              <Binary class="w-3.5 h-3.5" />
-              <span>Raw Base64 (Testing)</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <button 
-          @click="handleTestFillCurrentStep"
-          type="button"
-          class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/40 hover:border-amber-500 text-slate-800 dark:text-slate-200 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all font-semibold flex items-center gap-1.5 text-xs shadow-sm cursor-pointer"
-          :title="`Auto-fill Step ${currentStep} fields with test data`"
-        >
-          <Zap class="w-3.5 h-3.5 text-amber-500" />
-          <span>1-Click Test Fill (Step {{ currentStep }})</span>
-        </button>
-      </div>
-    </div>
-
     <!-- STEP 1: Personal Information -->
     <div v-if="currentStep === 1 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
@@ -130,6 +77,7 @@
           <div class="relative">
             <input 
               v-model="formData.firstName" 
+              maxlength="100"
               @blur="touchField('firstName')"
               type="text" 
               placeholder="e.g. Juan" 
@@ -150,6 +98,7 @@
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Middle Name</label>
           <input 
             v-model="formData.middleName" 
+            maxlength="100"
             type="text" 
             placeholder="e.g. Santos (Optional)" 
             class="input-field" 
@@ -162,6 +111,7 @@
           <div class="relative">
             <input 
               v-model="formData.lastName" 
+              maxlength="100"
               @blur="touchField('lastName')"
               type="text" 
               placeholder="e.g. Dela Cruz" 
@@ -185,6 +135,7 @@
           <div class="relative">
             <input 
               v-model="formData.emailAddress" 
+              maxlength="100"
               @blur="touchField('emailAddress')"
               type="email" 
               placeholder="e.g. juan@example.com" 
@@ -355,6 +306,7 @@
         <div class="relative">
           <textarea 
             v-model="formData.installationAddress" 
+            maxlength="255"
             @blur="touchField('installationAddress')"
             rows="2"
             placeholder="e.g. House No. 123, Block 5 Lot 12 Sunshine Village, National Road" 
@@ -378,6 +330,7 @@
           <div class="relative">
             <textarea 
               v-model="formData.firstNearestLandmark" 
+              maxlength="255"
               @blur="touchField('firstNearestLandmark')"
               rows="2"
               placeholder="e.g. Beside Barangay Hall / Near Water Refilling Station / Yellow gate" 
@@ -401,6 +354,7 @@
           <div class="relative">
             <textarea 
               v-model="formData.secondNearestLandmark" 
+              maxlength="255"
               @blur="touchField('secondNearestLandmark')"
               rows="2"
               placeholder="e.g. Across from San Isidro Chapel / 2 houses after bakery" 
@@ -703,7 +657,7 @@
       <div v-if="!submittedCode">
         <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
           <FileText class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
-          <span>Step 5: Final Review & Digital Signature</span>
+          <span>Step 5: Final Review &amp; Confirmation</span>
         </h3>
 
         <!-- Summary Review Box -->
@@ -767,7 +721,13 @@
         </div>
 
         <!-- Validation Error Alert Banner -->
-        <div v-if="submissionError" class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300">
+        <div
+          v-if="submissionError"
+          ref="errorPanelRef"
+          role="alert"
+          aria-live="assertive"
+          class="scroll-mt-24 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300"
+        >
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
           <div class="space-y-1 min-w-0 flex-1">
             <h4 class="font-bold text-sm">
@@ -872,14 +832,24 @@
             </div>
             <button 
               @click="copyCode" 
-              type="button"
-              class="p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors"
+              type="button" 
+              class="p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors cursor-pointer"
               title="Copy Reference Code"
             >
               <Copy class="w-5 h-5" />
             </button>
           </div>
-          <p class="text-[11px] dark:text-slate-500 text-slate-500">Save this reference code to check your real-time installation dispatch status.</p>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">Save this reference code to check your real-time installation dispatch status.</p>
+        </div>
+
+        <!-- No confirmation email is sent yet, so tell the applicant what to do
+             instead of implying one is on the way. -->
+        <div class="max-w-md mx-auto p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-200 flex items-start justify-center gap-2 text-left">
+          <AlertCircle class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+          <span>
+            Please save or screenshot your reference code — we do not email a copy yet.
+            Our team will contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
+          </span>
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 pt-4">
@@ -925,12 +895,14 @@
       <button 
         v-else 
         @click="handleSubmit" 
-        class="btn-primary text-xs bg-emerald-600 hover:bg-emerald-500"
+        class="btn-primary text-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
         :disabled="isSubmitting"
+        :aria-busy="isSubmitting"
       >
         <RotateCw v-if="isSubmitting" class="w-4 h-4 animate-spin" />
+        <RotateCcw v-else-if="failedReferenceCode" class="w-4 h-4" />
         <Sparkles v-else class="w-4 h-4" />
-        <span>{{ isSubmitting ? 'Submitting Application...' : 'Submit Application' }}</span>
+        <span>{{ submitButtonLabel }}</span>
       </button>
     </div>
 
@@ -960,14 +932,14 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted, watch } from 'vue'
+import { ref, computed, reactive, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import confetti from 'canvas-confetti'
 import { 
   Sparkles, Check, User, MapPin, Wifi, FileText, 
   UploadCloud, CheckCircle2, AlertCircle, Search, ArrowLeft, ArrowRight, 
   RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap, Gift,
-  FileCheck, Binary, FlaskConical } from 'lucide-vue-next'
+  FileCheck } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 import DropzoneUploader from './DropzoneUploader.vue'
 import TermsModal from './TermsModal.vue'
@@ -976,7 +948,6 @@ import MapLocationPicker from './MapLocationPicker.vue'
 
 const route = useRoute()
 const registrationStore = useRegistrationStore()
-const uploadPayloadMode = computed(() => registrationStore.uploadPayloadMode)
 const currentStep = computed(() => registrationStore.currentStep)
 const formData = computed(() => registrationStore.formData)
 const availablePlans = computed(() => registrationStore.availablePlans)
@@ -1084,6 +1055,12 @@ const showCopyToast = ref(false)
 const submissionError = ref('')
 const errorCopied = ref(false)
 const failedReferenceCode = ref('')
+const errorPanelRef = ref(null)
+
+const submitButtonLabel = computed(() => {
+  if (isSubmitting.value) return 'Submitting Application...'
+  return failedReferenceCode.value ? 'Try Submitting Again' : 'Submit Application'
+})
 
 // Turn known backend failures into something a human can act on.
 const friendlyCause = computed(() => {
@@ -1158,30 +1135,6 @@ const touched = reactive({})
 
 function touchField(fieldKey) {
   touched[fieldKey] = true
-}
-
-function handleTestFillCurrentStep() {
-  registrationStore.fillStep(currentStep.value)
-  if (currentStep.value === 1) {
-    touchField('firstName')
-    touchField('lastName')
-    touchField('emailAddress')
-    touchField('mobileNumber')
-  } else if (currentStep.value === 2) {
-    touchField('region')
-    touchField('city')
-    touchField('barangay')
-    touchField('installationAddress')
-    touchField('firstNearestLandmark')
-  } else if (currentStep.value === 4) {
-    touchField('houseFrontPicture')
-    touchField('governmentValidId')
-    touchField('secondGovernmentValidId')
-    touchField('proofOfBilling')
-    touchField('documentPicture')
-  } else if (currentStep.value === 5) {
-    touchField('termsAndConditionsAgreement')
-  }
 }
 
 function onMobileInput(key) {
@@ -1368,16 +1321,21 @@ function printReceipt() {
 async function handleSubmit() {
   touchField('termsAndConditionsAgreement')
 
+  if (isSubmitting.value) return
+
   // Check terms agreement
   if (!formData.value.termsAndConditionsAgreement) {
     submissionError.value = 'Please check the box to agree to the Terms & Conditions.'
+    await revealError()
     return
   }
 
   submissionError.value = ''
+  failedReferenceCode.value = ''
 
   try {
     const result = await registrationStore.submitApplication()
+    if (result.alreadyRunning) return
     wasDelivered.value = result.delivered
 
     if (result.delivered) {
@@ -1392,10 +1350,34 @@ async function handleSubmit() {
       failedReferenceCode.value = result.referenceCode
       submissionError.value =
         'Your application was NOT submitted. Nothing has been received by our team yet.'
+      await revealError()
     }
   } catch (err) {
     console.error('Submission failed:', err)
     submissionError.value = 'Failed to submit application. Please check your network connection.'
+    await revealError()
   }
+}
+
+// A failure below the fold is a failure the applicant will not see — they just
+// press Submit again. Bring the message to them.
+async function revealError() {
+  await nextTick()
+  // Let the panel's entry animation and layout settle first; measuring too
+  // early left the alert sitting just above the viewport.
+  await new Promise(resolve => setTimeout(resolve, 350))
+  const panel = errorPanelRef.value
+  if (!panel) return
+  // Default behavior lets the stylesheet's `scroll-behavior: smooth` animate it.
+  panel.scrollIntoView({ block: 'start' })
+  // Some engines silently drop smooth scrolls. If the panel still isn't in
+  // view a moment later, jump to it — an unseen failure message is the one
+  // thing this function must never allow.
+  setTimeout(() => {
+    const rect = panel.getBoundingClientRect()
+    if (rect.top < 0 || rect.top > window.innerHeight - 120) {
+      panel.scrollIntoView({ behavior: 'instant', block: 'start' })
+    }
+  }, 700)
 }
 </script>

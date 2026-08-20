@@ -144,26 +144,52 @@ const apiPayload = {
 
 ---
 
-### Step 3: Implement Offline LocalStorage Fallback
+### Step 3: Only Report Success After the Backend Confirms
 
-To prevent data loss when backend services encounter network issues or CORS restrictions:
+**Never** cache a record as "submitted" before the POST succeeds. An earlier
+build did exactly that — the applicant saw a reference code and confetti while
+the backend had rejected the insert. The correct order is:
 
 ```javascript
-// Save to local cache first
-submittedApplications.value.unshift(newApplicationRecord)
-localStorage.setItem('switch_applications', JSON.stringify(submittedApplications.value))
-
-// Then send POST request
 try {
-  await fetch('/api/Applications', {
+  const response = await fetch('/api/Applications', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(apiPayload)
   })
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+    const err = new Error(`HTTP ${response.status}`)
+    err.responseBody = body
+    throw err
+  }
+
+  // ONLY now is the application real: cache it and show the success screen.
+  submittedApplications.value.unshift(newApplicationRecord)
+  localStorage.setItem('switch_applications', JSON.stringify(submittedApplications.value))
 } catch (err) {
-  console.warn('Backend API request failed, fallback saved locally:', err)
+  // Keep the form state (the draft autosave already has it), surface the
+  // failure to the applicant, and let them retry with the SAME reference code.
+  lastSubmitError.value = { message: err.message, responseBody: err.responseBody }
 }
 ```
+
+**Backend column limits.** The `Application` table stores most text fields in
+fixed-width `nvarchar` columns (names/emails ≈ 100 chars, addresses/landmarks
+≈ 255 chars). Oversized values make SQL Server reject the *entire* insert with
+"String or binary data would be truncated". Document fields
+(`houseFrontPicture`, `governmentValidId`, …) must be short filename strings —
+never base64 data URIs. `submitApplication()` in `src/stores/registration.js`
+caps every field (see `FIELD_LIMITS`) before sending; keep any new field in
+that map.
+
+**Serverless proxy allowlist.** `api/_proxy.js` only forwards
+`GET /api/Plans` and `POST /api/Applications`. This is deliberate: the
+upstream API is unauthenticated, so an open passthrough would let anyone read
+applicant records through this site's domain. When a new endpoint is needed,
+add it to `ALLOWED_ROUTES` explicitly (and think about what it exposes).
+Upstream 5xx bodies are logged server-side but replaced with a generic message
+before reaching the browser — they contain SQL/EF Core internals.
 
 ---
 
