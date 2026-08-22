@@ -250,50 +250,49 @@
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <!-- Region -->
+        <!-- Province (stored in formData.region — the backend column is named "region") -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Region <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <select 
-            v-model="formData.region" 
+          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Province <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <SearchableSelect
+            v-model="formData.region"
+            :options="provincesList"
+            placeholder="Choose Province"
+            :status-class="getFieldStatusClass('region')"
             @blur="touchField('region')"
-            class="input-field"
-            :class="getFieldStatusClass('region')"
-          >
-            <option v-for="reg in regionsList" :key="reg" :value="reg">{{ reg }}</option>
-          </select>
+          />
           <p v-if="isFieldInvalid('region')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
-            Region selection is required.
+            Province selection is required.
           </p>
         </div>
 
-        <!-- City -->
+        <!-- City / Municipality — filtered by the selected province -->
         <div>
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">City / Town <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <select 
-            v-model="formData.city" 
+          <SearchableSelect
+            v-model="formData.city"
+            :options="citiesList"
+            placeholder="Choose City / Town"
+            :status-class="getFieldStatusClass('city')"
             @blur="touchField('city')"
-            class="input-field"
-            :class="getFieldStatusClass('city')"
-          >
-            <option v-for="c in citiesList" :key="c" :value="c">{{ c }}</option>
-          </select>
+          />
           <p v-if="isFieldInvalid('city')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
             City selection is required.
           </p>
         </div>
 
-        <!-- Barangay -->
+        <!-- Barangay — filtered by the selected city; typed entries allowed
+             when the barangay lookup is unavailable -->
         <div>
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Barangay <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <select 
-            v-model="formData.barangay" 
+          <SearchableSelect
+            v-model="formData.barangay"
+            :options="barangayOptions"
+            placeholder="Choose or type Barangay"
+            :allow-custom="true"
+            :loading="isLoadingBarangays"
+            :status-class="getFieldStatusClass('barangay')"
             @blur="touchField('barangay')"
-            class="input-field"
-            :class="getFieldStatusClass('barangay')"
-          >
-            <option value="" disabled>Choose Barangay</option>
-            <option v-for="b in barangaysList" :key="b" :value="b">{{ b }} (Fiber Active)</option>
-          </select>
+          />
           <p v-if="isFieldInvalid('barangay')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
             Barangay selection is required.
           </p>
@@ -981,10 +980,11 @@
       @select="registrationStore.selectPlan"
     />
 
-    <MapLocationPicker 
-      :isOpen="isMapModalOpen" 
+    <MapLocationPicker
+      :isOpen="isMapModalOpen"
       :barangaysList="barangaysList"
-      @close="isMapModalOpen = false" 
+      :initialPlace="{ city: formData.city, province: formData.region }"
+      @close="isMapModalOpen = false"
       @confirm="handleMapConfirm"
     />
 
@@ -1001,19 +1001,23 @@ import {
   RotateCw, RotateCcw, SlidersHorizontal, Navigation, Copy, Printer, Zap, Gift,
   FileCheck } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
+import { canonicalPlace, samePlace } from '../data/calabarzonLocations'
 import DropzoneUploader from './DropzoneUploader.vue'
 import TermsModal from './TermsModal.vue'
 import PlanCompareModal from './PlanCompareModal.vue'
 import MapLocationPicker from './MapLocationPicker.vue'
+import SearchableSelect from './SearchableSelect.vue'
 
 const route = useRoute()
 const registrationStore = useRegistrationStore()
 const currentStep = computed(() => registrationStore.currentStep)
 const formData = computed(() => registrationStore.formData)
 const availablePlans = computed(() => registrationStore.availablePlans)
-const regionsList = computed(() => registrationStore.regionsList)
+const provincesList = computed(() => registrationStore.provincesList)
 const citiesList = computed(() => registrationStore.citiesList)
 const barangaysList = computed(() => registrationStore.barangaysList)
+const barangayOptions = computed(() => registrationStore.barangayOptions)
+const isLoadingBarangays = computed(() => registrationStore.isLoadingBarangays)
 const referrersList = computed(() => registrationStore.referrersList)
 const derivedPromo = computed(() => registrationStore.derivedPromo)
 const isSubmitting = computed(() => registrationStore.isSubmitting)
@@ -1074,16 +1078,10 @@ function syncPlanFromRouteQuery() {
 // Deep-link support for the coverage map / coverage cards, which link here as
 // /register?barangay=Batingan%20(HQ)&city=Binangonan. Without this the applicant
 // lands on an empty form after telling us exactly where they live.
-function canonicalPlace(value) {
-  return String(value || '')
-    .replace(/\([^)]*\)/g, '')   // drop "(HQ)", "(Binangonan)", "(Phase 2 & 3)"
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-}
-
+// (canonicalPlace comes from calabarzonLocations and drops "(HQ)", casing, etc.)
 function syncLocationFromRouteQuery() {
-  if (!formData.value.region || !regionsList.value.includes(formData.value.region)) {
-    formData.value.region = regionsList.value[0] || 'Region IV-A (CALABARZON)'
+  if (!formData.value.region || !provincesList.value.includes(formData.value.region)) {
+    formData.value.region = provincesList.value[0] || 'Rizal'
   }
 
   const queryCity = route?.query?.city
@@ -1169,8 +1167,20 @@ async function copyErrorDetail() {
 const wasDelivered = ref(true)
 
 function handleMapConfirm(data) {
+  // Order matters: province first so the city list recomputes, then city so
+  // the barangay list follows. Setting all three in one batch keeps the
+  // store's cascade watcher from clearing the values we just pinned.
+  if (data.province) {
+    const matchedProvince = provincesList.value.find(p => samePlace(p, data.province))
+    if (matchedProvince) registrationStore.formData.region = matchedProvince
+  }
+  if (data.city) {
+    const matchedCity = citiesList.value.find(c => samePlace(c, data.city))
+    registrationStore.formData.city = matchedCity || data.city
+  }
   if (data.barangay) {
-    registrationStore.formData.barangay = data.barangay
+    const matchedBarangay = barangaysList.value.find(b => samePlace(b, data.barangay))
+    registrationStore.formData.barangay = matchedBarangay || data.barangay
   }
   if (data.address) {
     registrationStore.formData.installationAddress = data.address
@@ -1258,9 +1268,6 @@ async function useCurrentLocation() {
     const latFixed = lat.toFixed(5)
     const lngFixed = lng.toFixed(5)
 
-    registrationStore.formData.region = 'Region IV-A (CALABARZON)'
-    registrationStore.formData.city = 'Binangonan'
-
     try {
       // Reverse geocode via OpenStreetMap Nominatim API
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
@@ -1268,10 +1275,20 @@ async function useCurrentLocation() {
         const data = await response.json()
         const address = data.address || {}
 
+        // Nominatim reports the province as `state` for PH addresses
+        const detectedProvince = (address.state || address.province || '').trim()
+        const matchedProvince = provincesList.value.find(p => samePlace(p, detectedProvince))
+        if (matchedProvince) registrationStore.formData.region = matchedProvince
+
         // Extract barangay / suburb / village / neighbourhood / quarter
         const detectedSub = (address.suburb || address.quarter || address.village || address.neighbourhood || address.residential || address.hamlet || '').trim()
-        const detectedCity = address.city || address.town || address.municipality || 'Binangonan'
+        const detectedCity = (address.city || address.town || address.municipality || '').trim()
         const detectedRoad = address.road || address.pedestrian || address.highway || ''
+
+        if (detectedCity) {
+          const matchedCity = citiesList.value.find(c => samePlace(c, detectedCity))
+          registrationStore.formData.city = matchedCity || detectedCity
+        }
 
         // Match detected suburb to barangaysList
         if (detectedSub) {
@@ -1302,11 +1319,11 @@ async function useCurrentLocation() {
           }
         }
       } else {
-        registrationStore.formData.installationAddress = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
+        registrationStore.formData.installationAddress = `GPS: ${latFixed}, ${lngFixed}`
       }
     } catch (fetchErr) {
       console.warn('Reverse geocoding fetch warning, using coordinates:', fetchErr)
-      registrationStore.formData.installationAddress = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
+      registrationStore.formData.installationAddress = `GPS: ${latFixed}, ${lngFixed}`
     }
   } catch (geoErr) {
     console.warn('Geolocation failed or permission denied:', geoErr)

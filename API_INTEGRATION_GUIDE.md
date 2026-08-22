@@ -105,7 +105,7 @@ Ensure payload fields match the exact JSON schema expected by the backend:
 const apiPayload = {
   timestamp: new Date().toISOString(),
   emailAddress: formData.value.emailAddress,
-  region: formData.value.region,
+  region: formData.value.region, // holds the PROVINCE (e.g. "Rizal") — backend column is misnamed "region"
   city: formData.value.city,
   barangay: formData.value.barangay,
   referredBy: formData.value.referredBy || '',

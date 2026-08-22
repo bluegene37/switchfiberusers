@@ -40,7 +40,7 @@
               @blur="isSearchFocused = false"
               @keyup.enter="searchAddress"
               type="text" 
-              placeholder="Search landmark, street or barangay (e.g. Batingan, Binangonan)..." 
+              placeholder="Search landmark, street, barangay or city in CALABARZON..."
               class="input-field py-2 text-xs transition-all dark:text-white text-slate-900 bg-white dark:bg-slate-900"
               :class="(!isSearchFocused && !searchQuery) ? 'pl-9' : 'pl-3'"
             />
@@ -83,7 +83,7 @@
           </div>
           <div class="overflow-hidden">
             <span class="text-xs font-bold dark:text-white text-slate-900 block truncate">
-              Pinned Location: {{ selectedBarangay ? 'Brgy. ' + selectedBarangay + ', ' : '' }}Binangonan
+              Pinned Location: {{ selectedBarangay ? 'Brgy. ' + selectedBarangay + ', ' : '' }}{{ [selectedCity, selectedProvince].filter(Boolean).join(', ') || 'CALABARZON' }}
             </span>
             <span v-if="selectedAddress" class="text-[11px] dark:text-slate-400 text-slate-600 block truncate font-medium">
               {{ selectedAddress }}
@@ -115,13 +115,19 @@ import { ref, watch, onUnmounted, nextTick } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapPin, Search, Navigation, RotateCw, CheckCircle2, X } from 'lucide-vue-next'
+import { PROVINCES } from '../data/calabarzonLocations'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
-  barangaysList: { type: Array, default: () => [] }
+  barangaysList: { type: Array, default: () => [] },
+  // Current form selection — the map opens centered on it
+  initialPlace: { type: Object, default: () => ({ city: '', province: '' }) }
 })
 
 const emit = defineEmits(['close', 'confirm'])
+
+// Keeps Nominatim searches inside CALABARZON (lon/lat: left,top,right,bottom)
+const CALABARZON_VIEWBOX = '120.2,15.2,122.5,13.0'
 
 const mapContainerRef = ref(null)
 const searchQuery = ref('')
@@ -133,6 +139,8 @@ const currentLat = ref(14.4646) // Default Binangonan Rizal center
 const currentLng = ref(121.1925)
 const selectedAddress = ref('')
 const selectedBarangay = ref('')
+const selectedCity = ref('')
+const selectedProvince = ref('')
 const selectedRoad = ref('')
 
 let map = null
@@ -143,11 +151,43 @@ watch(() => props.isOpen, async (newVal) => {
     await nextTick()
     setTimeout(() => {
       initMap()
+      centerOnInitialPlace()
     }, 150)
   } else {
     destroyMap()
   }
 })
+
+// Fly the map to the province/city already chosen in the form, so the pin
+// starts near the applicant instead of always at Binangonan.
+async function centerOnInitialPlace() {
+  const { city, province } = props.initialPlace || {}
+  if (!province || !PROVINCES[province]) {
+    updatePosition(currentLat.value, currentLng.value)
+    return
+  }
+
+  if (city) {
+    try {
+      const query = `${city}, ${province}, Philippines`
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+      if (response.ok) {
+        const results = await response.json()
+        if (results && results.length > 0) {
+          const lat = parseFloat(results[0].lat)
+          const lon = parseFloat(results[0].lon)
+          if (map) map.setView([lat, lon], 14)
+          await updatePosition(lat, lon)
+          return
+        }
+      }
+    } catch (e) { /* fall through to the province center */ }
+  }
+
+  const meta = PROVINCES[province]
+  if (map) map.setView(meta.center, meta.zoom + 2)
+  updatePosition(meta.center[0], meta.center[1])
+}
 
 function initMap() {
   if (!mapContainerRef.value) return
@@ -189,9 +229,7 @@ function initMap() {
   map.on('click', (e) => {
     updatePosition(e.latlng.lat, e.latlng.lng)
   })
-
-  // Initial reverse geocode
-  updatePosition(currentLat.value, currentLng.value)
+  // The initial reverse geocode happens in centerOnInitialPlace()
 }
 
 function destroyMap() {
@@ -217,19 +255,24 @@ async function updatePosition(lat, lng) {
       const data = await response.json()
       const address = data.address || {}
       const detectedSub = (address.suburb || address.quarter || address.village || address.neighbourhood || address.residential || address.hamlet || '').trim()
-      const detectedCity = address.city || address.town || address.municipality || 'Binangonan'
+      const detectedCity = (address.city || address.town || address.municipality || '').trim()
+      // Nominatim reports the province as `state` for PH addresses
+      const detectedProvince = (address.state || address.province || '').trim()
       const detectedRoad = address.road || address.pedestrian || address.highway || ''
 
       selectedRoad.value = detectedRoad
+      selectedCity.value = detectedCity
+      selectedProvince.value = detectedProvince
 
-      // Match barangay
+      // Match barangay against the current form's list; keep the raw
+      // detection otherwise so pinning in a different city still fills it.
       if (detectedSub) {
-        const matched = props.barangaysList.find(b => 
+        const matched = props.barangaysList.find(b =>
           b.toLowerCase() === detectedSub.toLowerCase() ||
-          detectedSub.toLowerCase().includes(b.toLowerCase()) || 
+          detectedSub.toLowerCase().includes(b.toLowerCase()) ||
           b.toLowerCase().includes(detectedSub.toLowerCase())
         )
-        selectedBarangay.value = matched || ''
+        selectedBarangay.value = matched || detectedSub
       } else {
         selectedBarangay.value = ''
       }
@@ -243,11 +286,11 @@ async function updatePosition(lat, lng) {
 
       selectedAddress.value = parts.join(', ')
     } else {
-      selectedAddress.value = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
+      selectedAddress.value = `GPS: ${latFixed}, ${lngFixed}`
     }
   } catch (err) {
     console.warn('Reverse geocode error:', err)
-    selectedAddress.value = `Binangonan, Rizal (GPS: ${latFixed}, ${lngFixed})`
+    selectedAddress.value = `GPS: ${latFixed}, ${lngFixed}`
   }
 }
 
@@ -255,8 +298,9 @@ async function searchAddress() {
   if (!searchQuery.value.trim()) return
   isSearching.value = true
   try {
-    const query = `${searchQuery.value}, Binangonan, Rizal, Philippines`
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+    // Search the whole CALABARZON region (viewbox-bounded), not one town
+    const query = `${searchQuery.value}, Philippines`
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&viewbox=${CALABARZON_VIEWBOX}&bounded=1`)
     if (response.ok) {
       const results = await response.json()
       if (results && results.length > 0) {
@@ -310,6 +354,8 @@ function confirmPin() {
     lng: currentLng.value,
     address: selectedAddress.value,
     barangay: selectedBarangay.value,
+    city: selectedCity.value,
+    province: selectedProvince.value,
     road: selectedRoad.value
   })
   close()

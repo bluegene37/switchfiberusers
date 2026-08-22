@@ -3,46 +3,20 @@ import { ref, computed, watch } from 'vue'
 import { sendApplicationEmail } from '../services/emailService'
 import { sendApplicationSms } from '../services/smsService'
 
-export const regionsList = [
-  'Region IV-A (CALABARZON)',
-  'National Capital Region (NCR)',
-  'Region III (Central Luzon)'
-]
+// CALABARZON location hierarchy (provinces → cities → barangays) lives in
+// src/data/calabarzonLocations.js. The form field and API payload keep the key
+// `region` because that is the backend Application table's column name
+// (misnamed by the backend team) — everything user-facing says "Province".
+import {
+  PROVINCES,
+  provincesList,
+  fallbackCitiesByProvince,
+  coverageBarangaysByCity,
+  normalizeCityName,
+  samePlace
+} from '../data/calabarzonLocations'
 
-export const citiesList = [
-  'Binangonan',
-  'Angono',
-  'Taytay',
-  'Teresa',
-  'Cardona',
-  'Morong',
-  'Baras',
-  'Tanay',
-  'Antipolo',
-  'San Mateo',
-  'Rodriguez'
-]
-
-export const barangaysList = [
-  'Batingan',
-  'Bilibiran',
-  'Calumpang',
-  'Darangan',
-  'Layunan',
-  'Libid',
-  'Libis',
-  'Lunsad',
-  'Macamot',
-  'Mahabang Parang (Binangonan)',
-  'Mambog',
-  'Palangoy',
-  'Pag-asa',
-  'Pantok',
-  'Pila-pila',
-  'Tagpos',
-  'Tatala',
-  'Tayuman'
-]
+export { provincesList }
 
 // Referrer list transcribed from the official Switch Fiber application form.
 // 'None' is the default; the rest are active sales agents / partners.
@@ -145,7 +119,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     referredBy: '',
     
     // Address Details
-    region: 'Region IV-A (CALABARZON)',
+    region: 'Rizal',
     applyingFor: 'Residential Fiber',
     city: 'Binangonan',
     barangay: '',
@@ -189,7 +163,7 @@ export const useRegistrationStore = defineStore('registration', () => {
   // Registration Form State with localStorage draft auto-recovery
   // Bump when the form's field set or default values change, so a returning
   // visitor's saved draft can't keep posting values the backend no longer uses.
-  const DRAFT_VERSION = 3
+  const DRAFT_VERSION = 4
 
   const getSavedDraft = () => {
     try {
@@ -218,13 +192,136 @@ export const useRegistrationStore = defineStore('registration', () => {
     for (const key of Object.keys(base)) {
       if (draft[key] !== undefined && draft[key] !== '') base[key] = draft[key]
     }
-    if (!regionsList.includes(base.region)) {
-      base.region = 'Region IV-A (CALABARZON)'
+    if (!provincesList.includes(base.region)) {
+      base.region = 'Rizal'
+    }
+    // A drafted city from another province would leave the cascade
+    // inconsistent — drop city and barangay together so the user re-picks.
+    const draftCities = fallbackCitiesByProvince[base.region] || []
+    if (base.city && !draftCities.some(c => samePlace(c, base.city))) {
+      base.city = ''
+      base.barangay = ''
     }
     return base
   }
 
   const formData = ref(mergeDraft(initialDraft))
+
+  // ---- Cascading province → city → barangay catalogs -----------------------
+  // Cities start from the complete offline roster and are upgraded in place
+  // with live PSGC codes; barangays are fetched per city from psgc.gitlab.io.
+  const cityCatalog = ref(
+    Object.fromEntries(
+      Object.entries(fallbackCitiesByProvince).map(([prov, cities]) => [
+        prov,
+        cities.map(name => ({ name, code: null }))
+      ])
+    )
+  )
+  const barangayCatalog = ref({})
+  const isLoadingBarangays = ref(false)
+
+  const citiesList = computed(() =>
+    (cityCatalog.value[formData.value.region] || []).map(c => c.name)
+  )
+
+  function barangayKey(province, city) {
+    return `${province}|${city}`
+  }
+
+  // Plain names, used for matching (map picker, deep links, GPS autofill)
+  const barangaysList = computed(() => {
+    const city = formData.value.city
+    if (!city) return []
+    const coverage = Object.keys(coverageBarangaysByCity).find(c => samePlace(c, city))
+    if (coverage) return coverageBarangaysByCity[coverage]
+    return barangayCatalog.value[barangayKey(formData.value.region, city)] || []
+  })
+
+  // Labeled options for the barangay dropdown — coverage barangays carry the
+  // "(Fiber Active)" badge.
+  const barangayOptions = computed(() => {
+    const city = formData.value.city
+    const hasCoverage = city && Object.keys(coverageBarangaysByCity).some(c => samePlace(c, city))
+    return barangaysList.value.map(name => ({
+      value: name,
+      label: hasCoverage ? `${name} (Fiber Active)` : name
+    }))
+  })
+
+  async function ensureCityCodes(province) {
+    const meta = PROVINCES[province]
+    if (!meta) return
+    const existing = cityCatalog.value[province] || []
+    if (existing.some(c => c.code)) return
+    try {
+      const res = await fetch(`https://psgc.gitlab.io/api/provinces/${meta.psgcCode}/cities-municipalities/`)
+      if (!res.ok) return
+      const list = await res.json()
+      if (!Array.isArray(list) || list.length === 0) return
+      cityCatalog.value = {
+        ...cityCatalog.value,
+        [province]: list
+          .map(c => ({ name: normalizeCityName(c.name), code: c.code }))
+          .sort((a, b) => a.name.localeCompare(b.name))
+      }
+    } catch (e) {
+      // Offline roster stays in place; barangays for this province simply
+      // won't auto-load and the barangay field accepts typed entries.
+    }
+  }
+
+  async function ensureBarangays(province, city) {
+    if (!province || !city) return
+    if (Object.keys(coverageBarangaysByCity).some(c => samePlace(c, city))) return
+    const key = barangayKey(province, city)
+    if (barangayCatalog.value[key]) return
+    await ensureCityCodes(province)
+    const code = (cityCatalog.value[province] || []).find(c => samePlace(c.name, city))?.code
+    if (!code) return
+    isLoadingBarangays.value = true
+    try {
+      const res = await fetch(`https://psgc.gitlab.io/api/cities-municipalities/${code}/barangays/`)
+      if (!res.ok) return
+      const list = await res.json()
+      if (!Array.isArray(list)) return
+      barangayCatalog.value = {
+        ...barangayCatalog.value,
+        [key]: list.map(b => b.name).sort((a, b) => a.localeCompare(b))
+      }
+    } catch (e) {
+      // Typed barangay entries remain possible when the lookup is unavailable.
+    } finally {
+      isLoadingBarangays.value = false
+    }
+  }
+
+  // Keep the cascade consistent. A field is only auto-cleared when it was NOT
+  // set in the same batch of changes (e.g. the map picker sets province, city
+  // and barangay together — none of those should be wiped).
+  watch(
+    () => [formData.value.region, formData.value.city, formData.value.barangay],
+    ([region, city, barangay], [oldRegion, oldCity, oldBarangay]) => {
+      if (region !== oldRegion) {
+        ensureCityCodes(region)
+        if (city === oldCity && city && !citiesList.value.some(c => samePlace(c, city))) {
+          formData.value.city = ''
+          formData.value.barangay = ''
+          return
+        }
+      }
+      if (city !== oldCity) {
+        ensureBarangays(region, city)
+        if (barangay === oldBarangay && barangay) {
+          formData.value.barangay = ''
+        }
+      }
+    }
+  )
+
+  // Warm up the catalogs for the initial (or draft-restored) selection.
+  ensureCityCodes(formData.value.region)
+  ensureBarangays(formData.value.region, formData.value.city)
 
   // Automatically save form history as user types
   watch(formData, (newVal) => {
@@ -1030,9 +1127,11 @@ export const useRegistrationStore = defineStore('registration', () => {
     formData,
     availablePlans,
     plansList,
-    regionsList,
+    provincesList,
     citiesList,
     barangaysList,
+    barangayOptions,
+    isLoadingBarangays,
     referrersList,
     derivedPromo,
     lastSubmitError,
