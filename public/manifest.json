@@ -1,0 +1,19 @@
+{
+  "name": "Switch Fiber - High-Speed Internet in Rizal",
+  "short_name": "Switch Fiber",
+  "description": "Unlimited, ultra-fast pure fiber internet provider in Rizal, Philippines. Apply online and track status.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#ee2824",
+  "orientation": "portrait-primary",
+  "categories": ["utilities", "business", "telecom"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

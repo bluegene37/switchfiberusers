@@ -1,0 +1,35 @@
+name: 💡 Feature Request
+description: Propose a new feature, UX improvement, or enhancement for Switch Fiber
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an idea! Please share the details of the feature or enhancement you'd like to see.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / User Story
+      description: Is your feature request related to a problem or user need?
+      placeholder: As a prospective subscriber, I want to be able to preview Wi-Fi coverage across multi-floor houses...
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution / UI & UX Description
+      description: A clear and concise description of what you want to happen.
+      placeholder: Add a mesh Wi-Fi calculator component on the /plans page...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context / Mockups
+      description: Add any relevant screenshots, sketches, or API documentation.

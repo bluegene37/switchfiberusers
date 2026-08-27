@@ -1,0 +1,74 @@
+name: 🐛 Bug Report
+description: Report an issue, broken UI component, or error in the Switch Fiber web app
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem! Please fill out the form below to help us reproduce and resolve the issue quickly.
+  - type: input
+    id: version
+    attributes:
+      label: Application Version / Commit Hash
+      description: What version or commit of the portal are you running? (e.g. v1.0.0 or main)
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser & Operating System
+      description: Select the primary browser where the issue occurred.
+      options:
+        - Chrome / Chromium
+        - Firefox
+        - Safari (iOS / macOS)
+        - Edge
+        - Android WebView / Mobile Chrome
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise explanation of what the bug is.
+      placeholder: The coverage checker map does not render markers on iOS Safari...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to trigger the issue.
+      placeholder: |
+        1. Go to '/register'
+        2. Select 'Plan 999'
+        3. Drop a pin on the map picker
+        4. See error message
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The pin location should automatically update coordinates and fetch nearest barangays.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console & Network Logs
+      description: Copy and paste relevant browser console errors or network request logs.
+      render: shell
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Verification
+      options:
+        - label: I have verified this is not a duplicate of an existing issue.
+          required: true
+        - label: I have tested that this issue is reproducible.
+          required: true

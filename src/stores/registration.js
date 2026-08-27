@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { sendApplicationEmail } from '../services/emailService'
-import { sendApplicationSms } from '../services/smsService'
+import { sendApplicationEmail } from '../services/emailService.js'
+import { sendApplicationSms } from '../services/smsService.js'
 
 // CALABARZON location hierarchy (provinces → cities → barangays) lives in
 // src/data/calabarzonLocations.js. The form field and API payload keep the key
@@ -14,7 +14,7 @@ import {
   coverageBarangaysByCity,
   normalizeCityName,
   samePlace
-} from '../data/calabarzonLocations'
+} from '../data/calabarzonLocations.js'
 
 export { provincesList }
 
