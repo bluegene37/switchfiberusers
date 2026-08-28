@@ -62,7 +62,8 @@ describe('Router & Route Definitions', () => {
   })
 
   it('configures SEO meta titles and descriptions for routes', () => {
-    assert.ok(routerSource.includes("title: 'Unlimited Ultra-Fast Fiber Internet in Rizal'"))
+    assert.ok(routerSource.includes("const SITE_NAME = 'SwitchFiber - Public'"))
+    assert.ok(routerSource.includes("title: 'Home'"))
     assert.ok(routerSource.includes("title: 'About Us'"))
     assert.ok(routerSource.includes("title: 'Fiber Plans & Pricing'"))
     assert.ok(routerSource.includes("title: 'Area Coverage in Rizal'"))

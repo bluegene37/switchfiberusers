@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PlansView from '../views/PlansView.vue'
 
-const SITE_NAME = 'Switch Fiber'
+const SITE_NAME = 'SwitchFiber - Public'
 
 // Heavier routes are lazy-loaded so the landing page ships a smaller bundle.
 // /register in particular pulls in Leaflet, Dropzone and the signature pad.
@@ -12,7 +12,7 @@ const routes = [
     name: 'Home',
     component: HomeView,
     meta: {
-      title: 'Unlimited Ultra-Fast Fiber Internet in Rizal',
+      title: 'Home',
       description: 'Unlimited, no-data-cap fiber internet in Binangonan and across Rizal. Plans from ₱699/mo with free installation and local 24/7 support.'
     }
   },
