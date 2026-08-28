@@ -134,18 +134,7 @@ flowchart TD
    ```
 
 3. **Configure Environment Variables**:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` with your configuration:
-   ```env
-   BACKEND_API_URL=https://103.249.198.43:8090
-   RESEND_API_KEY=re_your_api_key_here
-   RESEND_FROM_EMAIL="Switch Fiber <noreply@harmonyitc.com>"
-   SITE_URL=http://localhost:3000
-   SEMAPHORE_API_KEY=your_semaphore_api_key
-   SEMAPHORE_SENDER_NAME=SWITCHFIBER
-   ```
+
 
 4. **Start Development Server**:
    ```bash
