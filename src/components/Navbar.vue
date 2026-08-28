@@ -14,6 +14,11 @@
             <span>Customer Hotline:</span>
             <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a>
           </span>
+          <span class="hidden lg:inline-block">|</span>
+          <router-link to="/help" class="hidden lg:flex items-center gap-1.5 font-medium hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">
+            <BookOpen class="w-3.5 h-3.5" />
+            <span>Help</span>
+          </router-link>
         </div>
 
         <div class="flex items-center gap-6">
@@ -277,8 +282,18 @@
             <span>Pay Bills (GCash / Maya)</span>
           </router-link>
 
-          <router-link 
-            to="/tech-support" 
+          <router-link
+            to="/help"
+            @click="mobileMenuOpen = false"
+            class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
+            :class="$route.path === '/help' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
+          >
+            <BookOpen class="w-4 h-4 text-teal-500" />
+            <span>Help Center & User Guide</span>
+          </router-link>
+
+          <router-link
+            to="/tech-support"
             @click="mobileMenuOpen = false"
             class="flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm transition-all"
             :class="$route.path === '/tech-support' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
@@ -337,6 +352,7 @@ import { useRoute } from 'vue-router'
 import {
   Home,
   Info,
+  BookOpen,
   Zap,
   MapPin,
   Search,

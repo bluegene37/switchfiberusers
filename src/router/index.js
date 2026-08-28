@@ -90,6 +90,15 @@ const routes = [
     }
   },
   {
+    path: '/help',
+    name: 'HelpCenter',
+    component: () => import('../views/HelpCenterView.vue'),
+    meta: {
+      title: 'Help Center & User Guide',
+      description: 'Step-by-step guide to Switch Fiber: check coverage, compare plans, apply online, track your application and pay bills — plus answers to common questions.'
+    }
+  },
+  {
     path: '/careers',
     name: 'Careers',
     component: () => import('../views/CareersView.vue'),

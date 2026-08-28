@@ -26,6 +26,7 @@ describe('Router & Route Definitions', () => {
       "'/status'",
       "'/pay-bills'",
       "'/tech-support'",
+      "'/help'",
       "'/careers'",
       "'/:pathMatch(.*)*'"
     ]
@@ -49,6 +50,7 @@ describe('Router & Route Definitions', () => {
       "name: 'ApplicationStatus'",
       "name: 'PayBills'",
       "name: 'TechSupport'",
+      "name: 'HelpCenter'",
       "name: 'Careers'",
       "name: 'NotFound'"
     ]
@@ -72,6 +74,7 @@ describe('Router & Route Definitions', () => {
     assert.ok(routerSource.includes("title: 'Track Application Status'"))
     assert.ok(routerSource.includes("title: 'Pay Bills'"))
     assert.ok(routerSource.includes("title: 'Router & Wi-Fi Setup Guide'"))
+    assert.ok(routerSource.includes("title: 'Help Center & User Guide'"))
     assert.ok(routerSource.includes("title: 'Sales Agent Careers'"))
     assert.ok(routerSource.includes("title: 'Page Not Found'"))
   })

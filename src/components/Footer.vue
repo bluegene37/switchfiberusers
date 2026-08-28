@@ -50,6 +50,7 @@
         <div>
           <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Customer Care</h4>
           <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
+            <li><router-link to="/help" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Help Center & User Guide</router-link></li>
             <li><router-link to="/pay-bills" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Settle Bill (pay.switchfiber.ph)</router-link></li>
             <li><router-link to="/tech-support" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">192.168.1.1 WiFi Router Guide</router-link></li>
             <li><router-link to="/tech-support" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Change WiFi Password & SSID</router-link></li>
