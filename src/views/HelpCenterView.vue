@@ -162,6 +162,16 @@
           <router-link to="/tech-support" class="font-bold underline">Requirements Checklist</router-link>.
         </div>
       </div>
+
+      <div class="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-xs dark:text-rose-300 text-rose-800">
+        <ShieldAlert class="w-5 h-5 text-[#ee2824] shrink-0 mt-0.5" />
+        <div>
+          <strong class="font-bold">Watch out for scams:</strong> Switch Fiber charges <u>no application fee and no processing fee</u>,
+          and no sales agent is authorized to collect payments from applicants. Report any suspicious charge from a technician, agent,
+          or third party to our customer care hotline
+          <a href="tel:09154077565" class="font-bold underline">0915 407 7565</a> right away.
+        </div>
+      </div>
     </div>
 
     <!-- Tracking & Billing How-Tos -->
@@ -217,12 +227,23 @@
             <code class="dark:bg-slate-900 bg-slate-100 text-[#ee2824] dark:text-[#ff6b67] border dark:border-slate-800 border-slate-300 px-2 py-0.5 rounded font-mono text-xs font-bold">pay.switchfiber.ph</code>.
           </li>
           <li class="leading-relaxed">
-            Choose your payment channel: <strong class="dark:text-white text-slate-900 font-bold">GCash</strong>,
-            <strong class="dark:text-white text-slate-900 font-bold">Maya</strong>,
-            <strong class="dark:text-white text-slate-900 font-bold">QR Ph</strong>, or debit/credit card.
+            Enter the <strong class="dark:text-white text-slate-900 font-bold">Account Number</strong> and
+            <strong class="dark:text-white text-slate-900 font-bold">Contact Number</strong> shown on your SOA (Statement of Account),
+            which is emailed and texted to you each billing cycle. Check that all account details are correct.
           </li>
           <li class="leading-relaxed">
-            Enter your account details, confirm the amount, and keep the payment confirmation for your records.
+            Type the amount to be paid, then choose your channel:
+            <strong class="dark:text-white text-slate-900 font-bold">GCash</strong>,
+            <strong class="dark:text-white text-slate-900 font-bold">Maya</strong>,
+            <strong class="dark:text-white text-slate-900 font-bold">WeChat Pay</strong>, or
+            debit/credit card (MasterCard, Visa, JCB).
+          </li>
+          <li class="leading-relaxed">
+            Paying with GCash? Select <strong class="dark:text-white text-slate-900 font-bold">QR Ph</strong>, screenshot the generated QR code,
+            then in the GCash app tap the QR scanner, choose <strong class="dark:text-white text-slate-900 font-bold">Upload QR</strong> and pick that screenshot from your gallery.
+          </li>
+          <li class="leading-relaxed">
+            Verify the amount, click <strong class="text-emerald-600 dark:text-emerald-400 font-bold">Proceed</strong>, and keep the confirmation for your records.
           </li>
         </ol>
 
@@ -325,6 +346,7 @@ import {
   Wrench,
   ClipboardList,
   AlertCircle,
+  ShieldAlert,
   MessageCircleQuestion,
   ChevronDown,
   PhoneCall,
@@ -361,7 +383,7 @@ const quickTasks = [
   },
   {
     title: 'Compare Fiber Plans',
-    description: 'Browse symmetrical unlimited plans — Plan 699, 999, 1499 and 1999 — side by side.',
+    description: 'Browse unlimited plans — Plan 699, 799, 999, 1299 and 1499 — side by side.',
     cta: 'View plans & pricing',
     to: '/plans',
     icon: Zap,
@@ -417,7 +439,8 @@ const journey = [
     icon: Zap,
     description: 'Compare the monthly plans and pick the speed that fits your household — from everyday browsing to heavy streaming and gaming.',
     tips: [
-      'All plans are unlimited with no data caps.',
+      'All plans are unlimited with no data caps and no hidden charges.',
+      'Residential plans carry a 1-year lock-in — you can upgrade during it, but not downgrade.',
       'You can still change your selected plan inside the application form before submitting.'
     ],
     link: { label: 'Compare plans & pricing', to: '/plans' }
@@ -484,7 +507,27 @@ const faqs = [
   },
   {
     q: 'Is there an installation fee?',
-    a: 'Installation is free for standard residential installations. Our team will advise you during the survey if your location needs special provisions.'
+    a: 'The standard installation fee is ₱500, and it is often waived during Free Installation and No Cash Out promos — ask customer support which promos are running in your barangay. Some areas require a cash out fee depending on your chosen plan, which is settled at the head office upon application. What we never charge is an application fee or a processing fee.'
+  },
+  {
+    q: 'Do you charge any application or processing fee?',
+    a: 'No. Switch Fiber has no application fee and no processing fee. No sales agent is authorized to collect payments from applicants — all payments are settled at our head office or through the official payment portal. Report any suspicious charge from a technician, agent, or third party to our customer care hotline 0915 407 7565 immediately.'
+  },
+  {
+    q: 'Is there a lock-in period?',
+    a: 'Standard residential plans carry a 1-year lock-in. Business SmartBiz bundle plans carry a 24-month lock-in and renew automatically under the same terms unless formally terminated. During the lock-in you may upgrade your plan (provided your billing is fully paid) but you may not downgrade — downgrades are only allowed at renewal.'
+  },
+  {
+    q: 'Where do I find my account number for payments?',
+    a: 'Your account number and registered contact number both appear on your SOA (Statement of Account), which is sent to your registered email address and mobile number each billing cycle. You need both to pay through pay.switchfiber.ph.'
+  },
+  {
+    q: 'What promos are available right now?',
+    a: 'Ongoing offers include the Pay and Save deal (pay on time for 4 straight months and get ₱100 off your 5th bill), the Get ConnectED back-to-school promo for students, parents and educators on higher plans, the Switch and Save promo for subscribers switching from another provider, and MSME SmartBiz bundle deals for business owners. Ask customer support which promos apply to your barangay and plan.'
+  },
+  {
+    q: 'Do you have a referral program?',
+    a: 'Yes. Existing subscribers with account numbers can refer family, friends and neighbors: 3 successful installed referrals earn 50% off your next month\'s subscription, and 6 successful installed referrals earn a free month. Rewards are processed once each referral is activated and has fully settled their first subscription plan (the pro-rated payment does not count).'
   },
   {
     q: 'How long does installation take after I apply?',
@@ -496,7 +539,7 @@ const faqs = [
   },
   {
     q: 'What payment methods do you accept?',
-    a: 'Online: GCash, Maya, QR Ph, and debit/credit cards through pay.switchfiber.ph. In person: over-the-counter cash payments at our Binangonan head office, plus GCash, Maya, Bayad Center, and 7-Eleven channels.'
+    a: 'Through the official portal at pay.switchfiber.ph we accept GCash (via QR Ph), Maya, WeChat Pay, and debit or credit cards (MasterCard, Visa and JCB). You can also pay cash over the counter at our Binangonan head office, Monday to Saturday, 8:00 AM to 5:00 PM.'
   },
   {
     q: 'Can I apply in person instead of online?',
