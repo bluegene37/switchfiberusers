@@ -48,7 +48,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '320+ Connected Homes',
-      activeNodes: '14 NAP Terminals',
+      activeNodes: '47+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGE.png',
       coveredAreas: [
         'Sta. Ursula Subd.',
         'Mirasolle Subd.',
@@ -80,7 +81,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '190+ Connected Homes',
-      activeNodes: '9 NAP Terminals',
+      activeNodes: '38+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/1.png',
       coveredAreas: [
         'M.H. Del Pilar St.',
         'Osmeña St.',
@@ -106,7 +108,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '210+ Connected Homes',
-      activeNodes: '10 NAP Terminals',
+      activeNodes: '33+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/2.png',
       coveredAreas: [
         'Paterno St.',
         'Osmeña St.',
@@ -134,7 +137,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '175+ Connected Homes',
-      activeNodes: '8 NAP Terminals',
+      activeNodes: '39+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/3.png',
       coveredAreas: [
         'M.H. Del Pilar St.',
         'R. Zulueta St.',
@@ -160,7 +164,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '200+ Connected Homes',
-      activeNodes: '10 NAP Terminals',
+      activeNodes: '65+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/4.png',
       coveredAreas: [
         'Quezon Ext.',
         'R. Zulueta St.',
@@ -187,7 +192,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '260+ Connected Homes',
-      activeNodes: '12 NAP Terminals',
+      activeNodes: '63+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES.png',
       coveredAreas: [
         'National Road',
         'Ynares St.',
@@ -217,7 +223,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '180+ Connected Homes',
-      activeNodes: '9 NAP Terminals',
+      activeNodes: '42+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-3.png',
       coveredAreas: [
         'P. Burgos St.',
         'Sitio Manggahan',
@@ -244,7 +251,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '230+ Connected Homes',
-      activeNodes: '11 NAP Terminals',
+      activeNodes: '48+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-2.png',
       coveredAreas: [
         'Manila East Road',
         'Jocson St.',
@@ -276,7 +284,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '270+ Connected Homes',
-      activeNodes: '13 NAP Terminals',
+      activeNodes: '46+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-9.png',
       coveredAreas: [
         'Mountainville Subd.',
         'C. Bolado Ave.',
@@ -309,7 +318,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '210+ Connected Homes',
-      activeNodes: '10 NAP Terminals',
+      activeNodes: '40+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-10.png',
       coveredAreas: [
         'Crystal East Valley',
         'Manila East Road',
@@ -339,7 +349,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '195+ Connected Homes',
-      activeNodes: '9 NAP Terminals',
+      activeNodes: '72+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-11.png',
       coveredAreas: [
         'Manila East Rd.',
         'M Oja St.',
@@ -373,7 +384,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '280+ Connected Homes',
-      activeNodes: '13 NAP Terminals',
+      activeNodes: '62+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-12.png',
       coveredAreas: [
         'Cervo St.',
         'Oliveros St.',
@@ -407,7 +419,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       speed: 'Up to 500 Mbps',
       slots: 'Ready for Dispatch',
       connectedHomes: '240+ Connected Homes',
-      activeNodes: '11 NAP Terminals',
+      activeNodes: '38+ coverage points mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-9-1.png',
       coveredAreas: [
         'Elbote St.',
         'Kasinay St.',
