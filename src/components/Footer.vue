@@ -20,10 +20,10 @@
           </p>
 
           <div class="pt-2 flex items-center gap-3">
-            <a href="https://www.facebook.com/switchfiberph" target="_blank" rel="noopener noreferrer" aria-label="Switch Fiber on Facebook" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+            <a href="https://facebook.com/switchfiber.ph" target="_blank" rel="noopener noreferrer" aria-label="Switch Fiber on Facebook" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
               <Facebook class="w-4 h-4" />
             </a>
-            <a href="https://www.instagram.com/switchfiberph/" target="_blank" rel="noopener noreferrer" aria-label="Switch Fiber on Instagram" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+            <a href="https://instagram.com/switchfiber.ph" target="_blank" rel="noopener noreferrer" aria-label="Switch Fiber on Instagram" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
               <Instagram class="w-4 h-4" />
             </a>
             <a href="https://invite.viber.com/?g=HF_4mUx80VGD5igbMKZi5lV0ai8R6_ld&lang=en" target="_blank" rel="noopener noreferrer" aria-label="Join the Switch Fiber Viber community" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">

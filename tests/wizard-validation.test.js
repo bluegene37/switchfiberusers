@@ -18,6 +18,10 @@ const footerSource = fs.readFileSync(
   path.resolve(__dirname, '../src/components/Footer.vue'),
   'utf8'
 )
+const navbarSource = fs.readFileSync(
+  path.resolve(__dirname, '../src/components/Navbar.vue'),
+  'utf8'
+)
 const statusSource = fs.readFileSync(
   path.resolve(__dirname, '../src/views/ApplicationStatusView.vue'),
   'utf8'
@@ -154,5 +158,35 @@ describe('Application Status tracker — empty submit', () => {
 
   it('surfaces the message to assistive tech', () => {
     assert.match(statusSource, /v-if="emptyError"[^>]*role="alert"/)
+  })
+})
+
+describe('Social handles — navbar and footer must agree', () => {
+  const handleOf = (src, host) => {
+    const re = new RegExp(`https://(?:www\\.)?${host}\\.com/([A-Za-z0-9_.]+)`, 'g')
+    return [...new Set([...src.matchAll(re)].map((m) => m[1]))]
+  }
+
+  for (const host of ['facebook', 'instagram']) {
+    it(`uses one ${host} handle across navbar and footer`, () => {
+      const nav = handleOf(navbarSource, host)
+      const foot = handleOf(footerSource, host)
+      assert.ok(nav.length, `no ${host} link found in the navbar`)
+      assert.ok(foot.length, `no ${host} link found in the footer`)
+      assert.deepEqual(
+        foot,
+        nav,
+        `footer ${host} handle(s) ${foot.join(',')} must match navbar ${nav.join(',')}`
+      )
+    })
+  }
+
+  it('points both surfaces at the switchfiber.ph account', () => {
+    for (const src of [navbarSource, footerSource]) {
+      assert.ok(
+        !/switchfiberph/.test(src),
+        'the legacy switchfiberph handle must not come back'
+      )
+    }
   })
 })
