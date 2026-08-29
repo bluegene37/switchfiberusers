@@ -2,7 +2,7 @@ import https from 'https'
 import http from 'http'
 import { URL } from 'url'
 
-const BACKEND_BASE_URL = process.env.BACKEND_API_URL || 'https://103.249.198.43:8090'
+const BACKEND_BASE_URL = process.env.BACKEND_API_URL || 'https://103.249.198.50:8090'
 
 // Only the two routes the public site actually calls. Without this allowlist
 // the function is an unauthenticated relay into the internal API — anyone

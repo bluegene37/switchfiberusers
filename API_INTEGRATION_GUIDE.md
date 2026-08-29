@@ -31,7 +31,7 @@ The application follows a **Modern Component-Driven Single Page Application (SPA
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                 Data & API Integration                      │
-│  - Dev Proxy (vite.config.js -> https://103.249.198.43:8090)│
+│  - Dev Proxy (vite.config.js -> https://103.249.198.50:8090)│
 │  - Prod Proxy (Vercel Serverless api/ -> HTTPS Node Agent)  │
 │  - Endpoints (/api/Plans, /api/Applications)               │
 │  - LocalStorage Offline Fallback                            │

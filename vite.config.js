@@ -70,7 +70,7 @@ export default defineConfig(({ mode }) => {
         // Mirrors the production Vercel functions in api/. The upstream box
         // serves a self-signed certificate, hence secure: false.
         '/api': {
-          target: process.env.BACKEND_API_URL || 'https://103.249.198.43:8090',
+          target: process.env.BACKEND_API_URL || 'https://103.249.198.50:8090',
           changeOrigin: true,
           secure: false
         }
