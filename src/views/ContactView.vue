@@ -191,7 +191,7 @@
             Easily check your current balance online anytime via our portal or receive your SOA on the 23rd day of every month:
           </p>
           <ul class="space-y-2 text-xs font-semibold dark:text-slate-300 text-slate-700">
-            <li class="flex items-center gap-2"><CheckCircle2 class="w-4 h-4 text-emerald-500" /> Visit <a href="https://pay.switchfiber.ph" target="_blank" class="text-[#ee2824] underline">pay.switchfiber.ph</a> and enter your Account Number</li>
+            <li class="flex items-center gap-2"><CheckCircle2 class="w-4 h-4 text-emerald-500" /> Visit <a href="https://pay.switchfiber.ph" target="_blank" rel="noopener noreferrer" class="text-[#ee2824] underline">pay.switchfiber.ph</a> and enter your Account Number</li>
             <li class="flex items-center gap-2"><CheckCircle2 class="w-4 h-4 text-emerald-500" /> Check SMS notifications sent to your registered mobile number</li>
           </ul>
         </div>
@@ -287,23 +287,23 @@
       <form @submit.prevent="sendMessage" class="space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Full Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <input v-model="form.name" type="text" placeholder="John Doe" class="input-field" required />
+            <label for="contact-name" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Full Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+            <input id="contact-name" v-model="form.name" type="text" placeholder="John Doe" class="input-field" required />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Mobile Number <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <input v-model="form.mobile" type="text" placeholder="09171234567" class="input-field" required />
+            <label for="contact-mobile" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Mobile Number <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+            <input id="contact-mobile" v-model="form.mobile" type="text" placeholder="09171234567" class="input-field" required />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <input v-model="form.email" type="email" placeholder="name@example.com" class="input-field" required />
+            <label for="contact-email" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+            <input id="contact-email" v-model="form.email" type="email" placeholder="name@example.com" class="input-field" required />
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Inquiry Type</label>
-            <select v-model="form.type" class="input-field">
+            <label for="contact-type" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Inquiry Type</label>
+            <select id="contact-type" v-model="form.type" class="input-field">
               <option value="customer_support">Customer Support Inquiry</option>
               <option value="billing">Billing Concern</option>
               <option value="general">General Inquiry</option>
@@ -311,14 +311,14 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Barangay (Location in Rizal)</label>
-            <input v-model="form.location" type="text" placeholder="e.g. Batingan, Binangonan" class="input-field" />
+            <label for="contact-location" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Barangay (Location in Rizal)</label>
+            <input id="contact-location" v-model="form.location" type="text" placeholder="e.g. Batingan, Binangonan" class="input-field" />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Your Message <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <textarea v-model="form.message" rows="4" placeholder="How can we assist you today?" class="input-field" required></textarea>
+          <label for="contact-message" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Your Message <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <textarea id="contact-message" v-model="form.message" rows="4" placeholder="How can we assist you today?" class="input-field" required></textarea>
         </div>
 
         <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2">

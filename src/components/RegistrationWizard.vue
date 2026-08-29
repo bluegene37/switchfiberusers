@@ -13,7 +13,7 @@
         <Sparkles class="w-3.5 h-3.5" />
         <span>Official Switch Fiber Online Registration</span>
       </div>
-      <h2 class="text-3xl md:text-4xl font-extrabold font-heading dark:text-white text-slate-900">Client Fiber Application Portal</h2>
+      <h1 class="text-3xl md:text-4xl font-extrabold font-heading dark:text-white text-slate-900">Client Fiber Application Portal</h1>
       <p class="dark:text-slate-400 text-slate-600 text-sm max-w-xl mx-auto">
         Complete your details in 5 quick steps to apply for high-speed fiber internet in Rizal!
       </p>
@@ -60,10 +60,10 @@
     <!-- STEP 1: Personal Information -->
     <div v-if="currentStep === 1 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-        <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
+        <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
           <User class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
           <span>Step 1: Applicant Personal Information</span>
-        </h3>
+        </h2>
         <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30 inline-flex items-center gap-1 w-fit shrink-0 whitespace-nowrap">
           <Zap class="w-3.5 h-3.5 shrink-0" />
           <span>Service Feasibility Verified</span>
@@ -73,9 +73,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- First Name -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">First Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <label for="reg-first-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">First Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
-            <input 
+            <input
+              id="reg-first-name" 
               v-model="formData.firstName" 
               maxlength="100"
               @blur="touchField('firstName')"
@@ -95,8 +96,9 @@
 
         <!-- Middle Name -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Middle Name</label>
-          <input 
+          <label for="reg-middle-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Middle Name</label>
+          <input
+              id="reg-middle-name" 
             v-model="formData.middleName" 
             maxlength="100"
             type="text" 
@@ -107,9 +109,10 @@
 
         <!-- Last Name -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Last Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <label for="reg-last-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Last Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
-            <input 
+            <input
+              id="reg-last-name" 
               v-model="formData.lastName" 
               maxlength="100"
               @blur="touchField('lastName')"
@@ -131,9 +134,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Email Address -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <label for="reg-email" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
-            <input 
+            <input
+              id="reg-email" 
               v-model="formData.emailAddress" 
               maxlength="100"
               @blur="touchField('emailAddress')"
@@ -154,9 +158,10 @@
 
         <!-- Mobile Number -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Mobile Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+          <label for="reg-mobile" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Mobile Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
-            <input 
+            <input
+              id="reg-mobile" 
               v-model="formData.mobileNumber" 
               @input="onMobileInput('mobileNumber')"
               @blur="touchField('mobileNumber')"
@@ -173,7 +178,7 @@
             <AlertCircle v-if="isFieldInvalid('mobileNumber')" class="w-4 h-4 text-[#ee2824] absolute right-3 top-1/2 -translate-y-1/2" />
           </div>
           <p v-if="isFieldInvalid('mobileNumber')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
-            Enter a valid 11-digit numeric mobile number (e.g. 09171234567).
+            Enter a valid 11-digit mobile number starting with 09 (e.g. 09171234567).
           </p>
           <span v-else class="text-[11px] dark:text-slate-500 text-slate-500 mt-1 block">Numbers only. For installation dispatch SMS updates.</span>
         </div>
@@ -182,9 +187,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Secondary Mobile -->
         <div>
-          <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Secondary Mobile Number (Numeric Only)</label>
+          <label for="reg-secondary-mobile" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Secondary Mobile Number (Numeric Only)</label>
           <div class="relative">
-            <input 
+            <input
+              id="reg-secondary-mobile" 
               v-model="formData.secondaryMobileNumber" 
               @input="onMobileInput('secondaryMobileNumber')"
               @blur="touchField('secondaryMobileNumber')"
@@ -199,7 +205,7 @@
             <AlertCircle v-if="isFieldInvalid('secondaryMobileNumber')" class="w-4 h-4 text-[#ee2824] absolute right-3 top-1/2 -translate-y-1/2" />
           </div>
           <p v-if="isFieldInvalid('secondaryMobileNumber')" class="text-[11px] text-[#ee2824] mt-1 font-medium">
-            Secondary mobile must be a valid 11-digit numeric number.
+            Secondary mobile must be a valid 11-digit number starting with 09 (e.g. 09151234567).
           </p>
         </div>
 
@@ -219,10 +225,10 @@
     <!-- STEP 2: Address & Location -->
     <div v-if="currentStep === 2 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
-        <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
+        <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
           <MapPin class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
           <span>Step 2: Installation Address & Service Area</span>
-        </h3>
+        </h2>
 
         <div class="flex items-center gap-2">
           <!-- Interactive Map Picker Button -->
@@ -371,10 +377,10 @@
     <div v-if="currentStep === 3 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b dark:border-slate-800 border-slate-200 pb-3">
         <div>
-          <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
+          <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
             <Wifi class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0" />
             <span>Step 3: Select Desired Internet Plan</span>
-          </h3>
+          </h2>
           <p class="text-xs dark:text-slate-400 text-slate-500 mt-0.5">
             Choose a plan below. Live rates and features are synced dynamically.
           </p>
@@ -556,10 +562,10 @@
 
     <!-- STEP 4: Document Uploads -->
     <div v-if="currentStep === 4 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
-      <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+      <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
         <UploadCloud class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
         <span>Step 4: Required Documents & Photo Uploads</span>
-      </h3>
+      </h2>
 
       <p class="text-xs dark:text-slate-400 text-slate-600">
         Upload clear photos or document files (JPG, PNG, WEBP, or PDF format). You can also click the camera icon to snap a photo directly!
@@ -697,10 +703,10 @@
     <!-- STEP 5: Review, Terms & API Submission -->
     <div v-if="currentStep === 5 || submittedCode" class="space-y-6 animate-in fade-in duration-300">
       <div v-if="!submittedCode">
-        <h3 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+        <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
           <FileText class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
           <span>Step 5: Final Review &amp; Confirmation</span>
-        </h3>
+        </h2>
 
         <!-- Summary Review Box -->
         <div class="p-5 rounded-2xl dark:bg-slate-900/90 bg-slate-100 border dark:border-slate-800 border-slate-200 space-y-4">
@@ -862,7 +868,7 @@
 
         <div class="space-y-2">
           <span class="badge-neon">Application Submitted Successfully!</span>
-          <h3 class="text-3xl font-extrabold font-heading dark:text-white text-slate-900">Welcome to Switch Fiber!</h3>
+          <h2 class="text-3xl font-extrabold font-heading dark:text-white text-slate-900">Welcome to Switch Fiber!</h2>
           <p class="dark:text-slate-300 text-slate-600 text-sm max-w-md mx-auto">
             Your internet application has been transmitted successfully to our dispatch system.
           </p>
@@ -1347,8 +1353,8 @@ function validateValue(key) {
   
   if (key === 'firstName' || key === 'lastName') return val.length >= 2
   if (key === 'emailAddress') return emailRegex.test(val)
-  if (key === 'mobileNumber') return phMobileRegex.test(val) || (val.length === 11 && /^\d+$/.test(val))
-  if (key === 'secondaryMobileNumber') return val.length === 0 || (val.length === 11 && /^\d+$/.test(val))
+  if (key === 'mobileNumber') return phMobileRegex.test(val)
+  if (key === 'secondaryMobileNumber') return val.length === 0 || phMobileRegex.test(val)
   if (key === 'region' || key === 'city' || key === 'barangay') return val.length > 0
   if (key === 'installationAddress') return val.length >= 3
   if (key === 'firstNearestLandmark') return val.length >= 2

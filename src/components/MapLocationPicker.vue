@@ -4,7 +4,14 @@
        inside the panel instead of the viewport. -->
   <Teleport to="body">
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-    <div class="glass-panel w-full max-w-4xl max-h-[90vh] rounded-3xl border border-[#ee2824]/40 shadow-2xl flex flex-col dark:bg-slate-900 bg-white overflow-hidden relative">
+    <div
+      ref="dialogEl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="map-picker-title"
+      tabindex="-1"
+      class="glass-panel w-full max-w-4xl max-h-[90vh] rounded-3xl border border-[#ee2824]/40 shadow-2xl flex flex-col dark:bg-slate-900 bg-white overflow-hidden relative"
+    >
       
       <!-- Modal Header -->
       <div class="px-6 py-4 border-b dark:border-slate-800 border-slate-200 flex items-center justify-between shrink-0">
@@ -13,13 +20,14 @@
             <MapPin class="w-5 h-5" />
           </div>
           <div>
-            <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900">Pin Your Installation Location</h3>
+            <h3 id="map-picker-title" class="text-xl font-bold font-heading dark:text-white text-slate-900">Pin Your Installation Location</h3>
             <p class="text-xs dark:text-slate-400 text-slate-600">OpenStreetMap - Drag marker or search address</p>
           </div>
         </div>
         <button 
           @click="close" 
           type="button"
+          aria-label="Close location picker"
           class="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
         >
           <X class="w-5 h-5" />
@@ -130,6 +138,7 @@ const emit = defineEmits(['close', 'confirm'])
 const CALABARZON_VIEWBOX = '120.2,15.2,122.5,13.0'
 
 const mapContainerRef = ref(null)
+const dialogEl = ref(null)
 const searchQuery = ref('')
 const isSearchFocused = ref(false)
 const isSearching = ref(false)
@@ -146,17 +155,60 @@ const selectedRoad = ref('')
 let map = null
 let marker = null
 
+// Escape closes the picker, and Tab is kept inside it, so keyboard users are
+// never stranded behind the overlay.
+function onKeydown(e) {
+  if (e.key === 'Escape') {
+    e.stopPropagation()
+    close()
+    return
+  }
+  if (e.key !== 'Tab' || !dialogEl.value) return
+
+  const focusable = dialogEl.value.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  if (!focusable.length) return
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
+let previouslyFocused = null
+
 watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
+    previouslyFocused = document.activeElement
+    document.addEventListener('keydown', onKeydown)
+    document.body.style.overflow = 'hidden'
     await nextTick()
+    dialogEl.value?.focus()
     setTimeout(() => {
       initMap()
       centerOnInitialPlace()
     }, 150)
   } else {
+    releaseModal()
     destroyMap()
   }
 })
+
+// Undo every global side effect the open modal installed.
+function releaseModal() {
+  document.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+  if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+    previouslyFocused.focus()
+  }
+  previouslyFocused = null
+}
 
 // Fly the map to the province/city already chosen in the form, so the pin
 // starts near the applicant instead of always at Binangonan.
@@ -362,6 +414,7 @@ function confirmPin() {
 }
 
 onUnmounted(() => {
+  releaseModal()
   destroyMap()
 })
 </script>

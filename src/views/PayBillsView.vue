@@ -10,7 +10,7 @@
       <h1 class="text-4xl sm:text-5xl font-extrabold font-heading dark:text-white text-slate-900">How to Settle Your Bill</h1>
       <p class="dark:text-slate-300 text-slate-600 text-base leading-relaxed">
         Safely pay your Switch Fiber bill anytime online through our official payment gateway at 
-        <a href="https://pay.switchfiber.ph" target="_blank" class="text-[#ee2824] dark:text-[#ff6b67] font-bold hover:underline">pay.switchfiber.ph</a>.
+        <a href="https://pay.switchfiber.ph" target="_blank" rel="noopener noreferrer" class="text-[#ee2824] dark:text-[#ff6b67] font-bold hover:underline">pay.switchfiber.ph</a>.
       </p>
     </div>
 
@@ -21,7 +21,7 @@
         We accept GCash (via QR Ph), Maya, WeChat Pay, Visa, Mastercard, and JCB credit/debit cards.
       </p>
       <div class="pt-2">
-        <a href="https://pay.switchfiber.ph" target="_blank" class="btn-primary py-4 px-8 text-base">
+        <a href="https://pay.switchfiber.ph" target="_blank" rel="noopener noreferrer" class="btn-primary py-4 px-8 text-base">
           <ExternalLink class="w-5 h-5" />
           <span>Go to pay.switchfiber.ph</span>
         </a>

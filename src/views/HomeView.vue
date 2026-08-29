@@ -171,10 +171,10 @@
           </div>
 
           <div class="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-end">
-            <router-link to="/plans" class="btn-primary text-xs py-3 px-6 text-center bg-sky-600 hover:bg-sky-500 shadow-sky-500/25">
+            <router-link to="/plans" class="btn-primary text-xs min-h-11 py-3 px-6 text-center bg-sky-600 hover:bg-sky-500 shadow-sky-500/25">
               <span>View Active Deals & Bundles</span>
             </router-link>
-            <router-link to="/register" class="btn-secondary text-xs py-3 px-6 text-center">
+            <router-link to="/register" class="btn-secondary text-xs min-h-11 py-3 px-6 text-center">
               <span>Apply Online Now</span>
             </router-link>
           </div>

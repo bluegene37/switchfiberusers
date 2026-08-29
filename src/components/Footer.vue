@@ -20,13 +20,13 @@
           </p>
 
           <div class="pt-2 flex items-center gap-3">
-            <a href="https://www.facebook.com/switchfiberph" target="_blank" class="w-9 h-9 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+            <a href="https://www.facebook.com/switchfiberph" target="_blank" rel="noopener noreferrer" aria-label="Switch Fiber on Facebook" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
               <Facebook class="w-4 h-4" />
             </a>
-            <a href="https://www.instagram.com/switchfiberph/" target="_blank" class="w-9 h-9 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+            <a href="https://www.instagram.com/switchfiberph/" target="_blank" rel="noopener noreferrer" aria-label="Switch Fiber on Instagram" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
               <Instagram class="w-4 h-4" />
             </a>
-            <a href="https://invite.viber.com/?g=HF_4mUx80VGD5igbMKZi5lV0ai8R6_ld&lang=en" target="_blank" class="w-9 h-9 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
+            <a href="https://invite.viber.com/?g=HF_4mUx80VGD5igbMKZi5lV0ai8R6_ld&lang=en" target="_blank" rel="noopener noreferrer" aria-label="Join the Switch Fiber Viber community" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
               <MessageSquare class="w-4 h-4" />
             </a>
           </div>
@@ -36,13 +36,13 @@
         <div>
           <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Quick Navigation</h4>
           <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
-            <li><router-link to="/" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Home Page</router-link></li>
-            <li><router-link to="/about" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">About Switch Fiber</router-link></li>
-            <li><router-link to="/plans" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
-            <li><router-link to="/coverage" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
-            <li><router-link to="/contact" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
-            <li><router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
-            <li><router-link to="/status" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
+            <li><router-link to="/" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Home Page</router-link></li>
+            <li><router-link to="/about" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">About Switch Fiber</router-link></li>
+            <li><router-link to="/plans" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
+            <li><router-link to="/coverage" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
+            <li><router-link to="/contact" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
+            <li><router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
+            <li><router-link to="/status" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
           </ul>
         </div>
 
@@ -50,11 +50,11 @@
         <div>
           <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Customer Care</h4>
           <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
-            <li><router-link to="/help" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Help Center & User Guide</router-link></li>
-            <li><router-link to="/pay-bills" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Settle Bill (pay.switchfiber.ph)</router-link></li>
-            <li><router-link to="/tech-support" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">192.168.1.1 WiFi Router Guide</router-link></li>
-            <li><router-link to="/tech-support" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Change WiFi Password & SSID</router-link></li>
-            <li><router-link to="/careers" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Become a Freelance Sales Agent</router-link></li>
+            <li><router-link to="/help" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Help Center & User Guide</router-link></li>
+            <li><router-link to="/pay-bills" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Settle Bill (pay.switchfiber.ph)</router-link></li>
+            <li><router-link to="/tech-support" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">192.168.1.1 WiFi Router Guide</router-link></li>
+            <li><router-link to="/tech-support" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Change WiFi Password & SSID</router-link></li>
+            <li><router-link to="/careers" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Become a Freelance Sales Agent</router-link></li>
           </ul>
         </div>
 
@@ -64,7 +64,7 @@
           <div class="space-y-2 text-xs dark:text-slate-400 text-slate-600">
             <div class="flex items-center gap-2">
               <PhoneCall class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
-              <a href="tel:09154077565" class="font-bold dark:text-white text-slate-900 hover:text-[#ee2824]">0915 407 7565</a>
+              <a href="tel:09154077565" class="inline-flex items-center min-h-11 py-1 font-bold dark:text-white text-slate-900 hover:text-[#ee2824]">0915 407 7565</a>
             </div>
             <div class="flex items-center gap-2">
               <Clock class="w-3.5 h-3.5 text-blue-500" />
@@ -84,7 +84,7 @@
         <div class="flex items-center gap-6">
           <span>Binangonan, Rizal, Philippines</span>
           <span>•</span>
-          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
+          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center min-h-11 py-1 text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
         </div>
       </div>
 

@@ -24,13 +24,13 @@
         <div class="flex items-center gap-6">
           <!-- Social Media Icons -->
           <div class="flex items-center gap-3 border-r dark:border-slate-800 border-slate-300 pr-6">
-            <a href="https://facebook.com/switchfiber.ph" target="_blank" rel="noopener" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-[#1877F2] transition-colors" title="Facebook Page">
+            <a href="https://facebook.com/switchfiber.ph" target="_blank" rel="noopener noreferrer" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-[#1877F2] transition-colors" title="Facebook Page">
               <Facebook class="w-3.5 h-3.5" />
             </a>
-            <a href="https://instagram.com/switchfiber.ph" target="_blank" rel="noopener" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-rose-500 transition-colors" title="Instagram">
+            <a href="https://instagram.com/switchfiber.ph" target="_blank" rel="noopener noreferrer" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-rose-500 transition-colors" title="Instagram">
               <Instagram class="w-3.5 h-3.5" />
             </a>
-            <a href="https://m.me/switchfiber.ph" target="_blank" rel="noopener" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-cyan-500 transition-colors" title="Messenger Chat">
+            <a href="https://m.me/switchfiber.ph" target="_blank" rel="noopener noreferrer" class="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-cyan-500 transition-colors" title="Messenger Chat">
               <MessageCircle class="w-3.5 h-3.5" />
             </a>
           </div>
@@ -165,7 +165,7 @@
         <button 
           id="theme-toggle-btn-mobile"
           @click="themeStore.toggleTheme()"
-          class="p-2.5 rounded-xl border dark:bg-slate-900/90 dark:border-slate-800 bg-slate-100 border-slate-200 text-slate-700 dark:text-slate-300 hover:border-[#ee2824]/40 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ee2824]/30"
+          class="w-11 h-11 flex items-center justify-center rounded-xl border dark:bg-slate-900/90 dark:border-slate-800 bg-slate-100 border-slate-200 text-slate-700 dark:text-slate-300 hover:border-[#ee2824]/40 transition-colors focus:outline-none focus:ring-2 focus:ring-[#ee2824]/30"
           :title="themeStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           aria-label="Toggle light or dark theme"
         >
@@ -176,7 +176,7 @@
         <!-- Clean Mobile Hamburger Button on far right -->
         <button 
           @click="mobileMenuOpen = !mobileMenuOpen"
-          class="p-2.5 rounded-xl dark:bg-slate-900/90 dark:border-slate-800 bg-slate-100 border border-slate-200 text-slate-700 dark:text-slate-300 hover:border-[#ee2824]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#ee2824]/30"
+          class="w-11 h-11 flex items-center justify-center rounded-xl dark:bg-slate-900/90 dark:border-slate-800 bg-slate-100 border border-slate-200 text-slate-700 dark:text-slate-300 hover:border-[#ee2824]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#ee2824]/30"
           :aria-expanded="mobileMenuOpen"
           aria-label="Toggle navigation menu"
         >
@@ -330,13 +330,13 @@
             <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a>
           </div>
           <div class="flex items-center justify-center gap-4 pt-1">
-            <a href="https://facebook.com/switchfiber.ph" target="_blank" rel="noopener" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#1877F2]" title="Facebook">
+            <a href="https://facebook.com/switchfiber.ph" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#1877F2]" title="Facebook">
               <Facebook class="w-4 h-4" />
             </a>
-            <a href="https://instagram.com/switchfiber.ph" target="_blank" rel="noopener" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-500" title="Instagram">
+            <a href="https://instagram.com/switchfiber.ph" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-rose-500" title="Instagram">
               <Instagram class="w-4 h-4" />
             </a>
-            <a href="https://m.me/switchfiber.ph" target="_blank" rel="noopener" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-cyan-500" title="Messenger">
+            <a href="https://m.me/switchfiber.ph" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-cyan-500" title="Messenger">
               <MessageCircle class="w-4 h-4" />
             </a>
           </div>

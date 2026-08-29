@@ -32,6 +32,7 @@
             autocomplete="off"
             placeholder="e.g. SF-20260819-1234-56"
             aria-label="Application reference number"
+            @input="emptyError = false"
             class="input-field uppercase font-mono text-lg sm:text-xl py-3.5 pl-4 pr-12 tracking-wide font-bold"
           />
           <button 
@@ -44,6 +45,11 @@
             <X class="w-5 h-5" />
           </button>
         </div>
+
+        <p v-if="emptyError" role="alert" class="text-[13px] text-[#ee2824] dark:text-[#ff6b67] mt-2 font-semibold flex items-center gap-1.5">
+          <AlertCircle class="w-4 h-4 shrink-0" />
+          <span>Enter your application reference number to track your status.</span>
+        </p>
 
         <div class="flex items-center justify-between text-xs dark:text-slate-400 text-slate-500 mt-2">
           <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">SF-YYYYMMDD-XXXX</strong></span>
@@ -307,6 +313,7 @@ const registrationStore = useRegistrationStore()
 const inputCode = ref('')
 const searched = ref(false)
 const foundApp = ref(null)
+const emptyError = ref(false)
 const copied = ref(false)
 
 const stages = [
@@ -341,13 +348,21 @@ function copyCode(code) {
 
 function handleSearch() {
   const code = inputCode.value.trim()
-  if (!code) return
+  if (!code) {
+    // Previously returned silently, which read as a dead button.
+    emptyError.value = true
+    searched.value = false
+    foundApp.value = null
+    return
+  }
+  emptyError.value = false
   searched.value = true
   foundApp.value = registrationStore.findApplicationByCode(code)
 }
 
 function handleReset() {
   inputCode.value = ''
+  emptyError.value = false
   searched.value = false
   foundApp.value = null
   if (route.query.code) {

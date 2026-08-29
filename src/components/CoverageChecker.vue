@@ -15,10 +15,11 @@
     <div class="max-w-xl mx-auto flex flex-col sm:flex-row gap-3 mb-6">
       <div class="relative flex-1">
         <Search class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-        <input 
+        <input
           v-model="inputAddress"
           @keyup.enter="handleCheck"
-          type="text" 
+          type="text"
+          aria-label="Barangay or municipality in Rizal"
           placeholder="e.g. Bilibiran, Binangonan or Taytay"
           class="input-field pl-11 pr-4 py-3 text-base"
         />

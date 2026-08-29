@@ -84,9 +84,10 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Full Name -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Full Legal Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+              <label for="careers-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Full Legal Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <div class="relative">
-                <input 
+                <input
+                id="careers-name" 
                   v-model="form.fullName" 
                   @blur="touch('fullName')"
                   type="text" 
@@ -103,9 +104,10 @@
 
             <!-- Email Address -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+              <label for="careers-email" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <div class="relative">
-                <input 
+                <input
+                id="careers-email" 
                   v-model="form.email" 
                   @blur="touch('email')"
                   type="email" 
@@ -124,9 +126,10 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Mobile Number -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Mobile Phone Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+              <label for="careers-mobile" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Mobile Phone Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
               <div class="relative">
-                <input 
+                <input
+                id="careers-mobile" 
                   v-model="form.mobile" 
                   @input="onMobileInput"
                   @blur="touch('mobile')"
@@ -147,8 +150,9 @@
 
             <!-- Target Service Municipality -->
             <div>
-              <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Primary Target Area (Rizal) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-              <select 
+              <label for="careers-area" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Primary Target Area (Rizal) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
+              <select
+                id="careers-area" 
                 v-model="form.municipality" 
                 @blur="touch('municipality')"
                 class="input-field"
@@ -170,8 +174,9 @@
 
           <!-- Sales Experience / Pitch -->
           <div>
-            <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Brief Sales Background</label>
-            <textarea 
+            <label for="careers-background" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-1">Brief Sales Background</label>
+            <textarea
+                id="careers-background" 
               v-model="form.experience" 
               rows="3" 
               placeholder="e.g. Experienced real estate/telecom agent in Binangonan with 200+ clients..." 

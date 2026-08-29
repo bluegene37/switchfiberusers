@@ -24,6 +24,11 @@ checksums.txt
 # Test Coverage & Reports
 coverage
 .nyc_output
+documents/
+personal_projects/
+screenshots/
+*.pdf
+QA_*.md
 
 # Editor & OS Files
 .vscode/*
