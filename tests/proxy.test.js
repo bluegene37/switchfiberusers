@@ -77,3 +77,56 @@ describe('Serverless Backend Proxy (api/_proxy.js)', () => {
     assert.equal(res.headers['allow'], 'POST, OPTIONS')
   })
 })
+
+describe('LCPNapLocations sanitization', () => {
+  const validRow = {
+    id: 1503,
+    lcpnap: 'CAR LCP 001 NAP 001',
+    lcp: 'CAR LCP 001',
+    nap: 'NAP 001',
+    portTotal: 16,
+    coordinates: '14.480371, 121.221994',
+    street: 'Hill Domingo',
+    barangay: '63',
+    city: 'Cardona',
+    modifiedBy: 'techhead.isp@switchfiber.ph',
+    userEmail: 'techhead.isp@switchfiber.ph',
+    image: 'LCP NAP Location_Images/x.jpg',
+    image2: 'LCP NAP Location_Images/y.jpg',
+    readingImage: 'LCP NAP Location_Images/z.jpg',
+    modifiedDate: null,
+    region: null
+  }
+
+  it('strips staff emails and internal file paths from rows', async () => {
+    const { sanitizeNapLocations } = await import('../api/LCPNapLocations.js')
+    const [row] = sanitizeNapLocations([validRow])
+    assert.ok(row)
+    assert.equal(row.lcpnap, 'CAR LCP 001 NAP 001')
+    assert.equal(row.coordinates, '14.480371, 121.221994')
+    assert.equal(row.userEmail, undefined)
+    assert.equal(row.modifiedBy, undefined)
+    assert.equal(row.image, undefined)
+    assert.equal(row.image2, undefined)
+    assert.equal(row.readingImage, undefined)
+  })
+
+  it('drops rows with blank, zero or out-of-area coordinates', async () => {
+    const { sanitizeNapLocations } = await import('../api/LCPNapLocations.js')
+    const rows = sanitizeNapLocations([
+      validRow,
+      { ...validRow, id: 2, coordinates: '' },
+      { ...validRow, id: 3, coordinates: '0, 0' },
+      { ...validRow, id: 4, coordinates: 'not-a-coordinate' },
+      { ...validRow, id: 5, coordinates: '48.8584, 2.2945' },
+      null
+    ])
+    assert.equal(rows.length, 1)
+    assert.equal(rows[0].id, 1503)
+  })
+
+  it('returns an empty list when upstream payload is not an array', async () => {
+    const { sanitizeNapLocations } = await import('../api/LCPNapLocations.js')
+    assert.deepEqual(sanitizeNapLocations({ error: 'oops' }), [])
+  })
+})

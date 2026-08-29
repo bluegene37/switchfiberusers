@@ -25,16 +25,16 @@
       <!-- Map Action Buttons: even 3-up row on mobile, inline on larger screens -->
       <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:items-center sm:w-auto sm:justify-end">
         <button
-          @click="toggleCustomerNodes"
+          @click="toggleNapPoints"
           type="button"
-          :aria-pressed="coverageStore.showCustomerNodes"
+          :aria-pressed="coverageStore.showNapPoints"
           class="btn-secondary py-2 px-2 sm:px-3 text-xs flex items-center justify-center gap-1.5 shrink-0 min-w-0"
-          :class="coverageStore.showCustomerNodes ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold' : ''"
-          title="Toggle active customer drop pins"
+          :class="coverageStore.showNapPoints ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold' : ''"
+          title="Toggle live fiber NAP terminal pins"
         >
           <Home class="w-3.5 h-3.5 shrink-0" />
-          <span class="sm:hidden truncate">{{ coverageStore.showCustomerNodes ? 'Hide Pins' : 'Show Pins' }}</span>
-          <span class="hidden sm:inline">{{ coverageStore.showCustomerNodes ? 'Hide Customer Pins' : 'Show Customer Pins' }}</span>
+          <span class="sm:hidden truncate">{{ coverageStore.showNapPoints ? 'Hide Pins' : 'Show Pins' }}</span>
+          <span class="hidden sm:inline">{{ coverageStore.showNapPoints ? 'Hide NAP Points' : 'Show NAP Points' }}</span>
         </button>
 
         <button
@@ -125,7 +125,7 @@
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-sky-500 border-2 border-white shadow-sm inline-block"></span>
-          <span class="font-bold dark:text-slate-200 text-slate-800">🏠 Connected Customer Drop Point</span>
+          <span class="font-bold dark:text-slate-200 text-slate-800">Live Fiber NAP Point</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white shadow-sm inline-block"></span>
@@ -139,7 +139,15 @@
 
       <div class="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-2 border-t dark:border-slate-800/60 border-slate-200/80">
         <p class="text-[11px] dark:text-slate-400 text-slate-500 font-medium">
-          4,500+ Connected Homes &amp; Active Fiber Subscribers across Rizal
+          <template v-if="coverageStore.napStatus === 'ready'">
+            {{ coverageStore.napLocations.length.toLocaleString() }} live fiber NAP points mapped across Rizal
+          </template>
+          <template v-else-if="coverageStore.napStatus === 'loading'">
+            Loading live fiber NAP points&hellip;
+          </template>
+          <template v-else>
+            4,500+ Connected Homes &amp; Active Fiber Subscribers across Rizal
+          </template>
         </p>
         <p class="text-[10px] dark:text-slate-500 text-slate-400">
           Solid shapes follow mapped barangay boundaries; dashed shapes are approximate. Please confirm exact serviceability with our team.
@@ -171,7 +179,8 @@ const showTouchHint = ref(false)
 
 let map = null
 let markersLayer = null
-let customerPinsLayer = null
+let napPointsLayer = null
+let napRenderer = null
 let circlesLayer = null
 let userMarker = null
 let tileLayer = null
@@ -215,10 +224,14 @@ function initMap() {
 
   circlesLayer = L.layerGroup().addTo(map)
   markersLayer = L.layerGroup().addTo(map)
-  customerPinsLayer = L.layerGroup().addTo(map)
+  napPointsLayer = L.layerGroup().addTo(map)
+  // ~1,500 live NAP points — canvas keeps them cheap to draw, where one DOM
+  // node per pin would make panning noticeably janky.
+  napRenderer = L.canvas({ padding: 0.5 })
 
   setupGestureHandling()
   renderCoverageItems()
+  renderNapPoints()
 }
 
 // Dragging stays enabled at all times — L.Browser.touch is true for any
@@ -322,58 +335,82 @@ function createPinIcon(type) {
   })
 }
 
-function createCustomerPinIcon() {
-  const html = `
-    <div style="position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
-      <div style="
-        position: relative;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background-color: #0284c7;
-        border: 2px solid #ffffff;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        font-size: 9px;
-      ">
-        🏠
-      </div>
-    </div>
-  `
-
-  return L.divIcon({
-    className: 'customer-subnode-marker',
-    html: html,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    popupAnchor: [0, -10]
-  })
-}
-
 // Backed by the store so the card list and any other view stay in sync
-function toggleCustomerNodes() {
-  coverageStore.showCustomerNodes = !coverageStore.showCustomerNodes
+function toggleNapPoints() {
+  coverageStore.showNapPoints = !coverageStore.showNapPoints
 }
 
-function applyCustomerPinVisibility() {
-  if (!map || !customerPinsLayer) return
-  const shouldShow = coverageStore.showCustomerNodes
-  if (shouldShow && !map.hasLayer(customerPinsLayer)) {
-    map.addLayer(customerPinsLayer)
-  } else if (!shouldShow && map.hasLayer(customerPinsLayer)) {
-    map.removeLayer(customerPinsLayer)
+function applyNapPinVisibility() {
+  if (!map || !napPointsLayer) return
+  const shouldShow = coverageStore.showNapPoints
+  if (shouldShow && !map.hasLayer(napPointsLayer)) {
+    map.addLayer(napPointsLayer)
+  } else if (!shouldShow && map.hasLayer(napPointsLayer)) {
+    map.removeLayer(napPointsLayer)
   }
 }
 
+// Live LCP/NAP terminal locations from the fiber backend, drawn as lightweight
+// canvas dots. These replace the old hand-placed "customer drop point" pins.
+function renderNapPoints() {
+  if (!map || !napPointsLayer) return
+
+  napPointsLayer.clearLayers()
+
+  coverageStore.filteredNapPoints.forEach(point => {
+    const dot = L.circleMarker([point.lat, point.lng], {
+      renderer: napRenderer,
+      radius: 4,
+      color: '#ffffff',
+      weight: 1,
+      fillColor: '#0284c7',
+      fillOpacity: 0.9
+    })
+
+    const locationLine = [point.street, point.city].filter(Boolean).join(', ')
+    const registerHref = `/register?city=${encodeURIComponent(point.city || '')}`
+
+    dot.bindPopup(`
+      <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
+        <div style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase;">
+          Live Fiber NAP Terminal
+        </div>
+        <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 3px 0;">
+          ${escapeHtml(point.name)}
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
+          ${escapeHtml(locationLine || 'Rizal service area')}${point.portTotal ? ` • ${escapeHtml(point.portTotal)} ports` : ''}
+        </div>
+        <a
+          href="${registerHref}"
+          data-route="${registerHref}"
+          style="
+            display: block;
+            text-align: center;
+            background-color: #0284c7;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+          "
+        >
+          Connect My Residence
+        </a>
+      </div>
+    `)
+    napPointsLayer.addLayer(dot)
+  })
+
+  applyNapPinVisibility()
+}
+
 function renderCoverageItems() {
-  if (!map || !markersLayer || !circlesLayer || !customerPinsLayer) return
+  if (!map || !markersLayer || !circlesLayer) return
 
   markersLayer.clearLayers()
   circlesLayer.clearLayers()
-  customerPinsLayer.clearLayers()
 
   const items = coverageStore.filteredCoverage
 
@@ -436,47 +473,6 @@ function renderCoverageItems() {
     marker.bindPopup(popupContent)
     markersLayer.addLayer(marker)
 
-    // Render SubNodes (Customer Connection Points)
-    if (item.subNodes && item.subNodes.length) {
-      item.subNodes.forEach(sub => {
-        const subIcon = createCustomerPinIcon()
-        const subMarker = L.marker([sub.lat, sub.lng], { icon: subIcon })
-
-        const subPopup = `
-          <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
-            <div style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase;">
-              🏠 Active Customer Connection Point
-            </div>
-            <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 3px 0;">
-              ${escapeHtml(sub.name)}
-            </div>
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
-              Brgy. ${escapeHtml(item.name)}, ${escapeHtml(item.municipality)} (${escapeHtml(sub.status)})
-            </div>
-            <a
-              href="${registerHref}"
-              data-route="${registerHref}"
-              style="
-                display: block;
-                text-align: center;
-                background-color: #0284c7;
-                color: #ffffff;
-                font-weight: 700;
-                font-size: 10px;
-                padding: 6px 10px;
-                border-radius: 6px;
-                text-decoration: none;
-              "
-            >
-              Connect My Residence
-            </a>
-          </div>
-        `
-        subMarker.bindPopup(subPopup)
-        customerPinsLayer.addLayer(subMarker)
-      })
-    }
-
     // Service area footprint: use the real barangay boundary when OpenStreetMap
     // has one, otherwise fall back to an approximate radius around the centre.
     const shapeColor = isHq ? '#ee2824' : (isAvailable ? '#10b981' : '#f59e0b')
@@ -508,8 +504,6 @@ function renderCoverageItems() {
       circlesLayer.addLayer(circle)
     }
   })
-
-  applyCustomerPinVisibility()
 }
 
 // Frame the visible pins. Called after rendering rather than inside it, so the
@@ -574,22 +568,40 @@ function locateUser() {
 
       map.flyTo([lat, lng], 14, { duration: 1.2 })
 
-      // Find closest coverage point
-      let closest = null
-      let minDistance = Infinity
-
-      coverageStore.coverageList.forEach(item => {
-        const d = getDistanceKm(lat, lng, item.lat, item.lng)
-        if (d < minDistance) {
-          minDistance = d
-          closest = item
+      // Measure against the live NAP terminals when they've loaded — real
+      // installed hardware beats the hand-placed barangay centres.
+      const napPoints = coverageStore.napLocations
+      if (napPoints.length) {
+        let closest = null
+        let minDistance = Infinity
+        napPoints.forEach(point => {
+          const d = getDistanceKm(lat, lng, point.lat, point.lng)
+          if (d < minDistance) {
+            minDistance = d
+            closest = point
+          }
+        })
+        const place = [closest.street, closest.city].filter(Boolean).join(', ')
+        if (minDistance <= 3.5) {
+          userLocationMessage.value = `You are approximately ${(minDistance * 1000).toFixed(0)}m from our nearest fiber NAP terminal (${closest.name}${place ? `, ${place}` : ''}).`
+        } else {
+          userLocationMessage.value = `Nearest fiber NAP terminal: ${closest.name}${place ? `, ${place}` : ''} (~${minDistance.toFixed(1)} km away).`
         }
-      })
-
-      if (closest && minDistance <= 3.5) {
-        userLocationMessage.value = `You are approximately ${(minDistance * 1000).toFixed(0)}m from our ${closest.name}, ${closest.municipality} fiber zone (${closest.status}).`
-      } else if (closest) {
-        userLocationMessage.value = `Nearest coverage node: ${closest.name}, ${closest.municipality} (~${minDistance.toFixed(1)} km away).`
+      } else {
+        let closest = null
+        let minDistance = Infinity
+        coverageStore.coverageList.forEach(item => {
+          const d = getDistanceKm(lat, lng, item.lat, item.lng)
+          if (d < minDistance) {
+            minDistance = d
+            closest = item
+          }
+        })
+        if (closest && minDistance <= 3.5) {
+          userLocationMessage.value = `You are approximately ${(minDistance * 1000).toFixed(0)}m from our ${closest.name}, ${closest.municipality} fiber zone (${closest.status}).`
+        } else if (closest) {
+          userLocationMessage.value = `Nearest coverage node: ${closest.name}, ${closest.municipality} (~${minDistance.toFixed(1)} km away).`
+        }
       }
     },
     (err) => {
@@ -618,6 +630,7 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 watch(() => coverageStore.selectedMunicipality, (newMun) => {
   if (!map) return
   renderCoverageItems()
+  renderNapPoints()
   const target = coverageStore.municipalityCenters[newMun]
   if (target) {
     map.flyTo([target.lat, target.lng], target.zoom, { duration: 1 })
@@ -630,11 +643,17 @@ watch(() => coverageStore.selectedMunicipality, (newMun) => {
 watch(() => coverageStore.searchQuery, (q) => {
   if (!map) return
   renderCoverageItems()
+  renderNapPoints()
   if (q) fitToVisibleMarkers()
 })
 
-watch(() => coverageStore.showCustomerNodes, () => {
-  applyCustomerPinVisibility()
+watch(() => coverageStore.showNapPoints, () => {
+  applyNapPinVisibility()
+})
+
+// Redraw once the live NAP fetch resolves (or if the list ever refreshes)
+watch(() => coverageStore.napLocations, () => {
+  renderNapPoints()
 })
 
 // Re-tile when the site theme flips
@@ -659,6 +678,7 @@ watch(() => coverageStore.focusedBarangayId, (newId) => {
 })
 
 onMounted(() => {
+  coverageStore.fetchNapLocations()
   nextTick(() => {
     initMap()
     mapElementRef.value?.addEventListener('click', onPopupClick)

@@ -9,7 +9,8 @@ const BACKEND_BASE_URL = process.env.BACKEND_API_URL || 'https://103.249.198.50:
 // could reach any upstream path (including reads of applicant records).
 const ALLOWED_ROUTES = {
   '/api/Plans': ['GET'],
-  '/api/Applications': ['POST']
+  '/api/Applications': ['POST'],
+  '/api/LCPNapLocations': ['GET']
 }
 
 // Upstream serves a self-signed certificate.
@@ -29,7 +30,7 @@ function sendJson(res, code, payload) {
   res.end(JSON.stringify(payload))
 }
 
-export async function proxyRequest(req, res, targetPath = null) {
+export async function proxyRequest(req, res, targetPath = null, { transform = null } = {}) {
   // The SPA and these functions share an origin, so no cross-origin grant is
   // needed. A previous build sent Access-Control-Allow-Origin: * , which let
   // any site on the internet post applications through this endpoint.
@@ -132,10 +133,19 @@ export async function proxyRequest(req, res, targetPath = null) {
       return
     }
 
+    let responseBody = upstream.body
+    let responseContentType = upstream.contentType
+    if (transform && upstream.status >= 200 && upstream.status < 300) {
+      // Sanitizing transform: upstream rows can carry internal-only fields
+      // (staff emails, file paths) that must not reach a public browser.
+      responseBody = JSON.stringify(transform(JSON.parse(upstream.body)))
+      responseContentType = 'application/json'
+    }
+
     if (typeof res.status === 'function') res.status(upstream.status)
     else res.statusCode = upstream.status
-    res.setHeader('Content-Type', upstream.contentType)
-    res.end(upstream.body)
+    res.setHeader('Content-Type', responseContentType)
+    res.end(responseBody)
   } catch (error) {
     console.error(`Backend proxy error on ${req.method} ${routeKey}:`, error)
     sendJson(res, 502, {
