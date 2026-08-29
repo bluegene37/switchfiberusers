@@ -50,7 +50,7 @@
     <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3 sm:gap-4">
       
       <!-- Brand Logo -->
-      <router-link to="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+      <router-link to="/" class="flex items-center min-h-11 gap-2.5 sm:gap-3 group shrink-0">
         <img src="/logo.png" alt="Switch Fiber Logo" class="w-9 h-9 sm:w-11 sm:h-11 object-contain group-hover:scale-105 transition-transform drop-shadow-md" />
         <div>
           <div class="flex items-center">

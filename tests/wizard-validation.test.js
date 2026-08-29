@@ -26,6 +26,18 @@ const statusSource = fs.readFileSync(
   path.resolve(__dirname, '../src/views/ApplicationStatusView.vue'),
   'utf8'
 )
+const mainCss = fs.readFileSync(
+  path.resolve(__dirname, '../src/styles/main.css'),
+  'utf8'
+)
+const coverageSource = fs.readFileSync(
+  path.resolve(__dirname, '../src/views/CoverageView.vue'),
+  'utf8'
+)
+const plansSource = fs.readFileSync(
+  path.resolve(__dirname, '../src/views/PlansView.vue'),
+  'utf8'
+)
 
 /**
  * These assertions run against the SHIPPING component source, not a local copy
@@ -188,5 +200,36 @@ describe('Social handles — navbar and footer must agree', () => {
         'the legacy switchfiberph handle must not come back'
       )
     }
+  })
+})
+
+describe('Touch target minimums (WCAG 2.5.5)', () => {
+  it('gives every shared button a 44px height floor', () => {
+    const btnRule = mainCss.slice(
+      mainCss.indexOf('.btn-primary,'),
+      mainCss.indexOf('.btn-primary {', mainCss.indexOf('.btn-primary,') + 10)
+    )
+    assert.match(btnRule, /min-height:\s*2\.75rem/)
+  })
+
+  it('overrides Leaflet 30x30 zoom controls to 44x44', () => {
+    assert.match(mainCss, /leaflet-control-zoom a/)
+    assert.match(mainCss, /width:\s*2\.75rem\s*!important/)
+  })
+
+  it('sizes the coverage municipality filters and row actions', () => {
+    assert.ok(
+      coverageSource.includes('min-h-11'),
+      'municipality filter chips need a 44px min height'
+    )
+    assert.ok(
+      coverageSource.includes('min-w-11'),
+      'the icon-only locate button needs a 44px min width'
+    )
+  })
+
+  it('sizes the plans category tabs and refresh control', () => {
+    assert.ok(plansSource.includes('min-h-11'), 'plan category tabs need a 44px min height')
+    assert.ok(plansSource.includes('w-11 h-11'), 'the refresh button needs to be 44x44')
   })
 })

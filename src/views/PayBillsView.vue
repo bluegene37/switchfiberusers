@@ -82,7 +82,7 @@
       <h3 class="font-bold dark:text-white text-slate-900 text-lg">Need Billing Assistance?</h3>
       <p class="text-xs dark:text-slate-400 text-slate-600">Our dedicated billing support hotline is ready to help you with official receipts and payment posting.</p>
       <div class="pt-2">
-        <a href="tel:09154077555" class="text-lg font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Globe: 0915 407 7555</a>
+        <a href="tel:09154077555" class="inline-flex items-center min-h-11 text-lg font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Globe: 0915 407 7555</a>
       </div>
     </div>
 

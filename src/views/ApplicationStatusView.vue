@@ -135,7 +135,7 @@
         </div>
         <router-link 
           to="/contact" 
-          class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 border-slate-300 text-xs font-bold hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors whitespace-nowrap shrink-0 shadow-sm"
+          class="inline-flex items-center justify-center min-h-11 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border dark:border-slate-700 border-slate-300 text-xs font-bold hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors whitespace-nowrap shrink-0 shadow-sm"
         >
           Contact Support
         </router-link>

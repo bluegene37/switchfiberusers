@@ -191,6 +191,10 @@ html.light .input-field::placeholder {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    /* 44px height floor so compact variants (py-2, text-xs) still clear the
+       WCAG 2.5.5 target size. Icon-only buttons additionally carry min-w-11,
+       since a min-width here loses to Tailwind's flex-item reset. */
+    min-height: 2.75rem;
     padding: 0.75rem 1.5rem;
     border-radius: 0.75rem;
     cursor: pointer;
@@ -328,4 +332,18 @@ textarea:not(.input-field):focus-visible,
   .btn-secondary:hover {
     transform: none;
   }
+}
+
+/* Leaflet ships 30x30 zoom controls and 14px-tall attribution links. The zoom
+   buttons are standalone controls, so they are bumped to the 44px touch
+   minimum. !important is needed because leaflet.css is imported from the
+   components and lands after this sheet in the bundle. The attribution links
+   stay as they are: inline links inside a block of text, which WCAG 2.5.5
+   explicitly exempts from the target-size rule. */
+.leaflet-container .leaflet-control-zoom a,
+.leaflet-touch .leaflet-control-zoom a {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  line-height: 2.75rem !important;
+  font-size: 1.375rem !important;
 }

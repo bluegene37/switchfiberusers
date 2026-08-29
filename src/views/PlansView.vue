@@ -33,7 +33,7 @@
           :disabled="isLoading"
           title="Refresh plans"
           aria-label="Refresh plans"
-          class="p-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-[#ee2824] dark:hover:text-white transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#ee2824]/40"
+          class="inline-flex items-center justify-center w-11 h-11 rounded-md text-slate-500 dark:text-slate-400 hover:text-[#ee2824] dark:hover:text-white transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#ee2824]/40"
         >
           <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': isLoading }" />
         </button>
@@ -55,7 +55,7 @@
           type="button"
           @click="scrollToSection(section.id)"
           :aria-current="activeSection === section.id ? 'true' : undefined"
-          class="px-4 sm:px-5 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-[#ee2824]/40"
+          class="inline-flex items-center justify-center min-h-11 px-4 sm:px-5 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-[#ee2824]/40"
           :class="activeSection === section.id
             ? 'bg-[#ee2824] text-white border-[#ee2824] shadow-lg shadow-[#ee2824]/25'
             : 'dark:bg-slate-900 bg-white dark:text-slate-300 text-slate-700 dark:border-slate-800 border-slate-200 hover:border-[#ee2824]/40'"

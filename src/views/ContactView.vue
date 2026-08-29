@@ -52,7 +52,7 @@
         </div>
         <div>
           <h3 class="font-bold font-heading text-base dark:text-white text-slate-900">General Inquiries</h3>
-          <a href="mailto:customercare@switchfiber.ph" class="text-xs text-[#ee2824] dark:text-[#ff6b67] font-semibold underline mt-1 block truncate">
+          <a href="mailto:customercare@switchfiber.ph" class="text-xs text-[#ee2824] dark:text-[#ff6b67] font-semibold underline mt-1 inline-flex items-center min-h-11 max-w-full truncate">
             customercare@switchfiber.ph
           </a>
         </div>
@@ -65,7 +65,7 @@
         </div>
         <div>
           <h3 class="font-bold font-heading text-base dark:text-white text-slate-900">Sales & Marketing</h3>
-          <a href="mailto:sales@switchfiber.ph" class="text-xs text-[#ee2824] dark:text-[#ff6b67] font-semibold underline mt-1 block truncate">
+          <a href="mailto:sales@switchfiber.ph" class="text-xs text-[#ee2824] dark:text-[#ff6b67] font-semibold underline mt-1 inline-flex items-center min-h-11 max-w-full truncate">
             sales@switchfiber.ph
           </a>
         </div>

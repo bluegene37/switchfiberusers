@@ -111,7 +111,7 @@
             <ul v-if="stage.tips" class="space-y-1.5 text-xs dark:text-slate-400 text-slate-600 list-disc list-inside">
               <li v-for="tip in stage.tips" :key="tip">{{ tip }}</li>
             </ul>
-            <router-link v-if="stage.link" :to="stage.link.to" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline pt-1">
+            <router-link v-if="stage.link" :to="stage.link.to" class="inline-flex items-center min-h-11 gap-1.5 text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline pt-1">
               <span>{{ stage.link.label }}</span>
               <ArrowRight class="w-3.5 h-3.5" />
             </router-link>
