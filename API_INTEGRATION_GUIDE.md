@@ -183,10 +183,11 @@ never base64 data URIs. `submitApplication()` in `src/stores/registration.js`
 caps every field (see `FIELD_LIMITS`) before sending; keep any new field in
 that map.
 
-**Serverless proxy allowlist.** `api/_proxy.js` only forwards
-`GET /api/Plans` and `POST /api/Applications`. This is deliberate: the
-upstream API is unauthenticated, so an open passthrough would let anyone read
-applicant records through this site's domain. When a new endpoint is needed,
+**Serverless proxy allowlist.** `api/_proxy.js` strictly restricts outbound routes:
+`GET /api/Plans`, `POST /api/Applications`, `GET /api/LCPNapLocations`, and
+`GET /api/Applications/:id` (sanitized to protect PII attachments and staff emails).
+This is deliberate: the upstream API is unauthenticated, so an open passthrough would let
+anyone read unmasked applicant records through this site's domain. When a new endpoint is needed,
 add it to `ALLOWED_ROUTES` explicitly (and think about what it exposes).
 Upstream 5xx bodies are logged server-side but replaced with a generic message
 before reaching the browser — they contain SQL/EF Core internals.

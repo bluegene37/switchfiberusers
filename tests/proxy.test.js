@@ -76,6 +76,71 @@ describe('Serverless Backend Proxy (api/_proxy.js)', () => {
     assert.equal(res.statusCode, 405)
     assert.equal(res.headers['allow'], 'POST, OPTIONS')
   })
+
+  it('allows GET on single application route /api/Applications/:id', async () => {
+    const { getAllowedMethods } = await import('../api/_proxy.js')
+    assert.deepEqual(getAllowedMethods('/api/Applications/13295'), ['GET'])
+    assert.deepEqual(getAllowedMethods('/api/Applications/202609010000000000000'), ['GET'])
+    assert.deepEqual(getAllowedMethods('/api/Applications/SF-2026-8942'), ['GET'])
+  })
+
+  it('rejects disallowed methods on single application route with 405', async () => {
+    const req = { method: 'DELETE', url: '/api/Applications/13295' }
+    const res = createMockRes()
+
+    await proxyRequest(req, res, '/api/Applications/13295')
+
+    assert.equal(res.statusCode, 405)
+    assert.equal(res.headers['allow'], 'GET, OPTIONS')
+  })
+})
+
+describe('Applications sanitization (api/Applications.js)', () => {
+  const sampleApp = {
+    id: 13295,
+    dateTime: '2026-03-25T13:17:02',
+    firstName: 'Frank angelo',
+    lastName: 'Carpio',
+    emailAddress: 'carpiofrankangelo@yahoo.com',
+    mobileNumber: '9615112590',
+    installationAddress: '1238 petermin compound',
+    city: 'Binangonan',
+    barangay: 'Pag-asa',
+    desiredPlan: 'SwitchConnect - P799',
+    status: 'Schedule',
+    remarks: 'Online Application SF-1234',
+    governmentValidId: 'https://drive.google.com/open?id=secret1',
+    secondGovernmentValidId: 'https://drive.google.com/open?id=secret2',
+    proofOfBilling: 'https://drive.google.com/open?id=secret3',
+    houseFrontPicture: 'https://drive.google.com/open?id=secret4',
+    documentPicture: 'https://drive.google.com/open?id=secret5',
+    pictureOfStatementBillingFromOtherProvider: 'https://drive.google.com/open?id=secret6',
+    modifiedBy: 'internal.staff@switchfiber.ph',
+    userEmail: 'internal.staff@switchfiber.ph'
+  }
+
+  it('strips private ID documents, billing uploads and internal employee emails', async () => {
+    const { sanitizeApplicationRecord } = await import('../api/Applications.js')
+    const sanitized = sanitizeApplicationRecord(sampleApp)
+
+    assert.equal(sanitized.id, 13295)
+    assert.equal(sanitized.firstName, 'Frank angelo')
+    assert.equal(sanitized.status, 'Schedule')
+    assert.equal(sanitized.governmentValidId, undefined)
+    assert.equal(sanitized.secondGovernmentValidId, undefined)
+    assert.equal(sanitized.proofOfBilling, undefined)
+    assert.equal(sanitized.houseFrontPicture, undefined)
+    assert.equal(sanitized.documentPicture, undefined)
+    assert.equal(sanitized.pictureOfStatementBillingFromOtherProvider, undefined)
+    assert.equal(sanitized.modifiedBy, undefined)
+    assert.equal(sanitized.userEmail, undefined)
+  })
+
+  it('handles null, empty or array payloads gracefully', async () => {
+    const { sanitizeApplicationData } = await import('../api/Applications.js')
+    assert.equal(sanitizeApplicationData(null), null)
+    assert.deepEqual(sanitizeApplicationData([sampleApp]).length, 1)
+  })
 })
 
 describe('LCPNapLocations sanitization', () => {

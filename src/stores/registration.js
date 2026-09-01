@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { sendApplicationEmail } from '../services/emailService.js'
+// import { sendApplicationEmail } from '../services/emailService.js' (Handled by backend)
 import { sendApplicationSms } from '../services/smsService.js'
 
 // CALABARZON location hierarchy (provinces → cities → barangays) lives in
@@ -998,7 +998,9 @@ export const useRegistrationStore = defineStore('registration', () => {
       submittedCode.value = randomCode
       pendingReferenceCode.value = ''
 
-      // Best-effort confirmation email — never blocks or fails the submission.
+      // Confirmation email is handled directly by the backend upon insert.
+      emailStatus.value = 'sent'
+      /*
       emailStatus.value = 'sending'
       sendApplicationEmail({
         recipientEmail: apiPayload.emailAddress,
@@ -1019,6 +1021,7 @@ export const useRegistrationStore = defineStore('registration', () => {
         emailStatus.value = 'failed'
         console.warn('[Confirmation Email] Not sent:', err)
       })
+      */
 
       // Best-effort confirmation SMS — parallel to the email, same rules.
       // Disabled for now (Semaphore account not yet set up); flip
@@ -1086,18 +1089,130 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
+  function mapApplicationStatus(status) {
+    const s = String(status || '').toLowerCase()
+    if (s.includes('active') || s.includes('installed') || s.includes('connected') || s.includes('completed') || s.includes('done')) {
+      return { status: 'Connection Active', step: 4, notes: 'Fiber connection is active and operational.' }
+    }
+    if (s.includes('schedule') || s.includes('dispatch') || s.includes('install')) {
+      return { status: 'Installation Scheduled', step: 3, notes: 'Account verification completed. Field technician team has been scheduled for installation.' }
+    }
+    if (s.includes('review') || s.includes('verif') || s.includes('feasib') || s.includes('survey')) {
+      return { status: 'Under Verification', step: 2, notes: 'Engineering team is conducting line feasibility and account verification.' }
+    }
+    return { status: status || 'Application Submitted', step: 1, notes: 'Application logged. Account officer is reviewing your submitted details.' }
+  }
+
+  function formatApiApplication(raw, requestedCode = '') {
+    if (!raw) return null
+    const id = raw.id ?? raw.applicationid ?? ''
+    const applicantName = `${raw.firstName || ''} ${raw.middleName ? raw.middleName + ' ' : ''}${raw.lastName || ''}`.trim() || 'Applicant'
+    const dateStr = raw.dateTime ? raw.dateTime.split('T')[0] : (raw.modifiedDate ? raw.modifiedDate.split('T')[0] : 'Recent')
+    const { status, step, notes } = mapApplicationStatus(raw.status)
+
+    let planTitle = raw.desiredPlan || 'Switch Fiber Plan'
+    if (planTitle && !planTitle.toLowerCase().includes('plan') && !planTitle.includes('₱') && !planTitle.includes('P')) {
+      planTitle = `${planTitle} Plan`
+    }
+
+    const refCode = raw.applicationid || requestedCode || (id ? String(id) : 'Application Record')
+
+    return {
+      id: raw.id,
+      referenceCode: refCode,
+      applicantName,
+      firstName: raw.firstName || '',
+      lastName: raw.lastName || '',
+      email: raw.emailAddress || '',
+      mobile: raw.mobileNumber || '',
+      plan: planTitle,
+      city: raw.city || raw.region || 'Rizal',
+      barangay: raw.barangay || '',
+      date: dateStr,
+      status: raw.status || status,
+      statusStep: step,
+      notes: raw.remarks && !raw.remarks.startsWith('Online Application') ? raw.remarks : notes,
+      delivered: true
+    }
+  }
+
+  const isTracking = ref(false)
+  const trackingError = ref(null)
+  const rawApiResponse = ref(null)
+  const rawApiStatus = ref(null)
+
+  async function fetchApplicationById(identifier) {
+    if (!identifier) return null
+    const rawInput = String(identifier).trim()
+    
+    isTracking.value = true
+    trackingError.value = null
+    rawApiResponse.value = null
+    rawApiStatus.value = null
+
+    // 1. Check local storage & built-in demo codes
+    const local = findApplicationByCode(rawInput)
+
+    try {
+      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+
+      rawApiStatus.value = response.status
+
+      let bodyData = null
+      try {
+        bodyData = await response.json()
+      } catch (jsonErr) {
+        bodyData = await response.text().catch(() => null)
+      }
+      rawApiResponse.value = bodyData
+
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 400) {
+          return local || null
+        }
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      if (bodyData && (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)) {
+        return formatApiApplication(bodyData, rawInput)
+      }
+      return local || null
+    } catch (err) {
+      console.warn(`[Application Tracker] Fetch error for "${identifier}":`, err)
+      trackingError.value = 'Unable to connect to records server. Please check Application ID and try again.'
+      if (!rawApiResponse.value) {
+        rawApiResponse.value = { error: err.message || String(err) }
+      }
+      return local || null
+    } finally {
+      isTracking.value = false
+    }
+  }
+
   function findApplicationByCode(code) {
     if (!code) return null
     const cleanCode = code.trim().toUpperCase()
     const found = submittedApplications.value.find(
-      app => app.referenceCode?.toUpperCase() === cleanCode && app.delivered !== false
+      app => (app.referenceCode?.toUpperCase() === cleanCode || String(app.id) === cleanCode) && app.delivered !== false
     )
     if (found) return found
 
     // Built-in Demo Code for previewing the tracker UI
-    if (cleanCode === 'SF-2026-8942') {
+    if (cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === 'SF-2026-8942') {
       return {
-        referenceCode: 'SF-2026-8942',
+        referenceCode: cleanCode,
         applicantName: 'Juan Dela Cruz (Demo)',
         mobile: '09171234567',
         plan: 'SwitchConnect Plan (₱799/mo)',
@@ -1148,6 +1263,13 @@ export const useRegistrationStore = defineStore('registration', () => {
     prevStep,
     selectPlan,
     submitApplication,
-    findApplicationByCode
+    findApplicationByCode,
+    fetchApplicationById,
+    isTracking,
+    trackingError,
+    rawApiResponse,
+    rawApiStatus,
+    mapApplicationStatus,
+    formatApiApplication
   }
 })

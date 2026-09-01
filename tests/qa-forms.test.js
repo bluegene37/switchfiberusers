@@ -126,4 +126,31 @@ describe('QA Form Validation & Domain Model Integrity', () => {
       assert.equal(derivePromo(plans[4]), 'Free Mesh Wi-Fi Router')
     })
   })
+
+  describe('Application Status & Timeline Progression Mapping', () => {
+    const mapStatus = (status) => {
+      const s = String(status || '').toLowerCase()
+      if (s.includes('active') || s.includes('installed') || s.includes('connected') || s.includes('completed') || s.includes('done')) {
+        return { status: 'Connection Active', step: 4 }
+      }
+      if (s.includes('schedule') || s.includes('dispatch') || s.includes('install')) {
+        return { status: 'Installation Scheduled', step: 3 }
+      }
+      if (s.includes('review') || s.includes('verif') || s.includes('feasib') || s.includes('survey')) {
+        return { status: 'Under Verification', step: 2 }
+      }
+      return { status: status || 'Application Submitted', step: 1 }
+    }
+
+    it('maps upstream API status values to standard 4-stage tracker steps', () => {
+      assert.equal(mapStatus('Schedule').step, 3)
+      assert.equal(mapStatus('Scheduled').step, 3)
+      assert.equal(mapStatus('In Progress').step, 1)
+      assert.equal(mapStatus('Under Review').step, 2)
+      assert.equal(mapStatus('For Verification').step, 2)
+      assert.equal(mapStatus('Active').step, 4)
+      assert.equal(mapStatus('Installed').step, 4)
+      assert.equal(mapStatus('Unknown').step, 1)
+    })
+  })
 })

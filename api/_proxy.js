@@ -13,6 +13,17 @@ const ALLOWED_ROUTES = {
   '/api/LCPNapLocations': ['GET']
 }
 
+export function getAllowedMethods(routeKey) {
+  if (ALLOWED_ROUTES[routeKey]) {
+    return ALLOWED_ROUTES[routeKey]
+  }
+  // Allow single application lookup by ID: /api/Applications/:id (GET only)
+  if (/^\/api\/Applications\/[a-zA-Z0-9_-]+$/i.test(routeKey)) {
+    return ['GET']
+  }
+  return null
+}
+
 // Upstream serves a self-signed certificate.
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
@@ -49,7 +60,7 @@ export async function proxyRequest(req, res, targetPath = null, { transform = nu
   const cleanPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
   const routeKey = cleanPath.split('?')[0].replace(/\/+$/, '') || '/'
 
-  const allowedMethods = ALLOWED_ROUTES[routeKey]
+  const allowedMethods = getAllowedMethods(routeKey)
   if (!allowedMethods) {
     sendJson(res, 404, { error: 'Not Found' })
     return

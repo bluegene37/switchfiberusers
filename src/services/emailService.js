@@ -1,6 +1,6 @@
 // Switch Fiber confirmation email dispatch.
-// Calls our own serverless endpoint (api/send-confirmation.js), which talks to
-// Resend server-side — the API key never reaches the browser.
+// NOTE: Confirmation emails are now handled directly by the backend upon application creation.
+// Client-side dispatch is disabled in src/stores/registration.js.
 
 export async function sendApplicationEmail({
   recipientEmail,

@@ -58,7 +58,7 @@
     </div>
 
     <!-- STEP 1: Personal Information -->
-    <div v-if="currentStep === 1 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
+    <div v-if="currentStep === 1 && !submittedCode" class="sf-wizard-step-1 space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
         <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
           <User class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
@@ -72,7 +72,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- First Name -->
-        <div>
+        <div class="sf-wizard-field-first-name">
           <label for="reg-first-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">First Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input
@@ -82,7 +82,7 @@
               @blur="touchField('firstName')"
               type="text" 
               placeholder="e.g. Juan" 
-              class="input-field" 
+              class="sf-wizard-input-first-name input-field" 
               :class="getFieldStatusClass('firstName')"
               required
             />
@@ -95,20 +95,20 @@
         </div>
 
         <!-- Middle Name -->
-        <div>
+        <div class="sf-wizard-field-middle-name">
           <label for="reg-middle-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Middle Name</label>
           <input
-              id="reg-middle-name" 
+            id="reg-middle-name" 
             v-model="formData.middleName" 
             maxlength="100"
             type="text" 
             placeholder="e.g. Santos (Optional)" 
-            class="input-field" 
+            class="sf-wizard-input-middle-name input-field" 
           />
         </div>
 
         <!-- Last Name -->
-        <div>
+        <div class="sf-wizard-field-last-name">
           <label for="reg-last-name" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Last Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input
@@ -118,7 +118,7 @@
               @blur="touchField('lastName')"
               type="text" 
               placeholder="e.g. Dela Cruz" 
-              class="input-field" 
+              class="sf-wizard-input-last-name input-field" 
               :class="getFieldStatusClass('lastName')"
               required
             />
@@ -133,7 +133,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Email Address -->
-        <div>
+        <div class="sf-wizard-field-email">
           <label for="reg-email" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input
@@ -143,7 +143,7 @@
               @blur="touchField('emailAddress')"
               type="email" 
               placeholder="e.g. juan@example.com" 
-              class="input-field" 
+              class="sf-wizard-input-email input-field" 
               :class="getFieldStatusClass('emailAddress')"
               required
             />
@@ -157,7 +157,7 @@
         </div>
 
         <!-- Mobile Number -->
-        <div>
+        <div class="sf-wizard-field-mobile">
           <label for="reg-mobile" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Active Mobile Number (Numeric Only) <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <div class="relative">
             <input
@@ -170,7 +170,7 @@
               pattern="[0-9]*"
               maxlength="11"
               placeholder="e.g. 09171234567" 
-              class="input-field font-mono" 
+              class="sf-wizard-input-mobile input-field font-mono" 
               :class="getFieldStatusClass('mobileNumber')"
               required
             />
@@ -186,7 +186,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Secondary Mobile -->
-        <div>
+        <div class="sf-wizard-field-secondary-mobile">
           <label for="reg-secondary-mobile" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Secondary Mobile Number (Numeric Only)</label>
           <div class="relative">
             <input
@@ -199,7 +199,7 @@
               pattern="[0-9]*"
               maxlength="11"
               placeholder="e.g. 09151234567" 
-              class="input-field font-mono" 
+              class="sf-wizard-input-secondary-mobile input-field font-mono" 
               :class="getFieldStatusClass('secondaryMobileNumber')"
             />
             <AlertCircle v-if="isFieldInvalid('secondaryMobileNumber')" class="w-4 h-4 text-[#ee2824] absolute right-3 top-1/2 -translate-y-1/2" />
@@ -210,11 +210,11 @@
         </div>
 
         <!-- Referred By — same agent list as the official application form -->
-        <div>
+        <div class="sf-wizard-field-referrer">
           <label for="referred-by" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
             Referred By (Sales Agent)
           </label>
-          <select id="referred-by" v-model="formData.referredBy" class="input-field">
+          <select id="referred-by" v-model="formData.referredBy" class="sf-wizard-select-referrer input-field">
             <option value="">Choose</option>
             <option v-for="name in referrersList" :key="name" :value="name">{{ name }}</option>
           </select>
@@ -223,7 +223,7 @@
     </div>
 
     <!-- STEP 2: Address & Location -->
-    <div v-if="currentStep === 2 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
+    <div v-if="currentStep === 2 && !submittedCode" class="sf-wizard-step-2 space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
         <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2">
           <MapPin class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
@@ -235,7 +235,7 @@
           <button 
             @click="isMapModalOpen = true" 
             type="button" 
-            class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all flex items-center gap-1.5"
+            class="sf-wizard-btn-map-picker px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <MapPin class="w-3.5 h-3.5" />
             <span>Pin on Interactive Map</span>
@@ -246,7 +246,7 @@
             @click="useCurrentLocation" 
             type="button" 
             :disabled="isLocating"
-            class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center gap-1.5 disabled:opacity-60"
+            class="sf-wizard-btn-use-location px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center gap-1.5 disabled:opacity-60 cursor-pointer"
           >
             <RotateCw v-if="isLocating" class="w-3.5 h-3.5 animate-spin" />
             <Navigation v-else class="w-3.5 h-3.5" />
@@ -257,7 +257,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <!-- Province (stored in formData.region — the backend column is named "region") -->
-        <div>
+        <div class="sf-wizard-field-province">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Province <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <SearchableSelect
             v-model="formData.region"
@@ -272,7 +272,7 @@
         </div>
 
         <!-- City / Municipality — filtered by the selected province -->
-        <div>
+        <div class="sf-wizard-field-city">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">City / Town <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <SearchableSelect
             v-model="formData.city"
@@ -288,7 +288,7 @@
 
         <!-- Barangay — filtered by the selected city; typed entries allowed
              when the barangay lookup is unavailable -->
-        <div>
+        <div class="sf-wizard-field-barangay">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Barangay <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <SearchableSelect
             v-model="formData.barangay"
@@ -306,7 +306,7 @@
       </div>
 
       <!-- Installation Address -->
-      <div>
+      <div class="sf-wizard-field-address">
         <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Detailed Installation Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
         <div class="relative">
           <textarea 
@@ -315,7 +315,7 @@
             @blur="touchField('installationAddress')"
             rows="2"
             placeholder="e.g. House No. 123, Block 5 Lot 12 Sunshine Village, National Road" 
-            class="input-field" 
+            class="sf-wizard-input-address input-field" 
             :class="getFieldStatusClass('installationAddress')"
             required
           ></textarea>
@@ -328,7 +328,7 @@
       <!-- Nearest Landmarks (1st & 2nd Text Descriptions - Expandable) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- 1st Nearest Landmark -->
-        <div>
+        <div class="sf-wizard-field-landmark-1">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
             First Nearest Landmark <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span>
           </label>
@@ -339,7 +339,7 @@
               @blur="touchField('firstNearestLandmark')"
               rows="2"
               placeholder="e.g. Beside Barangay Hall / Near Water Refilling Station / Yellow gate" 
-              class="input-field resize-y" 
+              class="sf-wizard-input-landmark-1 input-field resize-y" 
               :class="getFieldStatusClass('firstNearestLandmark')"
             ></textarea>
           </div>
@@ -352,7 +352,7 @@
         </div>
 
         <!-- 2nd Nearest Landmark -->
-        <div>
+        <div class="sf-wizard-field-landmark-2">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
             Second Nearest Landmark (Optional)
           </label>
@@ -363,7 +363,7 @@
               @blur="touchField('secondNearestLandmark')"
               rows="2"
               placeholder="e.g. Across from San Isidro Chapel / 2 houses after bakery" 
-              class="input-field resize-y" 
+              class="sf-wizard-input-landmark-2 input-field resize-y" 
             ></textarea>
           </div>
           <p class="text-[11px] dark:text-slate-500 text-slate-500 mt-1">
@@ -374,7 +374,7 @@
     </div>
 
     <!-- STEP 3: Plan Selection -->
-    <div v-if="currentStep === 3 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
+    <div v-if="currentStep === 3 && !submittedCode" class="sf-wizard-step-3 space-y-6 animate-in fade-in duration-300">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b dark:border-slate-800 border-slate-200 pb-3">
         <div>
           <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center gap-2">
@@ -392,7 +392,7 @@
             @click="registrationStore.fetchPlans(true)"
             type="button"
             :disabled="isLoadingPlans"
-            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold dark:bg-slate-800 bg-slate-100 dark:text-slate-300 text-slate-700 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all flex items-center gap-1.5 disabled:opacity-50"
+            class="sf-wizard-btn-refresh-plans px-2.5 py-1.5 rounded-xl text-xs font-semibold dark:bg-slate-800 bg-slate-100 dark:text-slate-300 text-slate-700 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             title="Refresh plans from API"
           >
             <RotateCw class="w-3.5 h-3.5" :class="{ 'animate-spin': isLoadingPlans }" />
@@ -404,7 +404,7 @@
             @click="isCompareModalOpen = true"
             type="button"
             :disabled="!availablePlans.length"
-            class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+            class="sf-wizard-btn-compare-plans px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/30 hover:bg-[#ee2824]/20 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
             <SlidersHorizontal class="w-3.5 h-3.5" />
             <span class="sm:hidden">Compare</span>
@@ -421,7 +421,7 @@
             :key="tab.id"
             type="button"
             @click="selectedTierFilter = tab.id"
-            class="px-3 py-1.5 rounded-lg transition-all"
+            class="sf-wizard-plan-tier-btn px-3 py-1.5 rounded-lg transition-all cursor-pointer"
             :class="selectedTierFilter === tab.id
               ? 'bg-[#ee2824] text-white shadow-sm font-bold'
               : 'dark:text-slate-400 text-slate-600 hover:text-slate-900 dark:hover:text-white'"
@@ -483,14 +483,14 @@
         </div>
 
         <!-- Dynamic Plan Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="sf-wizard-plans-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <button
             v-for="plan in filteredPlans"
             :key="plan.id"
             type="button"
             @click="registrationStore.selectPlan(plan)"
             :aria-pressed="isPlanSelected(plan)"
-            class="p-5 rounded-2xl border cursor-pointer transition-all relative flex flex-col justify-between text-left w-full group"
+            class="sf-wizard-plan-card p-5 rounded-2xl border cursor-pointer transition-all relative flex flex-col justify-between text-left w-full group"
             :class="isPlanSelected(plan) 
               ? 'bg-[#ee2824]/10 border-[#ee2824] shadow-xl shadow-[#ee2824]/20 ring-2 ring-[#ee2824]/30' 
               : 'dark:bg-slate-900/80 bg-white dark:border-slate-800 border-slate-200 hover:border-[#ee2824]/50 hover:shadow-md'"
@@ -538,18 +538,18 @@
 
       <!-- Selected Plan Readout & Promo Inputs -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-        <div>
+        <div class="sf-wizard-field-desired-plan">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">Desired Plan Selection</label>
           <div class="relative">
-            <input v-model="formData.desiredPlan" type="text" readonly class="input-field font-bold text-[#ee2824] dark:text-[#ff6b67] bg-slate-50 dark:bg-slate-900/60" />
+            <input v-model="formData.desiredPlan" type="text" readonly class="sf-wizard-input-desired-plan input-field font-bold text-[#ee2824] dark:text-[#ff6b67] bg-slate-50 dark:bg-slate-900/60" />
             <CheckCircle2 v-if="formData.desiredPlan" class="w-4 h-4 text-emerald-500 absolute right-3 top-1/2 -translate-y-1/2" />
           </div>
         </div>
-        <div>
+        <div class="sf-wizard-field-applicable-promo">
           <label class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase mb-2">
             Applicable Promo
           </label>
-          <div class="input-field flex items-center gap-2 cursor-default dark:!bg-slate-900/60 !bg-slate-100 dark:!text-slate-200 !text-slate-700">
+          <div class="sf-wizard-box-promo input-field flex items-center gap-2 cursor-default dark:!bg-slate-900/60 !bg-slate-100 dark:!text-slate-200 !text-slate-700">
             <Gift class="w-4 h-4 text-emerald-500 shrink-0" />
             <span class="font-semibold truncate">{{ formData.applicablePromo || derivedPromo }}</span>
           </div>
@@ -561,7 +561,7 @@
     </div>
 
     <!-- STEP 4: Document Uploads -->
-    <div v-if="currentStep === 4 && !submittedCode" class="space-y-6 animate-in fade-in duration-300">
+    <div v-if="currentStep === 4 && !submittedCode" class="sf-wizard-step-4 space-y-6 animate-in fade-in duration-300">
       <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
         <UploadCloud class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
         <span>Step 4: Required Documents & Photo Uploads</span>
@@ -575,7 +575,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         <!-- 1. House Front Picture (FULL WIDTH DROPZONE) -->
-        <div class="glass-card p-5 rounded-2xl border space-y-3 md:col-span-2" :class="getFieldStatusClass('houseFrontPicture')">
+        <div class="sf-wizard-upload-house-front glass-card p-5 rounded-2xl border space-y-3 md:col-span-2" :class="getFieldStatusClass('houseFrontPicture')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">1. House Front Picture <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
           <DropzoneUploader
             v-model="formData.houseFrontPicture"
@@ -591,7 +591,7 @@
         </div>
 
         <!-- 2. 1st Government Valid ID -->
-        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('governmentValidId')">
+        <div class="sf-wizard-upload-primary-id glass-card p-5 rounded-2xl border space-y-3" :class="getFieldStatusClass('governmentValidId')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
             2. Primary Government ID <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span>
           </label>
@@ -612,7 +612,7 @@
         </div>
 
         <!-- 3. 2nd Government Valid ID -->
-        <div class="glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
+        <div class="sf-wizard-upload-secondary-id glass-card p-5 rounded-2xl border dark:border-slate-800 border-slate-200 space-y-3">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
             3. 2nd Government ID (Optional)
           </label>
@@ -631,7 +631,7 @@
 
         <!-- 4 & 5. Either-or requirement: Proof of Billing OR Supporting Document -->
         <div
-          class="md:col-span-2 flex items-start gap-2 p-3 rounded-xl border text-[11px] font-medium leading-relaxed"
+          class="sf-wizard-either-doc-notice md:col-span-2 flex items-start gap-2 p-3 rounded-xl border text-[11px] font-medium leading-relaxed"
           :class="eitherDocInvalid
             ? 'border-[#ee2824] bg-[#ee2824]/5 text-[#ee2824]'
             : eitherDocSatisfied
@@ -648,7 +648,7 @@
         </div>
 
         <!-- 4. Proof of Billing -->
-        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getEitherDocCardClass('proofOfBilling')">
+        <div class="sf-wizard-upload-billing glass-card p-5 rounded-2xl border space-y-3" :class="getEitherDocCardClass('proofOfBilling')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
             4. Proof of Billing
             <span class="ml-1 text-[10px] font-semibold normal-case px-1.5 py-0.5 rounded-full dark:bg-slate-800 bg-slate-200 dark:text-slate-300 text-slate-600">Either this or #5</span>
@@ -671,7 +671,7 @@
         </div>
 
         <!-- 5. Additional Supporting Document -->
-        <div class="glass-card p-5 rounded-2xl border space-y-3" :class="getEitherDocCardClass('documentPicture')">
+        <div class="sf-wizard-upload-supporting-doc glass-card p-5 rounded-2xl border space-y-3" :class="getEitherDocCardClass('documentPicture')">
           <label class="block text-xs font-bold dark:text-white text-slate-900 uppercase">
             5. Additional Supporting Document
             <span class="ml-1 text-[10px] font-semibold normal-case px-1.5 py-0.5 rounded-full dark:bg-slate-800 bg-slate-200 dark:text-slate-300 text-slate-600">Either this or #4</span>
@@ -701,7 +701,7 @@
     </div>
 
     <!-- STEP 5: Review, Terms & API Submission -->
-    <div v-if="currentStep === 5 || submittedCode" class="space-y-6 animate-in fade-in duration-300">
+    <div v-if="currentStep === 5 || submittedCode" class="sf-wizard-step-5 space-y-6 animate-in fade-in duration-300">
       <div v-if="!submittedCode">
         <h2 class="text-lg sm:text-xl font-bold font-heading dark:text-white text-slate-900 flex items-start sm:items-center gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
           <FileText class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67] shrink-0 mt-1 sm:mt-0" />
@@ -709,7 +709,7 @@
         </h2>
 
         <!-- Summary Review Box -->
-        <div class="p-5 rounded-2xl dark:bg-slate-900/90 bg-slate-100 border dark:border-slate-800 border-slate-200 space-y-4">
+        <div class="sf-wizard-summary-box p-5 rounded-2xl dark:bg-slate-900/90 bg-slate-100 border dark:border-slate-800 border-slate-200 space-y-4">
           <!-- Applicant & Installation Address Row -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-b dark:border-slate-800 border-slate-300 pb-3">
             <div>
@@ -730,10 +730,10 @@
 
           <!-- Dynamic Plan Details Box & Uploaded Documents Row -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5">
+            <div class="sf-wizard-summary-plan p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5">
               <div class="flex items-center justify-between">
                 <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px]">Selected Fiber Plan</span>
-                <button @click="registrationStore.currentStep = 3" type="button" class="text-[11px] font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">
+                <button @click="registrationStore.currentStep = 3" type="button" class="sf-wizard-btn-change-plan text-[11px] font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline cursor-pointer">
                   Change Plan
                 </button>
               </div>
@@ -750,7 +750,7 @@
               </div>
             </div>
 
-            <div class="p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5 flex flex-col justify-between">
+            <div class="sf-wizard-summary-docs p-3.5 rounded-xl dark:bg-slate-950/80 bg-white border dark:border-slate-800 border-slate-200 space-y-1.5 flex flex-col justify-between">
               <div>
                 <span class="dark:text-slate-500 text-slate-500 uppercase font-semibold text-[11px] block mb-1">Attached Documents</span>
                 <span class="text-[11px] dark:text-slate-400 text-slate-500 block truncate">ID: {{ formData.governmentValidIdName || 'Photo Attached' }}</span>
@@ -777,7 +777,7 @@
           ref="errorPanelRef"
           role="alert"
           aria-live="assertive"
-          class="scroll-mt-24 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300"
+          class="sf-wizard-error-panel scroll-mt-24 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-500 text-xs font-semibold flex items-start gap-3 animate-in shake duration-300"
         >
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
           <div class="space-y-1 min-w-0 flex-1">
@@ -827,7 +827,7 @@
 
         <!-- Terms Agreement Checkbox & Read Terms Modal Link -->
         <div 
-          class="p-4 rounded-2xl border space-y-3 transition-all"
+          class="sf-wizard-terms-box p-4 rounded-2xl border space-y-3 transition-all"
           :class="[
             touched['termsAndConditionsAgreement'] && !formData.termsAndConditionsAgreement 
               ? 'border-[#ee2824] bg-rose-500/10 ring-2 ring-[#ee2824]/20' 
@@ -840,7 +840,7 @@
                 type="checkbox" 
                 v-model="formData.termsAndConditionsAgreement" 
                 @change="touchField('termsAndConditionsAgreement'); submissionError = ''"
-                class="w-4 h-4 rounded accent-[#ee2824] mt-0.5 cursor-pointer" 
+                class="sf-wizard-checkbox-terms w-4 h-4 rounded accent-[#ee2824] mt-0.5 cursor-pointer" 
               />
               <span>I agree to the Terms & Conditions of Switch Fiber and confirm that all information provided is true and correct. <span class="text-[#ee2824] font-bold">*</span></span>
             </label>
@@ -848,7 +848,7 @@
             <button 
               @click="isTermsModalOpen = true" 
               type="button" 
-              class="text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline shrink-0 sm:ml-4"
+              class="sf-wizard-btn-read-terms text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline shrink-0 sm:ml-4 cursor-pointer"
             >
               Read Terms & Conditions
             </button>
@@ -861,7 +861,7 @@
       </div>
 
       <!-- SUCCESS CONFIRMATION SCREEN -->
-      <div v-else class="text-center space-y-6 py-6 animate-in zoom-in-95 duration-300">
+      <div v-else class="sf-wizard-success-panel text-center space-y-6 py-6 animate-in zoom-in-95 duration-300">
         <div class="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-400/40 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/20">
           <CheckCircle2 class="w-12 h-12" />
         </div>
@@ -875,60 +875,58 @@
         </div>
 
         <!-- Tracking Code Card -->
-        <div class="p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-3 shadow-2xl">
+        <div class="sf-wizard-success-code-card p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-3 shadow-2xl">
           <span class="text-xs dark:text-slate-400 text-slate-500 uppercase tracking-widest block">Application Reference Code</span>
           <div class="flex items-center justify-center gap-2">
-            <div class="text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wider">
+            <div class="sf-wizard-success-code-value text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wider">
               {{ submittedCode }}
             </div>
             <button 
               @click="copyCode" 
               type="button" 
-              class="p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors cursor-pointer"
-              title="Copy Reference Code"
+              class="sf-wizard-success-copy-btn p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors cursor-pointer"
+              title="Copy Application ID"
             >
               <Copy class="w-5 h-5" />
             </button>
           </div>
-          <p class="text-[11px] dark:text-slate-400 text-slate-500">Save this reference code to check your real-time installation dispatch status.</p>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">Save this Application ID to check your real-time installation dispatch status.</p>
         </div>
 
-        <!-- Delivery banner reflects what actually happened: green lists only
-             the channels (email / SMS) that confirmed sending, amber otherwise
-             so the applicant knows to save the code themselves. -->
+        <!-- Delivery banner reflects confirmation delivery -->
         <div
           v-if="deliveredChannelsNote"
-          class="max-w-md mx-auto p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start justify-center gap-2 text-left"
+          class="sf-wizard-success-delivery-banner max-w-md mx-auto p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start justify-center gap-2 text-left"
         >
           <CheckCircle2 class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
           <span>
-            A copy of your reference code has been {{ deliveredChannelsNote }}.
+            A copy of your Application ID has been {{ deliveredChannelsNote }}.
             Our team will contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
           </span>
         </div>
         <div
           v-else
-          class="max-w-md mx-auto p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-200 flex items-start justify-center gap-2 text-left"
+          class="sf-wizard-success-fallback-banner max-w-md mx-auto p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-200 flex items-start justify-center gap-2 text-left"
         >
           <AlertCircle class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
           <span>
-            Please save or screenshot your reference code.
+            Please save or screenshot your Application ID.
             Our team will contact you on <strong>{{ formData.mobileNumber || 'your mobile number' }}</strong> to confirm your schedule.
           </span>
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-3 pt-4">
-          <router-link :to="`/status?code=${submittedCode}`" class="btn-primary w-full sm:w-auto">
+          <router-link :to="`/status?code=${submittedCode}`" class="sf-wizard-success-track-btn btn-primary w-full sm:w-auto">
             <Search class="w-4 h-4" />
             <span>Track Application Status</span>
           </router-link>
           
-          <button @click="printReceipt" class="btn-secondary w-full sm:w-auto">
+          <button @click="printReceipt" class="sf-wizard-success-print-btn btn-secondary w-full sm:w-auto cursor-pointer">
             <Printer class="w-4 h-4" />
             <span>Print Application Summary</span>
           </button>
 
-          <button @click="resetWizard" class="btn-secondary w-full sm:w-auto">
+          <button @click="resetWizard" class="sf-wizard-success-reset-btn btn-secondary w-full sm:w-auto cursor-pointer">
             <RotateCcw class="w-4 h-4" />
             <span>Submit Another Application</span>
           </button>
@@ -937,11 +935,11 @@
     </div>
 
     <!-- Navigation Footer Controls -->
-    <div v-if="!submittedCode" class="mt-8 pt-6 border-t dark:border-slate-800 border-slate-200 flex items-center justify-between">
+    <div v-if="!submittedCode" class="sf-wizard-nav-footer mt-8 pt-6 border-t dark:border-slate-800 border-slate-200 flex items-center justify-between">
       <button 
         v-if="currentStep > 1" 
         @click="registrationStore.prevStep()" 
-        class="btn-secondary text-xs"
+        class="sf-wizard-btn-prev-step btn-secondary text-xs cursor-pointer"
       >
         <ArrowLeft class="w-4 h-4" />
         <span>Previous</span>
@@ -951,7 +949,7 @@
       <button 
         v-if="currentStep < 5" 
         @click="handleNextStep" 
-        class="btn-primary text-xs"
+        class="sf-wizard-btn-next-step btn-primary text-xs cursor-pointer"
       >
         <span>Next Step</span>
         <ArrowRight class="w-4 h-4" />
@@ -960,7 +958,7 @@
       <button 
         v-else 
         @click="handleSubmit" 
-        class="btn-primary text-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+        class="sf-wizard-btn-submit btn-primary text-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
         :disabled="isSubmitting"
         :aria-busy="isSubmitting"
       >
