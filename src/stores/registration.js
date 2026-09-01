@@ -91,11 +91,6 @@ export const useRegistrationStore = defineStore('registration', () => {
   const SMS_CONFIRMATIONS_ENABLED = false
   const smsStatus = ref('idle')
 
-  // Reference code for the in-flight application. Reused across retries so a
-  // failed-then-retried submit does not hand the applicant a different code
-  // each time (and does not fill the backend with near-duplicate rows).
-  const pendingReferenceCode = ref('')
-
   // Documents are transmitted as short filename strings only. The backend's
   // Application table stores these in fixed-width nvarchar columns (~255), so
   // posting a base64 data URI makes SQL Server raise
@@ -155,7 +150,6 @@ export const useRegistrationStore = defineStore('registration', () => {
 
     // Agreement
     termsAndConditionsAgreement: false,
-    applicationReferenceCode: '',
     submissionDate: ''
   })
 
@@ -688,7 +682,8 @@ export const useRegistrationStore = defineStore('registration', () => {
       console.warn('LocalStorage quota exceeded, trimming older applications:', err)
       try {
         const trimmedApps = submittedApplications.value.slice(0, 3).map(app => ({
-          referenceCode: app.referenceCode,
+          id: app.id,
+          applicationId: app.applicationId,
           applicantName: app.applicantName,
           mobile: app.mobile,
           plan: app.plan,
@@ -721,7 +716,6 @@ export const useRegistrationStore = defineStore('registration', () => {
     formData.value = getInitialFormData()
     apiError.value = null
     lastSubmitError.value = null
-    pendingReferenceCode.value = ''
     emailStatus.value = 'idle'
     smsStatus.value = 'idle'
     syncSelectedPlan()
@@ -841,7 +835,8 @@ export const useRegistrationStore = defineStore('registration', () => {
     // duplicate application while the first request is still open.
     if (isSubmitting.value) {
       return {
-        referenceCode: pendingReferenceCode.value,
+        id: '',
+        applicationId: '',
         delivered: false,
         alreadyRunning: true,
         error: lastSubmitError.value
@@ -852,23 +847,6 @@ export const useRegistrationStore = defineStore('registration', () => {
     apiError.value = null
 
     const now = new Date()
-
-    // Retrying a failed submit keeps the same reference code: the earlier
-    // attempt never created a row, and a fresh code each time would leave the
-    // applicant holding a code nobody can find.
-    if (!pendingReferenceCode.value) {
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      const seconds = String(now.getSeconds()).padStart(2, '0')
-      const randomSuffix = Math.floor(10 + Math.random() * 90)
-      pendingReferenceCode.value = `SF-${year}${month}${day}-${hours}${minutes}${seconds}-${randomSuffix}`
-    }
-
-    const randomCode = pendingReferenceCode.value
-    formData.value.applicationReferenceCode = randomCode
     formData.value.submissionDate = now.toISOString()
 
     const houseFrontVal = documentFilename(
@@ -938,7 +916,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       visitBy: '',
       visitWith: '',
       visitWithOther: '',
-      remarks: cap('remarks', `Online Application ${randomCode}${photoGpsNote()}`),
+      remarks: cap('remarks', `Online Application${photoGpsNote()}`),
       modifiedBy: '0',
       modifiedDate: '',
       userEmail: cap('emailAddress', formData.value.emailAddress)
@@ -948,6 +926,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS)
     let delivered = false
+    let createdApplicationId = ''
 
     try {
       const response = await fetch(endpoint, {
@@ -971,12 +950,10 @@ export const useRegistrationStore = defineStore('registration', () => {
         throw err
       }
 
-      // The backend returns the created row; its `id` is the number the
-      // applicant tracks with, so it replaces the local reference code as the
-      // user-facing handle. Fall back to the local code if the insert response
-      // carries no id.
+      // The backend returns the created row; its `id` is the primary number the
+      // applicant tracks with.
       const created = await response.json().catch(() => ({}))
-      const applicationId =
+      createdApplicationId =
         created && created.id !== undefined && created.id !== null
           ? String(created.id)
           : ''
@@ -984,8 +961,8 @@ export const useRegistrationStore = defineStore('registration', () => {
 
       // Only a confirmed insert becomes a trackable application.
       submittedApplications.value.unshift({
-        referenceCode: randomCode,
-        applicationId,
+        id: createdApplicationId,
+        applicationId: createdApplicationId,
         applicantName: `${apiPayload.firstName} ${apiPayload.middleName ? apiPayload.middleName + ' ' : ''}${apiPayload.lastName}`.trim(),
         email: apiPayload.emailAddress,
         mobile: apiPayload.mobileNumber,
@@ -1003,8 +980,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       saveToLocalStorage()
 
       lastSubmitError.value = null
-      submittedCode.value = applicationId || randomCode
-      pendingReferenceCode.value = ''
+      submittedCode.value = createdApplicationId
 
       // Confirmation email is dispatched by the backend on insert; the
       // client-side endpoint was removed as an unauthenticated send relay.
@@ -1014,11 +990,11 @@ export const useRegistrationStore = defineStore('registration', () => {
       // Disabled for now (Semaphore account not yet set up); flip
       // SMS_CONFIRMATIONS_ENABLED below to true once SEMAPHORE_API_KEY is
       // configured — the endpoint (api/send-sms.js) and UI are already wired.
-      if (SMS_CONFIRMATIONS_ENABLED) {
+      if (SMS_CONFIRMATIONS_ENABLED && createdApplicationId) {
         smsStatus.value = 'sending'
         sendApplicationSms({
           recipientNumber: apiPayload.mobileNumber,
-          referenceCode: randomCode
+          applicationId: createdApplicationId
         }).then(result => {
           smsStatus.value = result?.success ? 'sent' : 'failed'
           if (!result?.success) {
@@ -1036,7 +1012,6 @@ export const useRegistrationStore = defineStore('registration', () => {
       const aborted = err.name === 'AbortError'
       const detail = {
         at: new Date().toISOString(),
-        referenceCode: randomCode,
         endpoint,
         httpStatus: err.httpStatus ?? null,
         message: aborted
@@ -1054,7 +1029,6 @@ export const useRegistrationStore = defineStore('registration', () => {
 
       console.error(
         '[Switch Fiber] Application submit FAILED\n' +
-        `  reference : ${detail.referenceCode}\n` +
         `  endpoint  : ${detail.endpoint}\n` +
         `  http      : ${detail.httpStatus ?? '(no response)'}\n` +
         `  message   : ${detail.message}\n` +
@@ -1070,7 +1044,8 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
 
     return {
-      referenceCode: randomCode,
+      id: createdApplicationId,
+      applicationId: createdApplicationId,
       delivered,
       error: lastSubmitError.value
     }
@@ -1090,7 +1065,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     return { status: status || 'Application Submitted', step: 1, notes: 'Application logged. Account officer is reviewing your submitted details.' }
   }
 
-  function formatApiApplication(raw, requestedCode = '') {
+  function formatApiApplication(raw, requestedId = '') {
     if (!raw) return null
     const id = raw.id ?? raw.applicationid ?? ''
     const applicantName = `${raw.firstName || ''} ${raw.middleName ? raw.middleName + ' ' : ''}${raw.lastName || ''}`.trim() || 'Applicant'
@@ -1102,11 +1077,11 @@ export const useRegistrationStore = defineStore('registration', () => {
       planTitle = `${planTitle} Plan`
     }
 
-    const refCode = raw.applicationid || requestedCode || (id ? String(id) : 'Application Record')
+    const appId = id ? String(id) : (requestedId ? String(requestedId) : 'Application Record')
 
     return {
-      id: raw.id,
-      referenceCode: refCode,
+      id: raw.id ?? appId,
+      applicationId: appId,
       applicantName,
       firstName: raw.firstName || '',
       lastName: raw.lastName || '',
@@ -1193,17 +1168,18 @@ export const useRegistrationStore = defineStore('registration', () => {
     const cleanCode = code.trim().toUpperCase()
     const found = submittedApplications.value.find(
       app => (
-        app.referenceCode?.toUpperCase() === cleanCode ||
+        String(app.id ?? '') === cleanCode ||
         String(app.applicationId ?? '') === cleanCode ||
-        String(app.id) === cleanCode
+        app.referenceCode?.toUpperCase() === cleanCode
       ) && app.delivered !== false
     )
     if (found) return found
 
     // Built-in Demo Code for previewing the tracker UI
-    if (cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === 'SF-2026-8942') {
+    if (cleanCode === '13295' || cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === 'SF-2026-8942' || cleanCode === '8942') {
       return {
-        referenceCode: cleanCode,
+        id: cleanCode,
+        applicationId: cleanCode,
         applicantName: 'Juan Dela Cruz (Demo)',
         mobile: '09171234567',
         plan: 'SwitchConnect Plan (₱799/mo)',

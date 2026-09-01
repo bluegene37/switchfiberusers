@@ -30,7 +30,7 @@
             inputmode="text"
             autocapitalize="characters"
             autocomplete="off"
-            placeholder="e.g. 20260901*************"
+            placeholder="e.g. 13295"
             aria-label="Application ID"
             @input="emptyError = false"
             class="sf-tracker-search-input input-field uppercase font-mono text-lg sm:text-xl py-3.5 pl-4 pr-12 tracking-wide font-bold"
@@ -52,8 +52,8 @@
         </p>
 
         <div class="sf-tracker-format-hint flex items-center justify-between text-xs dark:text-slate-400 text-slate-500 mt-2">
-          <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">e.g. 20260901*************</strong></span>
-          <span class="text-[11px] text-slate-400">Found in confirmation email</span>
+          <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">e.g. 13295</strong></span>
+          <span class="text-[11px] text-slate-400">Found in confirmation email / SMS</span>
         </div>
       </div>
 
@@ -157,10 +157,10 @@
           </span>
           <div class="flex items-center gap-3">
             <h2 class="sf-tracker-code-value text-2xl sm:text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wide">
-              {{ foundApp.referenceCode || foundApp.id }}
+              {{ foundApp.applicationId || foundApp.id }}
             </h2>
             <button 
-              @click="copyCode(foundApp.referenceCode || foundApp.id)" 
+              @click="copyCode(foundApp.applicationId || foundApp.id)" 
               type="button" 
               class="sf-tracker-copy-code-btn p-2 rounded-xl border dark:border-slate-700 border-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
               :title="copied ? 'Copied to clipboard' : 'Copy Application ID'"

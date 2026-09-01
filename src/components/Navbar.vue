@@ -269,7 +269,7 @@
             :class="$route.path === '/status' ? 'text-[#ee2824] dark:text-[#ff6b67] bg-[#ee2824]/10 font-bold' : 'dark:text-slate-200 text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900'"
           >
             <Search class="w-4 h-4 text-purple-500" />
-            <span>Track Application Reference</span>
+            <span>Track Application</span>
           </router-link>
 
           <router-link 

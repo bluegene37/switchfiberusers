@@ -3,16 +3,17 @@
 // Semaphore server-side — the API key never reaches the browser, and the
 // message text is composed server-side.
 
-export async function sendApplicationSms({ recipientNumber, referenceCode }) {
-  if (!recipientNumber || !referenceCode) {
-    return { success: false, error: 'Missing recipient number or reference code' }
+export async function sendApplicationSms({ recipientNumber, applicationId, referenceCode }) {
+  const appId = String(applicationId || referenceCode || '').trim()
+  if (!recipientNumber || !appId) {
+    return { success: false, error: 'Missing recipient number or application ID' }
   }
 
   try {
     const response = await fetch('/api/send-sms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipientNumber, referenceCode })
+      body: JSON.stringify({ recipientNumber, applicationId: appId, referenceCode: appId })
     })
 
     const result = await response.json().catch(() => ({}))

@@ -175,7 +175,7 @@
           </div>
           <h4 class="font-bold font-heading dark:text-white text-slate-900 text-base">3. Active Mobile & Email</h4>
           <p class="text-xs dark:text-slate-300 text-slate-600 leading-relaxed">
-            Active 11-digit mobile number and email address to receive your Reference Code, dispatch notifications, and monthly SOA.
+            Active 11-digit mobile number and email address to receive your Application ID, dispatch notifications, and monthly SOA.
           </p>
         </div>
       </div>

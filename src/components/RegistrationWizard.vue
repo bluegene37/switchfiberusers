@@ -4,7 +4,7 @@
     <!-- Toast Notification for Copying Code -->
     <div v-if="showCopyToast" class="fixed top-6 right-6 z-50 bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-300">
       <CheckCircle2 class="w-5 h-5" />
-      <span class="text-xs font-bold">Reference code copied to clipboard!</span>
+      <span class="text-xs font-bold">Application ID copied to clipboard!</span>
     </div>
 
     <!-- Header Title -->
@@ -782,17 +782,16 @@
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
           <div class="space-y-1 min-w-0 flex-1">
             <h4 class="font-bold text-sm">
-              {{ failedReferenceCode ? 'Application NOT Submitted' : 'Application Cannot Be Submitted Yet' }}
+              {{ hasSubmitFailed ? 'Application NOT Submitted' : 'Application Cannot Be Submitted Yet' }}
             </h4>
             <p>{{ submissionError }}</p>
 
-            <div v-if="failedReferenceCode" class="mt-2 space-y-1 font-normal dark:text-slate-200 text-slate-700">
+            <div v-if="hasSubmitFailed" class="mt-2 space-y-1 font-normal dark:text-slate-200 text-slate-700">
               <p v-if="friendlyCause" class="font-semibold">{{ friendlyCause }}</p>
               <p>
-                Please try again, or call
+                Please try again, or call our customer hotline at
                 <a href="tel:09154077565" class="font-bold underline">0915 407 7565</a>
-                and quote reference
-                <span class="font-mono font-bold">{{ failedReferenceCode }}</span>.
+                for assistance.
               </p>
             </div>
 
@@ -803,7 +802,6 @@
               </summary>
               <dl class="mt-2 space-y-1 font-mono text-[11px] font-normal dark:text-slate-300 text-slate-700">
                 <div><span class="opacity-70">time:</span> {{ lastSubmitError.at }}</div>
-                <div><span class="opacity-70">ref:</span> {{ lastSubmitError.referenceCode }}</div>
                 <div class="break-all"><span class="opacity-70">endpoint:</span> {{ lastSubmitError.endpoint }}</div>
                 <div><span class="opacity-70">http:</span> {{ lastSubmitError.httpStatus ?? 'no response' }}</div>
                 <div class="break-all"><span class="opacity-70">message:</span> {{ lastSubmitError.message }}</div>
@@ -876,7 +874,7 @@
 
         <!-- Tracking Code Card -->
         <div class="sf-wizard-success-code-card p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-3 shadow-2xl">
-          <span class="text-xs dark:text-slate-400 text-slate-500 uppercase tracking-widest block">Application Reference Code</span>
+          <span class="text-xs dark:text-slate-400 text-slate-500 uppercase tracking-widest block">Application ID</span>
           <div class="flex items-center justify-center gap-2">
             <div class="sf-wizard-success-code-value text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wider">
               {{ submittedCode }}
@@ -963,7 +961,7 @@
         :aria-busy="isSubmitting"
       >
         <RotateCw v-if="isSubmitting" class="w-4 h-4 animate-spin" />
-        <RotateCcw v-else-if="failedReferenceCode" class="w-4 h-4" />
+        <RotateCcw v-else-if="hasSubmitFailed" class="w-4 h-4" />
         <Sparkles v-else class="w-4 h-4" />
         <span>{{ submitButtonLabel }}</span>
       </button>
@@ -1133,12 +1131,12 @@ const isMapModalOpen = ref(false)
 const showCopyToast = ref(false)
 const submissionError = ref('')
 const errorCopied = ref(false)
-const failedReferenceCode = ref('')
+const hasSubmitFailed = ref(false)
 const errorPanelRef = ref(null)
 
 const submitButtonLabel = computed(() => {
   if (isSubmitting.value) return 'Submitting Application...'
-  return failedReferenceCode.value ? 'Try Submitting Again' : 'Submit Application'
+  return hasSubmitFailed.value ? 'Try Submitting Again' : 'Submit Application'
 })
 
 // Turn known backend failures into something a human can act on.
@@ -1208,7 +1206,7 @@ const submittedCode = computed(() => registrationStore.submittedCode)
 function resetWizard() {
   registrationStore.resetForm()
   submissionError.value = ''
-  failedReferenceCode.value = ''
+  hasSubmitFailed.value = false
   Object.keys(touched).forEach(key => delete touched[key])
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -1216,7 +1214,7 @@ function resetWizard() {
 // Automatically reset wizard validation, touched fields & error state when resetForm is called from anywhere (e.g. Navbar Apply Online)
 watch(() => registrationStore.resetSignal, () => {
   submissionError.value = ''
-  failedReferenceCode.value = ''
+  hasSubmitFailed.value = false
   Object.keys(touched).forEach(key => delete touched[key])
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
@@ -1468,7 +1466,7 @@ async function handleSubmit() {
   }
 
   submissionError.value = ''
-  failedReferenceCode.value = ''
+  hasSubmitFailed.value = false
 
   try {
     const result = await registrationStore.submitApplication()
@@ -1484,7 +1482,7 @@ async function handleSubmit() {
       })
     } else {
       // Stay on the form and show the failure panel — never the success screen
-      failedReferenceCode.value = result.referenceCode
+      hasSubmitFailed.value = true
       submissionError.value =
         'Your application was NOT submitted. Nothing has been received by our team yet.'
       await revealError()
@@ -1492,6 +1490,7 @@ async function handleSubmit() {
   } catch (err) {
     console.error('Submission failed:', err)
     submissionError.value = 'Failed to submit application. Please check your network connection.'
+    hasSubmitFailed.value = true
     await revealError()
   }
 }

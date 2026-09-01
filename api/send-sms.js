@@ -17,10 +17,10 @@ function normalizePhMobile(raw) {
 
 export async function sendConfirmationSms(data) {
   const number = normalizePhMobile(data?.recipientNumber)
-  const referenceCode = String(data?.referenceCode ?? '').trim().slice(0, 40)
+  const applicationId = String(data?.applicationId ?? data?.id ?? data?.referenceCode ?? '').trim().slice(0, 40)
 
-  if (!referenceCode) {
-    return { success: false, error: 'Missing referenceCode.' }
+  if (!applicationId) {
+    return { success: false, error: 'Missing applicationId.' }
   }
   if (!number) {
     return { success: false, error: 'Invalid Philippine mobile number.' }
@@ -28,7 +28,7 @@ export async function sendConfirmationSms(data) {
 
   const apiKey = process.env.SEMAPHORE_API_KEY
   if (!apiKey) {
-    console.log(`[Semaphore Service] SEMAPHORE_API_KEY not set — skipped SMS to ${number} for ${referenceCode}`)
+    console.log(`[Semaphore Service] SEMAPHORE_API_KEY not set — skipped SMS to ${number} for ID ${applicationId}`)
     return {
       success: false,
       skipped: true,
@@ -37,13 +37,13 @@ export async function sendConfirmationSms(data) {
   }
 
   const baseOrigin = (process.env.SITE_URL || 'https://switchfiber.ph').replace(/\/$/, '')
-  const trackingUrl = `${baseOrigin}/status?code=${encodeURIComponent(referenceCode)}`
+  const trackingUrl = `${baseOrigin}/status?code=${encodeURIComponent(applicationId)}`
 
   // GSM-7 characters only, and per Semaphore's FAQ a message starting with
   // "TEST" is silently dropped by the networks — this one starts with the
   // brand name. ~220 chars = 2 SMS segments (2 credits).
   const message =
-    `Switch Fiber: We received your application. Ref: ${referenceCode}. ` +
+    `Switch Fiber: We received your application. ID: ${applicationId}. ` +
     `Track it at ${trackingUrl} ` +
     `Our team will call or text you to confirm your installation. Agents collect NO application or processing fees.`
 
@@ -80,7 +80,7 @@ export async function sendConfirmationSms(data) {
   }
 
   console.log(`[Semaphore Service] SMS queued to ${number} (ID: ${parsed[0].message_id})`)
-  return { success: true, id: parsed[0].message_id, recipientNumber: number, referenceCode }
+  return { success: true, id: parsed[0].message_id, recipientNumber: number, applicationId }
 }
 
 // Vercel Serverless Function Handler.

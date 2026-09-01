@@ -61,12 +61,12 @@ export const useRegistrationStore = defineStore('registration', () => {
   const apiError = ref(null)
 
   // 1. Add API action function
-  async function fetchApplicationByCode(referenceCode) {
+  async function fetchApplicationById(applicationId) {
     isSubmitting.value = true
     apiError.value = null
 
     try {
-      const response = await fetch(`/api/Applications/${referenceCode}`, {
+      const response = await fetch(`/api/Applications/${applicationId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       })
@@ -89,7 +89,7 @@ export const useRegistrationStore = defineStore('registration', () => {
   return {
     isSubmitting,
     apiError,
-    fetchApplicationByCode
+    fetchApplicationById
   }
 })
 ```
@@ -135,7 +135,7 @@ const apiPayload = {
   visitBy: '',
   visitWith: '',
   visitWithOther: '',
-  remarks: `Online Application ${randomCode}`,
+  remarks: `Online Application`,
   modifiedBy: '0', // Server default
   modifiedDate: '',
   userEmail: formData.value.emailAddress
@@ -147,7 +147,7 @@ const apiPayload = {
 ### Step 3: Only Report Success After the Backend Confirms
 
 **Never** cache a record as "submitted" before the POST succeeds. An earlier
-build did exactly that — the applicant saw a reference code and confetti while
+build did exactly that — the applicant saw an ID and confetti while
 the backend had rejected the insert. The correct order is:
 
 ```javascript
@@ -169,7 +169,7 @@ try {
   localStorage.setItem('switch_applications', JSON.stringify(submittedApplications.value))
 } catch (err) {
   // Keep the form state (the draft autosave already has it), surface the
-  // failure to the applicant, and let them retry with the SAME reference code.
+  // failure to the applicant, and let them retry.
   lastSubmitError.value = { message: err.message, responseBody: err.responseBody }
 }
 ```
@@ -203,11 +203,11 @@ Import the store and invoke the action from button handlers:
 ```html
 <template>
   <div class="space-y-4 max-w-xl mx-auto">
-    <label class="block text-xs font-bold uppercase">Application Reference Code</label>
+    <label class="block text-xs font-bold uppercase">Application ID</label>
     <input 
       v-model="inputCode" 
       type="text" 
-      placeholder="e.g. SF-2026-8942" 
+      placeholder="e.g. 13295" 
       class="input-field" 
     />
 
@@ -217,7 +217,7 @@ Import the store and invoke the action from button handlers:
       class="btn-primary w-full"
     >
       <RotateCw v-if="registrationStore.isSubmitting" class="w-4 h-4 animate-spin" />
-      <span>{{ registrationStore.isSubmitting ? 'Searching...' : 'Track Reference' }}</span>
+      <span>{{ registrationStore.isSubmitting ? 'Searching...' : 'Track Application' }}</span>
     </button>
 
     <!-- Error Banner -->

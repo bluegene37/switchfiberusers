@@ -76,29 +76,26 @@ describe('QA Form Validation & Domain Model Integrity', () => {
     })
   })
 
-  describe('Application Reference Number Generation & Format', () => {
-    const generateRefCode = (date = new Date()) => {
-      const y = date.getFullYear()
-      const m = String(date.getMonth() + 1).padStart(2, '0')
-      const d = String(date.getDate()).padStart(2, '0')
-      const rand = Math.floor(1000 + Math.random() * 9000)
-      return `SF-${y}${m}${d}-${rand}`
-    }
+  describe('Application ID Format & Validation', () => {
+    const isValidAppId = (id) => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,40}$/.test(id.trim())
+    const isNumericAppId = (id) => typeof id === 'string' && /^\d+$/.test(id.trim())
 
-    const REF_REGEX = /^SF-\d{8}-[A-Z0-9]{4}(?:-[A-Z0-9]{2})?$/i
-
-    it('generates standard compliant application reference codes', () => {
-      for (let i = 0; i < 20; i++) {
-        const code = generateRefCode()
-        assert.ok(REF_REGEX.test(code), `Generated code ${code} does not match expected format`)
-      }
+    it('validates standard database numeric application IDs', () => {
+      assert.equal(isNumericAppId('13295'), true)
+      assert.equal(isNumericAppId('1'), true)
+      assert.equal(isNumericAppId('100045'), true)
+      assert.equal(isNumericAppId('SF-1234'), false)
+      assert.equal(isNumericAppId(''), false)
     })
 
-    it('validates reference code search parser', () => {
-      assert.equal(REF_REGEX.test('SF-20260829-1234'), true)
-      assert.equal(REF_REGEX.test('SF-20260819-5821-01'), true)
-      assert.equal(REF_REGEX.test('INVALID-CODE'), false)
-      assert.equal(REF_REGEX.test('SF-1234'), false)
+    it('validates tracking input parser for various ID formats', () => {
+      assert.equal(isValidAppId('13295'), true)
+      assert.equal(isValidAppId('2026-8942'), true)
+      assert.equal(isValidAppId('DEMO-8942'), true)
+      assert.equal(isValidAppId('SF-20260901-223707-54'), true)
+      assert.equal(isValidAppId(''), false)
+      assert.equal(isValidAppId('ID with spaces'), false)
+      assert.equal(isValidAppId('<script>'), false)
     })
   })
 

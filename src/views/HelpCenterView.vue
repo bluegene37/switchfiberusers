@@ -192,7 +192,7 @@
             Open the <router-link to="/status" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Track Status</router-link> page.
           </li>
           <li class="leading-relaxed">
-            Enter the <strong class="dark:text-white text-slate-900 font-bold">Reference Code</strong> you received by email or SMS after applying.
+            Enter the <strong class="dark:text-white text-slate-900 font-bold">Application ID</strong> you received by email or SMS after applying.
           </li>
           <li class="leading-relaxed">
             Read your stage on the timeline:
@@ -206,7 +206,7 @@
         </ol>
 
         <p class="text-[11px] dark:text-slate-500 text-slate-500 border-t dark:border-slate-800 border-slate-200 pt-3">
-          Lost your reference code? Call customer support at
+          Lost your application ID? Call customer support at
           <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a> with your full name and installation address.
         </p>
       </div>
@@ -448,14 +448,14 @@ const journey = [
   {
     title: 'Apply Online',
     icon: ClipboardList,
-    description: 'Fill out the 5-step application wizard with your personal details, installation address, chosen plan and documents, then submit. Your unique Reference Code is generated instantly and sent by email and SMS.',
+    description: 'Fill out the 5-step application wizard with your personal details, installation address, chosen plan and documents, then submit. Your unique Application ID is generated instantly and sent by email and SMS.',
     link: { label: 'Start your application', to: '/register' }
   },
   {
     title: 'Track Your Application',
     icon: Search,
-    description: 'Use your Reference Code on the Track Status page to follow the four stages: Application Submitted, Under Verification, Installation Scheduled, and Connection Active.',
-    link: { label: 'Track your reference code', to: '/status' }
+    description: 'Use your Application ID on the Track Status page to follow the four stages: Application Submitted, Under Verification, Installation Scheduled, and Connection Active.',
+    link: { label: 'Track your application status', to: '/status' }
   },
   {
     title: 'Installation Day',
@@ -471,7 +471,7 @@ const journey = [
 const wizardSteps = [
   {
     title: 'Personal Info',
-    description: 'Your full name, active 11-digit mobile number and email address. This is where your Reference Code and updates will be sent.',
+    description: 'Your full name, active 11-digit mobile number and email address. This is where your Application ID and updates will be sent.',
     tip: 'Double-check your mobile number and email — typos here mean missed notifications.'
   },
   {
@@ -491,8 +491,8 @@ const wizardSteps = [
   },
   {
     title: 'Review & Submit',
-    description: 'Check all your details, read and agree to the Terms & Conditions, then submit. Your Reference Code appears on screen — save or screenshot it.',
-    tip: 'Your Reference Code is also delivered by email and SMS as a backup.'
+    description: 'Check all your details, read and agree to the Terms & Conditions, then submit. Your Application ID appears on screen — save or screenshot it.',
+    tip: 'Your Application ID is also delivered by email and SMS as a backup.'
   }
 ]
 
@@ -531,10 +531,10 @@ const faqs = [
   },
   {
     q: 'How long does installation take after I apply?',
-    a: 'It depends on the engineering verification and crew schedule for your area. Track your Reference Code on the Track Status page to see your live stage — you will move from Under Verification to Installation Scheduled once a slot is confirmed.'
+    a: 'It depends on the engineering verification and crew schedule for your area. Track your Application ID on the Track Status page to see your live stage — you will move from Under Verification to Installation Scheduled once a slot is confirmed.'
   },
   {
-    q: 'I lost my Reference Code. What do I do?',
+    q: 'I lost my Application ID. What do I do?',
     a: 'Check your email inbox and SMS messages first — a copy was sent to both when you applied. If you still can\'t find it, call customer support at 0915 407 7565 with your full name and installation address.'
   },
   {

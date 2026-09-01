@@ -6,12 +6,12 @@ import { sendApplicationSms } from '../src/services/smsService.js'
 describe('Notification Services & Handlers', () => {
 
   describe('api/send-sms.js (sendConfirmationSms)', () => {
-    it('rejects requests missing referenceCode or valid Philippine mobile', async () => {
+    it('rejects requests missing applicationId or valid Philippine mobile', async () => {
       const res1 = await sendConfirmationSms({})
       assert.equal(res1.success, false)
-      assert.match(res1.error, /Missing referenceCode/)
+      assert.match(res1.error, /Missing applicationId/)
 
-      const res2 = await sendConfirmationSms({ referenceCode: 'SW-12345', recipientNumber: '123' })
+      const res2 = await sendConfirmationSms({ applicationId: '13295', recipientNumber: '123' })
       assert.equal(res2.success, false)
       assert.match(res2.error, /Invalid Philippine mobile number/)
     })
@@ -22,7 +22,7 @@ describe('Notification Services & Handlers', () => {
 
       const res = await sendConfirmationSms({
         recipientNumber: '09151234567',
-        referenceCode: 'SW-12345'
+        applicationId: '13295'
       })
 
       assert.equal(res.success, false)
@@ -36,9 +36,9 @@ describe('Notification Services & Handlers', () => {
 
   describe('src/services/smsService.js (sendApplicationSms)', () => {
     it('validates client-side parameters before network fetch', async () => {
-      const res = await sendApplicationSms({ recipientNumber: '', referenceCode: '' })
+      const res = await sendApplicationSms({ recipientNumber: '', applicationId: '' })
       assert.equal(res.success, false)
-      assert.match(res.error, /Missing recipient number or reference code/)
+      assert.match(res.error, /Missing recipient number or application ID/)
     })
   })
 })
