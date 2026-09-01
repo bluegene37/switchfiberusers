@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-// import { sendApplicationEmail } from '../services/emailService.js' (Handled by backend)
 import { sendApplicationSms } from '../services/smsService.js'
 
 // CALABARZON location hierarchy (provinces → cities → barangays) lives in
@@ -972,12 +971,21 @@ export const useRegistrationStore = defineStore('registration', () => {
         throw err
       }
 
-      await response.json().catch(() => ({}))
+      // The backend returns the created row; its `id` is the number the
+      // applicant tracks with, so it replaces the local reference code as the
+      // user-facing handle. Fall back to the local code if the insert response
+      // carries no id.
+      const created = await response.json().catch(() => ({}))
+      const applicationId =
+        created && created.id !== undefined && created.id !== null
+          ? String(created.id)
+          : ''
       delivered = true
 
       // Only a confirmed insert becomes a trackable application.
       submittedApplications.value.unshift({
         referenceCode: randomCode,
+        applicationId,
         applicantName: `${apiPayload.firstName} ${apiPayload.middleName ? apiPayload.middleName + ' ' : ''}${apiPayload.lastName}`.trim(),
         email: apiPayload.emailAddress,
         mobile: apiPayload.mobileNumber,
@@ -995,33 +1003,12 @@ export const useRegistrationStore = defineStore('registration', () => {
       saveToLocalStorage()
 
       lastSubmitError.value = null
-      submittedCode.value = randomCode
+      submittedCode.value = applicationId || randomCode
       pendingReferenceCode.value = ''
 
-      // Confirmation email is handled directly by the backend upon insert.
+      // Confirmation email is dispatched by the backend on insert; the
+      // client-side endpoint was removed as an unauthenticated send relay.
       emailStatus.value = 'sent'
-      /*
-      emailStatus.value = 'sending'
-      sendApplicationEmail({
-        recipientEmail: apiPayload.emailAddress,
-        applicantName: `${apiPayload.firstName} ${apiPayload.lastName}`.trim(),
-        referenceCode: randomCode,
-        desiredPlan: formData.value.desiredPlan,
-        installationAddress: apiPayload.installationAddress,
-        barangay: apiPayload.barangay,
-        city: apiPayload.city,
-        mobileNumber: apiPayload.mobileNumber,
-        firstNearestLandmark: apiPayload.firstNearestLandmark
-      }).then(result => {
-        emailStatus.value = result?.success ? 'sent' : 'failed'
-        if (!result?.success) {
-          console.warn('[Confirmation Email] Not sent:', result?.error || '(unknown)')
-        }
-      }).catch(err => {
-        emailStatus.value = 'failed'
-        console.warn('[Confirmation Email] Not sent:', err)
-      })
-      */
 
       // Best-effort confirmation SMS — parallel to the email, same rules.
       // Disabled for now (Semaphore account not yet set up); flip
@@ -1141,9 +1128,13 @@ export const useRegistrationStore = defineStore('registration', () => {
   const rawApiResponse = ref(null)
   const rawApiStatus = ref(null)
 
-  async function fetchApplicationById(identifier) {
+  // `verifier` is the applicant's proof of ownership: their mobile number, or a
+  // legacy SF- reference code. The application id alone is sequential, so the
+  // server refuses to return a record without it.
+  async function fetchApplicationById(identifier, verifier = '') {
     if (!identifier) return null
     const rawInput = String(identifier).trim()
+    const rawVerifier = String(verifier ?? '').trim()
     
     isTracking.value = true
     trackingError.value = null
@@ -1154,7 +1145,13 @@ export const useRegistrationStore = defineStore('registration', () => {
     const local = findApplicationByCode(rawInput)
 
     try {
-      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}`
+      // A code-shaped verifier goes to ?code=, anything else is treated as the
+      // applicant's mobile number.
+      const verifierParam = /^SF-/i.test(rawVerifier) ? 'code' : 'verify'
+      const query = rawVerifier
+        ? `?${verifierParam}=${encodeURIComponent(rawVerifier)}`
+        : ''
+      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}${query}`
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
@@ -1205,7 +1202,11 @@ export const useRegistrationStore = defineStore('registration', () => {
     if (!code) return null
     const cleanCode = code.trim().toUpperCase()
     const found = submittedApplications.value.find(
-      app => (app.referenceCode?.toUpperCase() === cleanCode || String(app.id) === cleanCode) && app.delivered !== false
+      app => (
+        app.referenceCode?.toUpperCase() === cleanCode ||
+        String(app.applicationId ?? '') === cleanCode ||
+        String(app.id) === cleanCode
+      ) && app.delivered !== false
     )
     if (found) return found
 

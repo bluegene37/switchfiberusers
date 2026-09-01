@@ -11,15 +11,13 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       {
-        // Mirrors the notification Vercel functions (api/send-confirmation.js,
-        // api/send-sms.js) in local dev. Registered as plugin middleware so it
+        // Mirrors the notification Vercel function (api/send-sms.js) in local
+        // dev. Registered as plugin middleware so it
         // runs before the /api proxy — these routes must never be forwarded to
         // the fiber backend.
         name: 'notification-dev-middleware',
         configureServer(server) {
           const routes = {
-            '/api/send-confirmation': async (data) =>
-              (await import('./api/send-confirmation.js')).sendConfirmationEmail(data),
             '/api/send-sms': async (data) =>
               (await import('./api/send-sms.js')).sendConfirmationSms(data)
           }
