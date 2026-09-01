@@ -41,12 +41,7 @@ function sendJson(res, code, payload) {
   res.end(JSON.stringify(payload))
 }
 
-export async function proxyRequest(
-  req,
-  res,
-  targetPath = null,
-  { transform = null, authorize = null } = {}
-) {
+export async function proxyRequest(req, res, targetPath = null, { transform = null } = {}) {
   // The SPA and these functions share an origin, so no cross-origin grant is
   // needed. A previous build sent Access-Control-Allow-Origin: * , which let
   // any site on the internet post applications through this endpoint.
@@ -151,25 +146,11 @@ export async function proxyRequest(
 
     let responseBody = upstream.body
     let responseContentType = upstream.contentType
-    if ((authorize || transform) && upstream.status >= 200 && upstream.status < 300) {
-      const parsed = JSON.parse(upstream.body)
-
-      // Authorization runs on the upstream record, before anything is written
-      // back. The numeric application id is sequential and therefore public;
-      // only a second factor the applicant actually holds may unlock a record.
-      if (authorize && !authorize(parsed)) {
-        // Deliberately identical to an unknown id, so the endpoint never
-        // confirms which ids exist.
-        sendJson(res, 404, { error: 'Not Found' })
-        return
-      }
-
-      if (transform) {
-        // Sanitizing transform: upstream rows can carry internal-only fields
-        // (staff emails, file paths) that must not reach a public browser.
-        responseBody = JSON.stringify(transform(parsed))
-        responseContentType = 'application/json'
-      }
+    if (transform && upstream.status >= 200 && upstream.status < 300) {
+      // Sanitizing transform: upstream rows can carry internal-only fields
+      // (staff emails, file paths) that must not reach a public browser.
+      responseBody = JSON.stringify(transform(JSON.parse(upstream.body)))
+      responseContentType = 'application/json'
     }
 
     if (typeof res.status === 'function') res.status(upstream.status)

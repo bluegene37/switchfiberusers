@@ -57,41 +57,6 @@
         </div>
       </div>
 
-      <!-- Second factor. The application ID on its own is sequential, so the
-           server will not release a record without proof of ownership. -->
-      <div class="mt-4">
-        <label class="sf-tracker-input-label block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase tracking-wider mb-2">
-          Mobile Number <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span>
-        </label>
-
-        <div class="sf-tracker-input-wrapper relative">
-          <input
-            v-model="inputVerifier"
-            @keyup.enter="handleSearch"
-            type="tel"
-            inputmode="tel"
-            autocomplete="tel"
-            placeholder="e.g. 09171234567"
-            aria-label="Mobile number used on the application"
-            @input="emptyError = false"
-            class="sf-tracker-search-input input-field font-mono text-lg sm:text-xl py-3.5 pl-4 pr-12 tracking-wide font-bold"
-          />
-          <button
-            v-if="inputVerifier"
-            @click="inputVerifier = ''"
-            type="button"
-            class="sf-tracker-clear-btn absolute right-3.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
-            title="Clear mobile number"
-          >
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-
-        <div class="sf-tracker-format-hint flex items-center justify-between text-xs dark:text-slate-400 text-slate-500 mt-2">
-          <span>The number you applied with</span>
-          <span class="text-[11px] text-slate-400">Confirms the record is yours</span>
-        </div>
-      </div>
 
       <!-- BIG, PROMINENT ACTION BUTTONS ROW -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -351,7 +316,6 @@ const router = useRouter()
 const registrationStore = useRegistrationStore()
 
 const inputCode = ref('')
-const inputVerifier = ref('')
 const searched = ref(false)
 const foundApp = ref(null)
 const emptyError = ref(false)
@@ -390,7 +354,6 @@ function copyCode(code) {
 
 async function handleSearch() {
   const code = inputCode.value.trim()
-  const verifier = inputVerifier.value.trim()
   if (!code) {
     emptyError.value = true
     searched.value = false
@@ -401,7 +364,7 @@ async function handleSearch() {
   isLoading.value = true
 
   try {
-    const result = await registrationStore.fetchApplicationById(code, verifier)
+    const result = await registrationStore.fetchApplicationById(code)
     foundApp.value = result
     searched.value = true
   } catch (err) {
@@ -415,7 +378,6 @@ async function handleSearch() {
 
 function handleReset() {
   inputCode.value = ''
-  inputVerifier.value = ''
   emptyError.value = false
   searched.value = false
   foundApp.value = null

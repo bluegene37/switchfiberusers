@@ -1128,13 +1128,9 @@ export const useRegistrationStore = defineStore('registration', () => {
   const rawApiResponse = ref(null)
   const rawApiStatus = ref(null)
 
-  // `verifier` is the applicant's proof of ownership: their mobile number, or a
-  // legacy SF- reference code. The application id alone is sequential, so the
-  // server refuses to return a record without it.
-  async function fetchApplicationById(identifier, verifier = '') {
+  async function fetchApplicationById(identifier) {
     if (!identifier) return null
     const rawInput = String(identifier).trim()
-    const rawVerifier = String(verifier ?? '').trim()
     
     isTracking.value = true
     trackingError.value = null
@@ -1145,13 +1141,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     const local = findApplicationByCode(rawInput)
 
     try {
-      // A code-shaped verifier goes to ?code=, anything else is treated as the
-      // applicant's mobile number.
-      const verifierParam = /^SF-/i.test(rawVerifier) ? 'code' : 'verify'
-      const query = rawVerifier
-        ? `?${verifierParam}=${encodeURIComponent(rawVerifier)}`
-        : ''
-      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}${query}`
+      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}`
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
