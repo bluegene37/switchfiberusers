@@ -27,10 +27,11 @@
             v-model="inputCode"
             @keyup.enter="handleSearch"
             type="text"
-            inputmode="text"
+            inputmode="numeric"
             autocapitalize="characters"
+            maxlength="40"
             autocomplete="off"
-            placeholder="e.g. 13295"
+            placeholder="e.g. 202609012251532731662"
             aria-label="Application ID"
             @input="emptyError = false"
             class="sf-tracker-search-input input-field uppercase font-mono text-lg sm:text-xl py-3.5 pl-4 pr-12 tracking-wide font-bold"
@@ -52,7 +53,7 @@
         </p>
 
         <div class="sf-tracker-format-hint flex items-center justify-between text-xs dark:text-slate-400 text-slate-500 mt-2">
-          <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">e.g. 13295</strong></span>
+          <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">21 digits, e.g. 202609012251532731662</strong></span>
           <span class="text-[11px] text-slate-400">Found in confirmation email / SMS</span>
         </div>
       </div>

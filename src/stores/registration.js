@@ -927,6 +927,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS)
     let delivered = false
     let createdApplicationId = ''
+    let createdRecordId = ''
 
     try {
       const response = await fetch(endpoint, {
@@ -950,18 +951,33 @@ export const useRegistrationStore = defineStore('registration', () => {
         throw err
       }
 
-      // The backend returns the created row; its `id` is the primary number the
-      // applicant tracks with.
+      // The backend returns the created row. `applicationid` is what the
+      // applicant tracks with — handing out the sequential `id` instead let
+      // anyone walk 1..N through the tracker and read other applicants'
+      // records (Data Privacy Act, RA 10173).
       const created = await response.json().catch(() => ({}))
-      createdApplicationId =
+      createdRecordId =
         created && created.id !== undefined && created.id !== null
           ? String(created.id)
           : ''
+      createdApplicationId = readApplicationId(created)
+
+      // The row number cannot be recovered into an Application ID — upstream
+      // answers 404 for /api/Applications/{row id} — so if the insert reply
+      // omits `applicationid` there is nothing trackable to show. Surface that
+      // rather than printing a number the tracker will reject.
+      if (!createdApplicationId) {
+        console.error(
+          '[Switch Fiber] Insert succeeded but returned no applicationid; ' +
+          `row id ${createdRecordId || '(none)'} is not trackable.`
+        )
+        createdApplicationId = createdRecordId
+      }
       delivered = true
 
       // Only a confirmed insert becomes a trackable application.
       submittedApplications.value.unshift({
-        id: createdApplicationId,
+        id: createdRecordId || createdApplicationId,
         applicationId: createdApplicationId,
         applicantName: `${apiPayload.firstName} ${apiPayload.middleName ? apiPayload.middleName + ' ' : ''}${apiPayload.lastName}`.trim(),
         email: apiPayload.emailAddress,
@@ -1065,9 +1081,20 @@ export const useRegistrationStore = defineStore('registration', () => {
     return { status: status || 'Application Submitted', step: 1, notes: 'Application logged. Account officer is reviewing your submitted details.' }
   }
 
+  // The backend spells the public tracking ID `applicationid` (all lowercase) —
+  // a 21-digit code built from the submission timestamp, e.g.
+  // 202609012251532731662. `id` is the internal sequential row number.
+  function readApplicationId(raw) {
+    if (!raw || typeof raw !== 'object') return ''
+    const value = raw.applicationid ?? raw.applicationId
+    return value === null || value === undefined ? '' : String(value).trim()
+  }
+
   function formatApiApplication(raw, requestedId = '') {
     if (!raw) return null
-    const id = raw.id ?? raw.applicationid ?? ''
+    // Applicants track with `applicationid`; the row number is only a fallback
+    // for records created before that code existed.
+    const id = readApplicationId(raw) || raw.id || ''
     const applicantName = `${raw.firstName || ''} ${raw.middleName ? raw.middleName + ' ' : ''}${raw.lastName || ''}`.trim() || 'Applicant'
     const dateStr = raw.dateTime ? raw.dateTime.split('T')[0] : (raw.modifiedDate ? raw.modifiedDate.split('T')[0] : 'Recent')
     const { status, step, notes } = mapApplicationStatus(raw.status)
@@ -1175,8 +1202,9 @@ export const useRegistrationStore = defineStore('registration', () => {
     )
     if (found) return found
 
-    // Built-in Demo Code for previewing the tracker UI
-    if (cleanCode === '13295' || cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === 'SF-2026-8942' || cleanCode === '8942') {
+    // Built-in Demo Codes for previewing the tracker UI. The first one is in
+    // the live Application ID format (21 digits); the rest are legacy.
+    if (cleanCode === '202600000000000000000' || cleanCode === '13295' || cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === 'SF-2026-8942' || cleanCode === '8942') {
       return {
         id: cleanCode,
         applicationId: cleanCode,
