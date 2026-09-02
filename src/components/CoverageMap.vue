@@ -190,19 +190,25 @@ let resizeObserver = null
 const RIZAL_DEFAULT_CENTER = [14.4820, 121.1950]
 const RIZAL_DEFAULT_ZOOM = 13
 
-// CARTO basemaps read better against the site's dark theme than raw OSM tiles.
+// Plain OSM tiles need no API key (CARTO's basemaps now watermark every
+// tile with "API KEY REQUIRED"). Both themes share the same source; dark mode
+// re-tiles with a class that inverts the raster via CSS so the map still
+// reads against the site's dark surfaces.
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const TILE_THEMES = {
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+  dark: { url: TILE_URL, className: 'coverage-tiles coverage-tiles--dark' },
+  light: { url: TILE_URL, className: 'coverage-tiles' }
 }
 const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 
 function applyTileTheme() {
   if (!map) return
   if (tileLayer) map.removeLayer(tileLayer)
-  tileLayer = L.tileLayer(themeStore.isDark ? TILE_THEMES.dark : TILE_THEMES.light, {
+  const theme = themeStore.isDark ? TILE_THEMES.dark : TILE_THEMES.light
+  tileLayer = L.tileLayer(theme.url, {
     attribution: TILE_ATTRIBUTION,
+    className: theme.className,
     maxZoom: 19,
     minZoom: 9
   }).addTo(map)
@@ -709,6 +715,12 @@ onUnmounted(() => {
 </script>
 
 <style>
+/* Dark theme: invert the OSM raster and swing the hue back so water stays
+   blue-ish and roads read as light lines on a charcoal ground. */
+.coverage-tiles--dark .leaflet-tile {
+  filter: invert(1) hue-rotate(180deg) brightness(0.82) contrast(0.92) saturate(0.55);
+}
+
 @keyframes ping {
   75%, 100% {
     transform: scale(2);
