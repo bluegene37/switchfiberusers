@@ -17,7 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..')
 
 const DIRS_TO_LINT = ['src', 'api', 'tests', 'scripts']
-const ROOT_FILES = ['vite.config.js', 'tailwind.config.js', 'postcss.config.js', 'package.json', 'vercel.json']
+const ROOT_FILES = ['vite.config.js', 'playwright.config.js', 'tailwind.config.js', 'postcss.config.js', 'package.json', 'vercel.json']
 
 let errors = 0
 let filesChecked = 0

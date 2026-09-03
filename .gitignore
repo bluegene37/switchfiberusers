@@ -30,6 +30,12 @@ screenshots/
 *.pdf
 QA_*.md
 
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # Editor & OS Files
 .vscode/*
 !.vscode/extensions.json
