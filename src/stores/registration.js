@@ -156,7 +156,23 @@ export const useRegistrationStore = defineStore('registration', () => {
   // Registration Form State with localStorage draft auto-recovery
   // Bump when the form's field set or default values change, so a returning
   // visitor's saved draft can't keep posting values the backend no longer uses.
-  const DRAFT_VERSION = 4
+  const DRAFT_VERSION = 5
+
+  // Every document field, bytes and display name alike. Kept out of the
+  // draft cache and wiped whenever an application finishes.
+  const UPLOAD_FIELDS = [
+    'houseFrontPicture', 'houseFrontName',
+    'governmentValidId', 'governmentValidIdName',
+    'secondGovernmentValidId', 'secondGovernmentValidIdName',
+    'proofOfBilling', 'proofOfBillingName',
+    'documentPicture', 'documentPictureName'
+  ]
+
+  function clearDraftCache() {
+    try {
+      localStorage.removeItem('switch_registration_draft')
+    } catch (e) {}
+  }
 
   const getSavedDraft = () => {
     try {
@@ -318,14 +334,17 @@ export const useRegistrationStore = defineStore('registration', () => {
 
   // Automatically save form history as user types
   watch(formData, (newVal) => {
+    // A finished application is never re-drafted: the post-submit cleanup
+    // below mutates formData, and without this guard that would write the
+    // applicant just sent straight back into the cache.
+    if (submittedCode.value) return
     try {
       const draft = { ...newVal }
-      // Omit heavy base64 file payloads from draft cache
-      draft.houseFrontPicture = ''
-      draft.governmentValidId = ''
-      draft.secondGovernmentValidId = ''
-      draft.proofOfBilling = ''
-      draft.documentPicture = ''
+      // Uploads are never cached. The base64 payloads are too heavy for
+      // localStorage, and a restored file name without its bytes would show
+      // the previous applicant's photos as "Uploaded" when nothing is there.
+      for (const key of UPLOAD_FIELDS) draft[key] = ''
+      draft.photoExif = {}
       draft.__v = DRAFT_VERSION
       localStorage.setItem('switch_registration_draft', JSON.stringify(draft))
     } catch (e) {
@@ -720,9 +739,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     smsStatus.value = 'idle'
     syncSelectedPlan()
     resetSignal.value++
-    try {
-      localStorage.removeItem('switch_registration_draft')
-    } catch (e) {}
+    clearDraftCache()
   }
 
   // Entry links ("Apply Online" in the navbar/footer, plan cards, coverage
@@ -997,6 +1014,14 @@ export const useRegistrationStore = defineStore('registration', () => {
 
       lastSubmitError.value = null
       submittedCode.value = createdApplicationId
+
+      // The application is done: drop the recovery draft so a reload or a
+      // later visit starts a blank form instead of the applicant just sent,
+      // and release the uploaded images from memory. The success screen only
+      // reads contact fields, which stay until "Submit Another Application".
+      clearDraftCache()
+      for (const key of UPLOAD_FIELDS) formData.value[key] = ''
+      formData.value.photoExif = {}
 
       // Confirmation email is dispatched by the backend on insert; the
       // client-side endpoint was removed as an unauthenticated send relay.

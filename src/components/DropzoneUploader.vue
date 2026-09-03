@@ -229,8 +229,16 @@ watch(() => props.modelValue, (newVal) => {
   if (newVal && newVal.startsWith('data:image')) {
     filePreviewUrl.value = newVal
   } else if (!newVal) {
+    // Cleared from outside (form reset, new application): drop every trace
+    // of the previous file, including the native inputs, so the same photo
+    // can be re-picked and nothing stale is shown.
     filePreviewUrl.value = ''
     fileSize.value = ''
+    compressedSize.value = ''
+    localExif.value = null
+    isLightboxOpen.value = false
+    if (fileInputRef.value) fileInputRef.value.value = ''
+    if (cameraInputRef.value) cameraInputRef.value.value = ''
   }
 }, { immediate: true })
 

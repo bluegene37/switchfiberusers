@@ -873,16 +873,16 @@
         </div>
 
         <!-- Tracking Code Card -->
-        <div class="sf-wizard-success-code-card p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-3 shadow-2xl">
+        <div class="sf-wizard-success-code-card p-4 sm:p-6 rounded-2xl dark:bg-slate-900 bg-white border border-[#ee2824]/40 max-w-md mx-auto space-y-3 shadow-2xl">
           <span class="text-xs dark:text-slate-400 text-slate-500 uppercase tracking-widest block">Application ID</span>
-          <div class="flex items-center justify-center gap-2">
-            <div class="sf-wizard-success-code-value text-3xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-wider">
+          <div class="flex items-center justify-center gap-2 min-w-0">
+            <div class="sf-wizard-success-code-value min-w-0 break-all leading-tight text-base sm:text-2xl font-extrabold font-mono text-[#ee2824] dark:text-[#ff6b67] tracking-normal sm:tracking-wide">
               {{ submittedCode }}
             </div>
             <button 
               @click="copyCode" 
               type="button" 
-              class="sf-wizard-success-copy-btn p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors cursor-pointer"
+              class="sf-wizard-success-copy-btn shrink-0 p-2 rounded-xl bg-[#ee2824]/10 text-[#ee2824] hover:bg-[#ee2824]/20 transition-colors cursor-pointer"
               title="Copy Application ID"
             >
               <Copy class="w-5 h-5" />
