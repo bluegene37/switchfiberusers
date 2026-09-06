@@ -223,5 +223,65 @@ describe('QA Form Validation & Domain Model Integrity', () => {
       assert.match(res.notes, /active, provisioned, and operational/i)
     })
   })
+
+  describe('PII Contact Data Masking Rules (RA 10173 Compliance)', () => {
+    function maskPhone(phone) {
+      if (!phone) return ''
+      const clean = String(phone).trim()
+      const digits = clean.replace(/\D/g, '')
+      if (digits.length >= 11) {
+        return `${digits.slice(0, 4)} ••• •${digits.slice(-3)}`
+      }
+      if (digits.length >= 7) {
+        return `${digits.slice(0, 3)} ••• ${digits.slice(-3)}`
+      }
+      return clean
+    }
+
+    function maskEmail(email) {
+      if (!email || typeof email !== 'string' || !email.includes('@')) return ''
+      const [user, domain] = email.trim().split('@')
+      let maskedUser = ''
+      if (user.length <= 2) {
+        maskedUser = user[0] + '•••'
+      } else {
+        maskedUser = user.slice(0, 2) + '••••' + user.slice(-1)
+      }
+
+      const domainParts = (domain || '').split('.')
+      let maskedDomain = ''
+      if (domainParts.length > 1) {
+        const dName = domainParts[0]
+        const ext = domainParts.slice(1).join('.')
+        const maskedDName = dName.length <= 2 ? dName[0] + '••' : dName.slice(0, 2) + '•••'
+        maskedDomain = `${maskedDName}.${ext}`
+      } else {
+        maskedDomain = domain || ''
+      }
+
+      return `${maskedUser}@${maskedDomain}`
+    }
+
+    it('masks standard 11-digit Philippine mobile numbers', () => {
+      assert.equal(maskPhone('09171234567'), '0917 ••• •567')
+      assert.equal(maskPhone('0918-987-6543'), '0918 ••• •543')
+      assert.equal(maskPhone('0919 555 1234'), '0919 ••• •234')
+    })
+
+    it('masks landlines or shorter numbers safely', () => {
+      assert.equal(maskPhone('0281234567'), '028 ••• 567')
+      assert.equal(maskPhone(''), '')
+      assert.equal(maskPhone(null), '')
+    })
+
+    it('masks applicant email usernames and domains', () => {
+      assert.equal(maskEmail('juan.delacruz@gmail.com'), 'ju••••z@gm•••.com')
+      assert.equal(maskEmail('maria.santos@yahoo.com'), 'ma••••s@ya•••.com')
+      assert.equal(maskEmail('info@switchfiber.ph'), 'in••••o@sw•••.ph')
+      assert.equal(maskEmail('me@domain.org'), 'm•••@do•••.org')
+      assert.equal(maskEmail(''), '')
+      assert.equal(maskEmail(null), '')
+    })
+  })
 })
 

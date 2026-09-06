@@ -173,11 +173,15 @@
       <div class="flex items-center justify-between text-xs pt-1 dark:text-slate-400 text-slate-500">
         <router-link to="/coverage" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] inline-flex items-center gap-1 transition-colors">
           <Map class="w-3.5 h-3.5" />
-          <span>Interactive Rizal Map</span>
+          <span>Rizal Map</span>
+        </router-link>
+        <router-link to="/status" class="hover:text-[#ee2824] dark:hover:text-[#ff6b67] inline-flex items-center gap-1 transition-colors font-medium">
+          <Search class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Track Application</span>
         </router-link>
         <span class="inline-flex items-center gap-1 text-emerald-500 font-semibold">
           <Zap class="w-3.5 h-3.5" />
-          <span>Free Install & Wi-Fi 6</span>
+          <span>Free Install</span>
         </span>
       </div>
     </div>
@@ -189,7 +193,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   MapPin, CheckCircle2, Clock, Sparkles, ArrowRight, 
-  ChevronDown, Map, Zap 
+  ChevronDown, Map, Zap, Search 
 } from 'lucide-vue-next'
 import { useCoverageStore } from '../stores/coverage'
 import { useRegistrationStore } from '../stores/registration'

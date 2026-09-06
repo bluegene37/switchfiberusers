@@ -169,12 +169,28 @@
               <Copy v-else class="w-4 h-4" />
             </button>
           </div>
-          <!-- Masked PII for public safety -->
-          <p class="sf-tracker-applicant-info text-sm font-bold dark:text-slate-200 text-slate-800 mt-1.5 flex items-center gap-2">
-            <span class="sf-tracker-applicant-name">{{ maskName(foundApp.applicantName) }}</span>
-            <span class="dark:text-slate-600 text-slate-400">•</span>
-            <span class="sf-tracker-applicant-location text-xs dark:text-slate-400 text-slate-600">{{ foundApp.city || foundApp.municipality || 'Rizal' }}</span>
-          </p>
+          <!-- Masked PII for public safety & subscriber verification -->
+          <div class="mt-2 space-y-2">
+            <p class="sf-tracker-applicant-info text-sm font-bold dark:text-slate-200 text-slate-800 flex flex-wrap items-center gap-2">
+              <span class="sf-tracker-applicant-name">{{ maskName(foundApp.applicantName) }}</span>
+              <span class="dark:text-slate-600 text-slate-400">•</span>
+              <span class="sf-tracker-applicant-location text-xs dark:text-slate-400 text-slate-500 font-medium">
+                {{ foundApp.barangay ? `${foundApp.barangay}, ` : '' }}{{ foundApp.city || foundApp.municipality || 'Rizal' }}
+              </span>
+            </p>
+
+            <!-- Masked Phone and Email Badges -->
+            <div class="flex flex-wrap items-center gap-2.5 pt-0.5 text-xs text-slate-600 dark:text-slate-300">
+              <span v-if="foundApp.mobile" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 font-mono font-semibold" title="Registered Mobile (Masked)">
+                <Phone class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
+                <span>{{ maskPhone(foundApp.mobile) }}</span>
+              </span>
+              <span v-if="foundApp.email" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 font-mono font-semibold" title="Registered Email (Masked)">
+                <Mail class="w-3.5 h-3.5 text-sky-500" />
+                <span>{{ maskEmail(foundApp.email) }}</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="text-left sm:text-right">
@@ -307,7 +323,9 @@ import {
   HelpCircle,
   Copy,
   Check,
-  Loader2
+  Loader2,
+  Phone,
+  Mail
 } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 
@@ -329,7 +347,7 @@ const stages = [
   'Connection Activated'
 ]
 
-// PII Data Masking function for Data Privacy Act compliance on public screens
+// PII Data Masking functions for Data Privacy Act compliance on public screens
 function maskName(name) {
   if (!name) return ''
   return name
@@ -340,6 +358,44 @@ function maskName(name) {
       return word[0] + '*'.repeat(Math.max(1, word.length - 2)) + word[word.length - 1]
     })
     .join(' ')
+}
+
+function maskPhone(phone) {
+  if (!phone) return ''
+  const clean = String(phone).trim()
+  const digits = clean.replace(/\D/g, '')
+  if (digits.length >= 11) {
+    // 09171234567 -> 0917 ••• •567
+    return `${digits.slice(0, 4)} ••• •${digits.slice(-3)}`
+  }
+  if (digits.length >= 7) {
+    return `${digits.slice(0, 3)} ••• ${digits.slice(-3)}`
+  }
+  return clean
+}
+
+function maskEmail(email) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) return ''
+  const [user, domain] = email.trim().split('@')
+  let maskedUser = ''
+  if (user.length <= 2) {
+    maskedUser = user[0] + '•••'
+  } else {
+    maskedUser = user.slice(0, 2) + '••••' + user.slice(-1)
+  }
+
+  const domainParts = (domain || '').split('.')
+  let maskedDomain = ''
+  if (domainParts.length > 1) {
+    const dName = domainParts[0]
+    const ext = domainParts.slice(1).join('.')
+    const maskedDName = dName.length <= 2 ? dName[0] + '••' : dName.slice(0, 2) + '•••'
+    maskedDomain = `${maskedDName}.${ext}`
+  } else {
+    maskedDomain = domain || ''
+  }
+
+  return `${maskedUser}@${maskedDomain}`
 }
 
 function copyCode(code) {

@@ -38,6 +38,14 @@ const plansSource = fs.readFileSync(
   path.resolve(__dirname, '../src/views/PlansView.vue'),
   'utf8'
 )
+const homeSource = fs.readFileSync(
+  path.resolve(__dirname, '../src/views/HomeView.vue'),
+  'utf8'
+)
+const heroCoverageCardSource = fs.readFileSync(
+  path.resolve(__dirname, '../src/components/HeroCoverageCard.vue'),
+  'utf8'
+)
 
 /**
  * These assertions run against the SHIPPING component source, not a local copy
@@ -233,5 +241,46 @@ describe('Touch target minimums (WCAG 2.5.5)', () => {
   it('sizes the plans category tabs and refresh control', () => {
     assert.ok(plansSource.includes('min-h-11'), 'plan category tabs need a 44px min height')
     assert.ok(plansSource.includes('w-11 h-11'), 'the refresh button needs to be 44x44')
+  })
+})
+
+describe('Track Application Shortcuts', () => {
+  it('includes a prominent Track Application shortcut on the Home page hero', () => {
+    assert.match(
+      homeSource,
+      /<router-link[^>]*to="\/status"[^>]*>[\s\S]*?Track Application[\s\S]*?<\/router-link>/,
+      'Home hero should provide a direct router-link to /status'
+    )
+  })
+
+  it('includes a Track Application shortcut on the HeroCoverageCard micro-bar', () => {
+    assert.match(
+      heroCoverageCardSource,
+      /<router-link[^>]*to="\/status"[^>]*>[\s\S]*?Track Application[\s\S]*?<\/router-link>/,
+      'HeroCoverageCard should provide a direct router-link to /status'
+    )
+  })
+})
+
+describe('Application Status Tracker — PII Masking and Contact Badges', () => {
+  it('defines maskPhone and maskEmail masking functions in ApplicationStatusView', () => {
+    assert.match(statusSource, /function maskPhone\s*\(/)
+    assert.match(statusSource, /function maskEmail\s*\(/)
+  })
+
+  it('renders masked phone badge with Phone icon when mobile exists', () => {
+    assert.match(
+      statusSource,
+      /v-if="foundApp\.mobile"[\s\S]*?maskPhone\(foundApp\.mobile\)/,
+      'Should display masked phone number when mobile exists'
+    )
+  })
+
+  it('renders masked email badge with Mail icon when email exists', () => {
+    assert.match(
+      statusSource,
+      /v-if="foundApp\.email"[\s\S]*?maskEmail\(foundApp\.email\)/,
+      'Should display masked email address when email exists'
+    )
   })
 })

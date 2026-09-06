@@ -25,7 +25,7 @@
               Enjoy the freedom of endless possibilities with Switch Fiber. Download & upload songs, stream in 4K, play online games with ultra-low ping, and work seamlessly with no data caps.
             </p>
 
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
               <router-link to="/register" class="btn-primary py-4 px-8 text-base shadow-xl shadow-[#ee2824]/25 w-full sm:w-auto">
                 <Sparkles class="w-5 h-5" />
                 <span>Apply Online Now</span>
@@ -33,6 +33,10 @@
               <router-link to="/plans" class="btn-secondary py-4 px-8 text-base w-full sm:w-auto">
                 <span>View Fiber Plans</span>
                 <ArrowRight class="w-5 h-5" />
+              </router-link>
+              <router-link to="/status" class="btn-secondary py-4 px-6 text-base w-full sm:w-auto flex items-center justify-center gap-2 hover:border-[#ee2824]/60 hover:text-[#ee2824] dark:hover:text-[#ff6b67] shadow-sm">
+                <Search class="w-5 h-5 text-[#ee2824] dark:text-[#ff6b67]" />
+                <span>Track Application</span>
               </router-link>
             </div>
 
@@ -262,7 +266,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Zap, Sparkles, ArrowRight, Infinity, ShieldCheck, 
-  HeartHandshake, CreditCard, ChevronDown, Gift, Briefcase 
+  HeartHandshake, CreditCard, ChevronDown, Gift, Briefcase, Search 
 } from 'lucide-vue-next'
 import HeroCoverageCard from '../components/HeroCoverageCard.vue'
 import PlanCard from '../components/PlanCard.vue'
