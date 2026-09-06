@@ -76,13 +76,27 @@
       </div>
     </div>
 
-    <!-- Billing Assistance Hotline Box -->
-    <div class="glass-card p-6 rounded-2xl border dark:border-slate-800 border-slate-200 max-w-xl mx-auto text-center space-y-2">
-      <PhoneCall class="w-6 h-6 text-[#ee2824] dark:text-[#ff6b67] mx-auto" />
-      <h3 class="font-bold dark:text-white text-slate-900 text-lg">Need Billing Assistance?</h3>
-      <p class="text-xs dark:text-slate-400 text-slate-600">Our dedicated billing support hotline is ready to help you with official receipts and payment posting.</p>
-      <div class="pt-2">
-        <a href="tel:09154077555" class="inline-flex items-center min-h-11 text-lg font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Globe: 0915 407 7555</a>
+    <!-- Billing Assistance & Walk-in Cash Payment Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <!-- Hotline Box -->
+      <div class="glass-card p-6 rounded-2xl border dark:border-slate-800 border-slate-200 text-center space-y-2">
+        <PhoneCall class="w-6 h-6 text-[#ee2824] dark:text-[#ff6b67] mx-auto" />
+        <h3 class="font-bold dark:text-white text-slate-900 text-lg">Billing Support Hotline</h3>
+        <p class="text-xs dark:text-slate-400 text-slate-600">Need help verifying an electronic payment or receiving your official SOA?</p>
+        <div class="pt-2">
+          <a href="tel:09154077555" class="inline-flex items-center min-h-11 text-base font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7555 (Globe)</a>
+        </div>
+      </div>
+
+      <!-- Walk-in Cash Payments Box -->
+      <div class="glass-card p-6 rounded-2xl border dark:border-slate-800 border-slate-200 text-center space-y-2">
+        <MapPin class="w-6 h-6 text-emerald-500 mx-auto" />
+        <h3 class="font-bold dark:text-white text-slate-900 text-lg">Over-The-Counter Cash</h3>
+        <p class="text-xs dark:text-slate-400 text-slate-600">Walk-in cash payments accepted at Switch Fiber Head Office:</p>
+        <p class="text-xs font-semibold dark:text-slate-200 text-slate-800 pt-1">
+          315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal<br />
+          <span class="text-slate-500 font-normal">Mon–Sat: 8:00 AM – 5:00 PM (12–1 PM Lunch Break)</span>
+        </p>
       </div>
     </div>
 
@@ -90,5 +104,5 @@
 </template>
 
 <script setup>
-import { CreditCard, ExternalLink, PhoneCall } from 'lucide-vue-next'
+import { CreditCard, ExternalLink, PhoneCall, MapPin } from 'lucide-vue-next'
 </script>

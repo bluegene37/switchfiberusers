@@ -69,6 +69,9 @@
           <li><strong>Certificate of Residency</strong> or Lease Agreement</li>
           <li><strong>NBI Clearance</strong></li>
         </ul>
+        <p class="text-[11px] dark:text-slate-400 text-slate-500 pt-1">
+          You can also email your documents directly to <a href="mailto:sales@switchfiber.ph" class="text-[#ee2824] dark:text-[#ff6b67] font-bold underline">sales@switchfiber.ph</a> or submit them in person at our Binangonan Head Office.
+        </p>
       </div>
     </div>
 

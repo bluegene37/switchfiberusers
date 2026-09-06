@@ -282,19 +282,27 @@ const activeFaq = ref(0)
 const faqs = [
   {
     question: 'What are the basic requirements to apply for Switch Fiber?',
-    answer: 'You only need (1) valid primary government-issued ID, (1) active mobile number, (1) email address, and (1) photo of your house front to help our technicians locate your premises.'
+    answer: 'You only need (1) valid primary government-issued ID (Passport, PhilSys National ID, Driver\'s License, PhilHealth, UMID, Postal ID, SSS, Voter\'s ID, etc.), (1) active mobile number, (1) active email address, and (1) clear photo of your house front or gate facade.'
+  },
+  {
+    question: 'Do you charge any application or processing fee?',
+    answer: 'No. Switch Fiber charges zero application fee and zero processing fee. No sales agent or field technician is authorized to collect fees from applicants. All legitimate payments are made through pay.switchfiber.ph or at our Binangonan head office. Report any unauthorized fee collection to our hotline at 0915 407 7565.'
   },
   {
     question: 'Is there a lock-in period for Switch Fiber plans?',
-    answer: 'Standard plans come with a 1-Year Lock-In period with no data capping or hidden charges.'
-  },
-  {
-    question: 'How do I change my Wi-Fi password or network name (SSID)?',
-    answer: 'Open your web browser, navigate to 192.168.1.1, log in using username "user" and password "user", then go to Network Settings to modify your 2.4GHz and 5GHz passphrases.'
+    answer: 'Standard residential plans come with a 12-month (1 year) lock-in period with no data capping or hidden charges. MSME SmartBiz bundles have a 24-month contract.'
   },
   {
     question: 'Where can I pay my monthly bills?',
-    answer: 'You can safely settle your bills through our official portal at pay.switchfiber.ph using GCash, Maya, QR Ph, or Debit/Credit cards.'
+    answer: 'You can safely settle your monthly bills online at pay.switchfiber.ph using GCash (via QR Ph), Maya, WeChat Pay, or Debit/Credit cards. Over-the-counter cash payments are also accepted at our Binangonan Head Office (Mon–Sat 8:00 AM – 5:00 PM).'
+  },
+  {
+    question: 'How do I change my Wi-Fi password or network name (SSID)?',
+    answer: 'Open any browser and navigate to 192.168.1.1, log in using username "user" and password "user", then go to Network Settings > Security (for password) or SSID Settings (for network name).'
+  },
+  {
+    question: 'What are the official customer support and billing hotlines?',
+    answer: 'Customer Support: 0915 407 7565 / 0917 876 2440 | Billing Hotline: 0915 407 7555 | Email: customercare@switchfiber.ph | Head Office: 315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal (Monday to Saturday, 8:00 AM – 5:00 PM).'
   }
 ]
 

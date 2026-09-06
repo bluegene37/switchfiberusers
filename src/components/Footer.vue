@@ -70,9 +70,13 @@
               <Clock class="w-3.5 h-3.5 text-blue-500" />
               <span>Mon - Sat: 8:00 AM - 5:00 PM</span>
             </div>
+            <div class="flex items-start gap-2">
+              <MapPin class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+              <span>315 Sampaloc St., Brgy. Batingan, Binangonan</span>
+            </div>
             <div class="flex items-center gap-2">
               <CreditCard class="w-3.5 h-3.5 text-emerald-500" />
-              <span>GCash • Maya • Bayad • 7-Eleven</span>
+              <span>pay.switchfiber.ph (GCash • Maya • Cards)</span>
             </div>
           </div>
         </div>
@@ -93,7 +97,7 @@
 </template>
 
 <script setup>
-import { Zap, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock } from 'lucide-vue-next'
+import { Zap, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock, MapPin } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 
 const registrationStore = useRegistrationStore()
