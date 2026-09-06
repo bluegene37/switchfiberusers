@@ -264,13 +264,16 @@
       </div>
 
       <div class="p-6 rounded-2xl dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-200 space-y-3 shadow-lg">
-        <span class="text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] uppercase tracking-wider block">Head Office (Binangonan)</span>
-        <h4 class="font-bold dark:text-white text-slate-900 text-base">Switch Internet Services Co.</h4>
-        <p class="text-xs dark:text-slate-300 text-slate-600 leading-relaxed font-mono">
-          315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal, Philippines, 1940
-        </p>
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] uppercase tracking-wider block">Office Locations (Binangonan)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">2 Locations</span>
+        </div>
+        <div class="space-y-2 text-xs dark:text-slate-300 text-slate-600 leading-relaxed font-mono">
+          <p><strong class="text-slate-900 dark:text-white font-sans">Head Office:</strong> 315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan</p>
+          <p><strong class="text-[#ee2824] dark:text-[#ff6b67] font-sans">Branch:</strong> Gaisano Capital Binangonan, Manila East Road, Brgy. Calumpang</p>
+        </div>
         <p class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-          ✓ Walk-in applications and over-the-counter payments accepted!
+          ✓ Walk-in applications and over-the-counter payments accepted at both locations!
         </p>
       </div>
     </div>

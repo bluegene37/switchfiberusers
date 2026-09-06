@@ -46,6 +46,10 @@ const heroCoverageCardSource = fs.readFileSync(
   path.resolve(__dirname, '../src/components/HeroCoverageCard.vue'),
   'utf8'
 )
+const contactSource = fs.readFileSync(
+  path.resolve(__dirname, '../src/views/ContactView.vue'),
+  'utf8'
+)
 
 /**
  * These assertions run against the SHIPPING component source, not a local copy
@@ -282,5 +286,46 @@ describe('Application Status Tracker — PII Masking and Contact Badges', () => 
       /v-if="foundApp\.email"[\s\S]*?maskEmail\(foundApp\.email\)/,
       'Should display masked email address when email exists'
     )
+  })
+})
+
+describe('Binangonan Office Locations — Gaisano Capital and Head Office', () => {
+  it('includes Gaisano Capital Binangonan in ContactView offices', () => {
+    assert.match(
+      contactSource,
+      /name:\s*['"]Gaisano Capital Binangonan['"]/,
+      'ContactView must list Gaisano Capital Binangonan'
+    )
+    assert.match(
+      contactSource,
+      /Gaisano Capital Binangonan, Manila East Road/i,
+      'ContactView must specify Manila East Road location for Gaisano Capital'
+    )
+  })
+
+  it('provides an interactive office switcher with map embed in ContactView', () => {
+    assert.match(
+      contactSource,
+      /v-for="\(office,\s*idx\)\s*in\s*offices"/,
+      'ContactView should allow visitors to switch between offices'
+    )
+    assert.match(
+      contactSource,
+      /:src="currentOffice\.mapSrc"/,
+      'Google Map iframe should bind to selected office map'
+    )
+  })
+
+  it('includes external directions link with noopener rel in ContactView', () => {
+    assert.match(
+      contactSource,
+      /<a[^>]*:href="currentOffice\.directionsUrl"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/,
+      'Directions link must include target="_blank" and rel="noopener noreferrer"'
+    )
+  })
+
+  it('mentions both Head Office and Gaisano Capital branch in Footer', () => {
+    assert.match(footerSource, /Head Office/i)
+    assert.match(footerSource, /Gaisano Capital Binangonan/i)
   })
 })

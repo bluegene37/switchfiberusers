@@ -11,7 +11,7 @@
         We're Here to <span class="text-[#ee2824] dark:text-[#ff6b67]">Help You</span>
       </h1>
       <p class="text-base sm:text-lg dark:text-slate-300 text-slate-600">
-        Reach out to our customer care hotlines, send an inquiry, or visit our office in Binangonan, Rizal.
+        Reach out to our customer care hotlines, send an inquiry, or visit our offices in Binangonan, Rizal (Head Office & Gaisano Capital Branch).
       </p>
     </div>
 
@@ -74,41 +74,159 @@
     </div>
 
     <!-- Visit Us Section & Embedded Google Map -->
-    <div class="glass-card p-8 rounded-3xl border dark:border-slate-800 border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-      
-      <!-- Google Map Container -->
-      <div class="lg:col-span-7 rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-300 shadow-lg min-h-[320px] relative bg-slate-100 dark:bg-slate-900">
-        <iframe 
-          title="Switch Fiber Office Location Map"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15454.498114421118!2d121.1856755!3d14.4533041!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c11f7c320299%3A0x6b13e9a7e6bdf20a!2sSta.%20Ursula%20Subd%2C%20Binangonan%2C%20Rizal!5e0!3m2!1sen!2sph!4v1700000000000!5m2!1sen!2sph" 
-          class="w-full h-80 border-0" 
-          allowfullscreen="" 
-          loading="lazy" 
-          referrerpolicy="no-referrer-when-downgrade"
-        ></iframe>
+    <div class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] text-xs font-bold mb-2">
+            <MapPin class="w-4 h-4" />
+            <span>Binangonan Office Locations</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold font-heading dark:text-white text-slate-900">
+            Visit Us in Binangonan
+          </h2>
+          <p class="text-xs dark:text-slate-400 text-slate-600 mt-1">
+            Drop by our offices for walk-in applications, bill payments, and friendly subscriber assistance.
+          </p>
+        </div>
+
+        <!-- Office Switcher Tabs -->
+        <div class="inline-flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 self-start sm:self-auto shadow-sm">
+          <button
+            v-for="(office, idx) in offices"
+            :key="office.id"
+            type="button"
+            @click="selectedOfficeIndex = idx"
+            :class="[
+              'px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 min-h-11',
+              selectedOfficeIndex === idx
+                ? 'bg-[#ee2824] text-white shadow-md shadow-[#ee2824]/30'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            ]"
+          >
+            <Building2 v-if="office.isBranch" class="w-4 h-4" />
+            <MapPin v-else class="w-4 h-4" />
+            <span>{{ office.shortName }}</span>
+            <span v-if="office.isNew" class="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-400 text-slate-950 font-black tracking-wide uppercase">New</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Visit Us Details -->
-      <div class="lg:col-span-5 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] text-xs font-bold">
-          <MapPin class="w-4 h-4" />
-          <span>Physical Location</span>
+      <!-- Main Map & Detail Card -->
+      <div class="glass-card p-6 sm:p-8 rounded-3xl border dark:border-slate-800 border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <!-- Google Map Container -->
+        <div class="lg:col-span-7 rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-300 shadow-lg min-h-[340px] relative bg-slate-100 dark:bg-slate-900">
+          <iframe 
+            :key="currentOffice.id"
+            :title="`${currentOffice.name} Google Map`"
+            :src="currentOffice.mapSrc" 
+            class="w-full h-80 sm:h-96 border-0" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+          
+          <!-- Map Overlay Tag -->
+          <div class="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/10 shadow-lg">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>{{ currentOffice.name }}</span>
+          </div>
         </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">
-          Visit Us
-        </h2>
-        <p class="text-sm dark:text-slate-200 text-slate-800 font-semibold leading-relaxed">
-          315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal, Philippines, 1940
-        </p>
-        <p class="text-xs dark:text-slate-400 text-slate-600 italic">
-          ✨ We accept walk-in applications and payments!
-        </p>
-        <div class="pt-2 text-xs dark:text-slate-300 text-slate-700 space-y-1 font-medium border-t dark:border-slate-800 border-slate-200">
-          <p><span class="font-bold">Operating Hours:</span> Monday – Saturday: 8:00 AM – 5:00 PM</p>
-          <p><span class="font-bold">Lunch Break:</span> 12:00 PM – 1:00 PM</p>
+
+        <!-- Visit Us Details -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="flex items-center gap-2">
+            <span :class="[
+              'px-2.5 py-1 rounded-lg text-xs font-extrabold uppercase tracking-wide',
+              currentOffice.isNew
+                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                : 'bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/20'
+            ]">
+              {{ currentOffice.badge }}
+            </span>
+            <span v-if="currentOffice.isNew" class="text-xs font-bold text-amber-500 flex items-center gap-1">
+              <Sparkles class="w-3.5 h-3.5" />
+              <span>Now Open!</span>
+            </span>
+          </div>
+
+          <h3 class="text-2xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">
+            {{ currentOffice.name }}
+          </h3>
+
+          <div class="space-y-1 text-sm dark:text-slate-200 text-slate-800 font-semibold leading-relaxed">
+            <p>{{ currentOffice.address }}</p>
+            <p v-if="currentOffice.landmark" class="text-xs text-slate-500 dark:text-slate-400 font-normal">
+              📍 {{ currentOffice.landmark }}
+            </p>
+          </div>
+
+          <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+            {{ currentOffice.highlights }}
+          </p>
+
+          <div class="pt-3 text-xs dark:text-slate-300 text-slate-700 space-y-1.5 font-medium border-t dark:border-slate-800 border-slate-200">
+            <div class="flex items-center gap-2">
+              <Clock class="w-4 h-4 text-blue-500 shrink-0" />
+              <p><span class="font-bold">Operating Hours:</span> {{ currentOffice.hours }}</p>
+            </div>
+            <p class="text-slate-500 pl-6 text-[11px]">{{ currentOffice.lunchBreak }}</p>
+          </div>
+
+          <!-- Quick Action Links -->
+          <div class="pt-2 flex flex-wrap items-center gap-3">
+            <a
+              :href="currentOffice.directionsUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn-primary py-2.5 px-4 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-[#ee2824]/20 min-h-11"
+            >
+              <Navigation class="w-3.5 h-3.5" />
+              <span>Get Directions</span>
+              <ExternalLink class="w-3 h-3 opacity-70" />
+            </a>
+
+            <router-link
+              to="/register"
+              class="btn-secondary py-2.5 px-4 text-xs font-bold flex items-center gap-1.5 min-h-11"
+            >
+              <Sparkles class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
+              <span>Apply Online</span>
+            </router-link>
+          </div>
         </div>
       </div>
 
+      <!-- Quick Office Comparison Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-for="(office, idx) in offices"
+          :key="`card-${office.id}`"
+          @click="selectedOfficeIndex = idx"
+          :class="[
+            'p-5 rounded-2xl border cursor-pointer transition-all duration-200 text-left',
+            selectedOfficeIndex === idx
+              ? 'dark:bg-slate-900 bg-red-50/50 border-[#ee2824] shadow-md shadow-[#ee2824]/10 ring-1 ring-[#ee2824]'
+              : 'dark:bg-slate-900/50 bg-white border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          ]"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <Building2 v-if="office.isBranch" class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+              <MapPin v-else class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+              <h4 class="font-bold text-sm dark:text-white text-slate-900">{{ office.name }}</h4>
+            </div>
+            <span v-if="office.isNew" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold border border-amber-500/30">NEW BRANCH</span>
+            <span v-else class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold">MAIN HQ</span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-2 leading-relaxed">{{ office.address }}</p>
+          <div class="flex items-center justify-between text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <span class="text-slate-500">{{ office.hours }}</span>
+            <span class="font-bold text-[#ee2824] dark:text-[#ff6b67] flex items-center gap-1">
+              {{ selectedOfficeIndex === idx ? 'Viewing on Map' : 'Click to View Map' }} →
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Subscriber Notice & Policy Infographic Cards Grid -->
@@ -368,8 +486,49 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { Headphones, Mail, MapPin, AlertTriangle, ShieldAlert, CheckCircle2, Send, Maximize2, X } from 'lucide-vue-next'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { 
+  Headphones, Mail, MapPin, AlertTriangle, ShieldAlert, 
+  CheckCircle2, Send, Maximize2, X, Building2, Clock, 
+  Navigation, ExternalLink, Sparkles 
+} from 'lucide-vue-next'
+
+// Binangonan Office Locations
+const offices = [
+  {
+    id: 'gaisano',
+    name: 'Gaisano Capital Binangonan',
+    shortName: 'Gaisano Capital Branch',
+    badge: 'New Branch Office',
+    isNew: true,
+    isBranch: true,
+    address: 'Gaisano Capital Binangonan, Manila East Road, Brgy. Calumpang, Binangonan, Rizal, 1940',
+    landmark: 'Located along Manila East Road — Inside Gaisano Capital Mall (Ground Floor)',
+    hours: 'Monday – Saturday: 10:00 AM – 7:00 PM',
+    lunchBreak: 'Open through lunch hours for your convenience',
+    highlights: '✨ Fast walk-in applications, plan consultations, and friendly customer assistance!',
+    mapSrc: 'https://maps.google.com/maps?q=Gaisano+Capital+Binangonan,+Manila+East+Road,+Calumpang,+Binangonan,+Rizal&t=&z=16&ie=UTF8&iwloc=&output=embed',
+    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Gaisano+Capital+Binangonan+Manila+East+Road+Calumpang+Binangonan+Rizal'
+  },
+  {
+    id: 'headoffice',
+    name: 'Head Office (Sta. Ursula)',
+    shortName: 'Head Office (Batingan)',
+    badge: 'Main Headquarters',
+    isNew: false,
+    isBranch: false,
+    address: '315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal, Philippines, 1940',
+    landmark: 'Near Sta. Ursula Subdivision Main Entrance',
+    hours: 'Monday – Saturday: 8:00 AM – 5:00 PM',
+    lunchBreak: 'Lunch Break: 12:00 PM – 1:00 PM',
+    highlights: '✨ Walk-in applications, over-the-counter cash payments, and technical service support!',
+    mapSrc: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15454.498114421118!2d121.1856755!3d14.4533041!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c11f7c320299%3A0x6b13e9a7e6bdf20a!2sSta.%20Ursula%20Subd%2C%20Binangonan%2C%20Rizal!5e0!3m2!1sen!2sph!4v1700000000000!5m2!1sen!2sph',
+    directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=315+Sampaloc+St+Sta+Ursula+Subd+Batingan+Binangonan+Rizal'
+  }
+]
+
+const selectedOfficeIndex = ref(0)
+const currentOffice = computed(() => offices[selectedOfficeIndex.value])
 
 // Official advisory graphics from switchfiber.ph, served locally from
 // public/advisories/ (WebP, optimized from the originals).

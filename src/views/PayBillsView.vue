@@ -92,11 +92,11 @@
       <div class="glass-card p-6 rounded-2xl border dark:border-slate-800 border-slate-200 text-center space-y-2">
         <MapPin class="w-6 h-6 text-emerald-500 mx-auto" />
         <h3 class="font-bold dark:text-white text-slate-900 text-lg">Over-The-Counter Cash</h3>
-        <p class="text-xs dark:text-slate-400 text-slate-600">Walk-in cash payments accepted at Switch Fiber Head Office:</p>
-        <p class="text-xs font-semibold dark:text-slate-200 text-slate-800 pt-1">
-          315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal<br />
-          <span class="text-slate-500 font-normal">Mon–Sat: 8:00 AM – 5:00 PM (12–1 PM Lunch Break)</span>
-        </p>
+        <p class="text-xs dark:text-slate-400 text-slate-600">Walk-in cash payments accepted at Switch Fiber Offices:</p>
+        <div class="text-xs font-semibold dark:text-slate-200 text-slate-800 pt-1 space-y-1">
+          <p><span class="text-slate-500 font-normal">Head Office:</span> 315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan (Mon–Sat: 8 AM – 5 PM)</p>
+          <p><span class="text-[#ee2824] dark:text-[#ff6b67] font-bold">New Branch:</span> Gaisano Capital Binangonan, Manila East Road, Brgy. Calumpang</p>
+        </div>
       </div>
     </div>
 

@@ -60,7 +60,7 @@
 
         <!-- Hotlines & Office Hours -->
         <div class="space-y-4">
-          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase">Hotline & Office</h4>
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase">Hotline & Offices</h4>
           <div class="space-y-2 text-xs dark:text-slate-400 text-slate-600">
             <div class="flex items-center gap-2">
               <PhoneCall class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
@@ -72,7 +72,10 @@
             </div>
             <div class="flex items-start gap-2">
               <MapPin class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-              <span>315 Sampaloc St., Brgy. Batingan, Binangonan</span>
+              <div class="space-y-0.5">
+                <p><span class="font-semibold text-slate-700 dark:text-slate-300">Head Office:</span> 315 Sampaloc St., Brgy. Batingan</p>
+                <p><span class="font-semibold text-[#ee2824] dark:text-[#ff6b67]">Branch:</span> Gaisano Capital Binangonan, Manila East Rd.</p>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <CreditCard class="w-3.5 h-3.5 text-emerald-500" />

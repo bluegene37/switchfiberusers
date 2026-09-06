@@ -298,7 +298,7 @@ const faqs = [
   },
   {
     question: 'Where can I pay my monthly bills?',
-    answer: 'You can safely settle your monthly bills online at pay.switchfiber.ph using GCash (via QR Ph), Maya, WeChat Pay, or Debit/Credit cards. Over-the-counter cash payments are also accepted at our Binangonan Head Office (Mon–Sat 8:00 AM – 5:00 PM).'
+    answer: 'You can safely settle your monthly bills online at pay.switchfiber.ph using GCash (via QR Ph), Maya, WeChat Pay, or Debit/Credit cards. Over-the-counter cash payments are also accepted at our Binangonan Head Office and Gaisano Capital Binangonan branch.'
   },
   {
     question: 'How do I change my Wi-Fi password or network name (SSID)?',
@@ -306,7 +306,7 @@ const faqs = [
   },
   {
     question: 'What are the official customer support and billing hotlines?',
-    answer: 'Customer Support: 0915 407 7565 / 0917 876 2440 | Billing Hotline: 0915 407 7555 | Email: customercare@switchfiber.ph | Head Office: 315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal (Monday to Saturday, 8:00 AM – 5:00 PM).'
+    answer: 'Customer Support: 0915 407 7565 / 0917 876 2440 | Billing Hotline: 0915 407 7555 | Email: customercare@switchfiber.ph | Head Office: 315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan | Branch: Gaisano Capital Binangonan, Manila East Rd.'
   }
 ]
 

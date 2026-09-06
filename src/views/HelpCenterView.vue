@@ -539,11 +539,11 @@ const faqs = [
   },
   {
     q: 'What payment methods do you accept?',
-    a: 'Through the official portal at pay.switchfiber.ph we accept GCash (via QR Ph), Maya, WeChat Pay, and debit or credit cards (MasterCard, Visa and JCB). You can also pay cash over the counter at our Binangonan head office, Monday to Saturday, 8:00 AM to 5:00 PM.'
+    a: 'Through the official portal at pay.switchfiber.ph we accept GCash (via QR Ph), Maya, WeChat Pay, and debit or credit cards (MasterCard, Visa and JCB). You can also pay cash over the counter at our Binangonan Head Office and Gaisano Capital Binangonan branch.'
   },
   {
     q: 'Can I apply in person instead of online?',
-    a: 'Yes. Walk-in applications are welcome at our head office: 315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan, Binangonan, Rizal — Monday to Saturday, 8:00 AM to 5:00 PM. Bring the same requirements listed above.'
+    a: 'Yes. Walk-in applications are welcome at our Head Office (315 Sampaloc St., Sta. Ursula Subd., Brgy. Batingan) and our branch office at Gaisano Capital Binangonan (Manila East Road, Brgy. Calumpang) — Monday to Saturday. Bring the same requirements listed above.'
   },
   {
     q: 'How do I change my Wi-Fi name or password?',
