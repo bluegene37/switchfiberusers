@@ -1139,7 +1139,7 @@ export const useRegistrationStore = defineStore('registration', () => {
 
   // The backend spells the public tracking ID `applicationid` (all lowercase) —
   // a 21-digit code built from the submission timestamp, e.g.
-  // 202609012251532731662. `id` is the internal sequential row number.
+  // 202609482710394827103. `id` is the internal sequential row number.
   function readApplicationId(raw) {
     if (!raw || typeof raw !== 'object') return ''
     const value = raw.applicationid ?? raw.applicationId

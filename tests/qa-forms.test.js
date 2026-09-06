@@ -92,7 +92,7 @@ describe('QA Form Validation & Domain Model Integrity', () => {
       assert.equal(isValidAppId('13295'), true)
       assert.equal(isValidAppId('2026-8942'), true)
       assert.equal(isValidAppId('DEMO-8942'), true)
-      assert.equal(isValidAppId('202609012251532731662'), true)
+      assert.equal(isValidAppId('202609482710394827103'), true)
       assert.equal(isValidAppId(''), false)
       assert.equal(isValidAppId('ID with spaces'), false)
       assert.equal(isValidAppId('<script>'), false)

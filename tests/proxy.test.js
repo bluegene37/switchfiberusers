@@ -81,7 +81,7 @@ describe('Serverless Backend Proxy (api/_proxy.js)', () => {
     const { getAllowedMethods } = await import('../api/_proxy.js')
     assert.deepEqual(getAllowedMethods('/api/Applications/13295'), ['GET'])
     assert.deepEqual(getAllowedMethods('/api/Applications/202609010000000000000'), ['GET'])
-    assert.deepEqual(getAllowedMethods('/api/Applications/202609012251532731662'), ['GET'])
+    assert.deepEqual(getAllowedMethods('/api/Applications/202609482710394827103'), ['GET'])
   })
 
   it('rejects disallowed methods on single application route with 405', async () => {
