@@ -53,9 +53,9 @@
             </div>
           </div>
 
-          <!-- Right Column: Interactive Live Speed Simulator -->
+          <!-- Right Column: Interactive Quick Coverage & Serviceability Checker -->
           <div class="lg:col-span-5">
-            <SpeedTestSim />
+            <HeroCoverageCard />
           </div>
 
         </div>
@@ -108,10 +108,6 @@
       </div>
     </section>
 
-    <!-- INTERACTIVE COVERAGE CHECKER -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <CoverageChecker />
-    </section>
 
     <!-- POPULAR PLANS MATRIX -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -268,8 +264,7 @@ import {
   Zap, Sparkles, ArrowRight, Infinity, ShieldCheck, 
   HeartHandshake, CreditCard, ChevronDown, Gift, Briefcase 
 } from 'lucide-vue-next'
-import SpeedTestSim from '../components/SpeedTestSim.vue'
-import CoverageChecker from '../components/CoverageChecker.vue'
+import HeroCoverageCard from '../components/HeroCoverageCard.vue'
 import PlanCard from '../components/PlanCard.vue'
 import { useRegistrationStore } from '../stores/registration'
 

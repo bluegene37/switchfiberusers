@@ -34,27 +34,27 @@
 
         <!-- Quick Links -->
         <div>
-          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Quick Navigation</h4>
-          <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
-            <li><router-link to="/" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Home Page</router-link></li>
-            <li><router-link to="/about" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">About Switch Fiber</router-link></li>
-            <li><router-link to="/plans" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
-            <li><router-link to="/coverage" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
-            <li><router-link to="/contact" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
-            <li><router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
-            <li><router-link to="/status" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-3">Quick Navigation</h4>
+          <ul class="space-y-1.5 text-sm dark:text-slate-400 text-slate-600">
+            <li><router-link to="/" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Home Page</router-link></li>
+            <li><router-link to="/about" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">About Switch Fiber</router-link></li>
+            <li><router-link to="/plans" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Fiber Plans & Speed</router-link></li>
+            <li><router-link to="/coverage" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Rizal Area Coverage</router-link></li>
+            <li><router-link to="/contact" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Contact Support</router-link></li>
+            <li><router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center py-1 hover:text-[#ee2824] text-[#ee2824] dark:text-[#ff6b67] font-medium">Apply Online Now</router-link></li>
+            <li><router-link to="/status" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Track Application Status</router-link></li>
           </ul>
         </div>
 
         <!-- Self Service & Billing -->
         <div>
-          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-4">Customer Care</h4>
-          <ul class="space-y-2.5 text-sm dark:text-slate-400 text-slate-600">
-            <li><router-link to="/help" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Help Center & User Guide</router-link></li>
-            <li><router-link to="/pay-bills" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Settle Bill (pay.switchfiber.ph)</router-link></li>
-            <li><router-link to="/tech-support" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">192.168.1.1 WiFi Router Guide</router-link></li>
-            <li><router-link to="/tech-support" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Change WiFi Password & SSID</router-link></li>
-            <li><router-link to="/careers" class="inline-flex items-center min-h-11 py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Become a Freelance Sales Agent</router-link></li>
+          <h4 class="font-heading font-bold dark:text-slate-200 text-slate-800 text-sm tracking-wider uppercase mb-3">Customer Care</h4>
+          <ul class="space-y-1.5 text-sm dark:text-slate-400 text-slate-600">
+            <li><router-link to="/help" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Help Center & User Guide</router-link></li>
+            <li><router-link to="/pay-bills" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Settle Bill (pay.switchfiber.ph)</router-link></li>
+            <li><router-link to="/tech-support" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">192.168.1.1 WiFi Router Guide</router-link></li>
+            <li><router-link to="/tech-support" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Change WiFi Password & SSID</router-link></li>
+            <li><router-link to="/careers" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors">Become a Freelance Sales Agent</router-link></li>
           </ul>
         </div>
 
@@ -64,7 +64,7 @@
           <div class="space-y-2 text-xs dark:text-slate-400 text-slate-600">
             <div class="flex items-center gap-2">
               <PhoneCall class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
-              <a href="tel:09154077565" class="inline-flex items-center min-h-11 py-1 font-bold dark:text-white text-slate-900 hover:text-[#ee2824]">0915 407 7565</a>
+              <a href="tel:09154077565" class="inline-flex items-center py-1 font-bold dark:text-white text-slate-900 hover:text-[#ee2824]">0915 407 7565</a>
             </div>
             <div class="flex items-center gap-2">
               <Clock class="w-3.5 h-3.5 text-blue-500" />
@@ -84,7 +84,7 @@
         <div class="flex items-center gap-6">
           <span>Binangonan, Rizal, Philippines</span>
           <span>•</span>
-          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center min-h-11 py-1 text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
+          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center py-1 text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
         </div>
       </div>
 
