@@ -61,6 +61,17 @@ implementation_plan.md
 walkthrough.md
 API_INTEGRATION_GUIDE.md
 RELEASING.md
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+.github/ISSUE_TEMPLATE/
+.github/pull_request_template.md
+
+# Documentation & screenshot tooling (not needed to run the app)
+scripts/capture-*-screenshots.js
+scripts/render-*.js
+scripts/finish-work.sh
 
 # Playwright & Testing Artifacts
 coverage
