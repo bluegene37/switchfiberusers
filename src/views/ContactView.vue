@@ -393,65 +393,41 @@
       </div>
     </div>
 
-    <!-- Direct Inquiry Form Section -->
-    <div class="glass-card p-8 rounded-3xl border dark:border-slate-800 border-slate-200 space-y-6">
-      <div>
-        <h2 class="text-2xl font-bold font-heading dark:text-white text-slate-900">Send Us a Direct Message</h2>
-        <p class="text-xs dark:text-slate-400 text-slate-600 mt-1">
-          Fill out the form below and our customer care team will get back to you right away.
-        </p>
+    <!-- Direct Official Inquiries & Assistance Banner -->
+    <div class="glass-card p-8 rounded-3xl border dark:border-slate-800 border-slate-200 text-center space-y-4 max-w-4xl mx-auto">
+      <div class="w-12 h-12 rounded-2xl bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] flex items-center justify-center mx-auto">
+        <Mail class="w-6 h-6" />
       </div>
-
-      <form @submit.prevent="sendMessage" class="space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label for="contact-name" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Full Name <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <input id="contact-name" v-model="form.name" type="text" placeholder="John Doe" class="input-field" required />
-          </div>
-          <div>
-            <label for="contact-mobile" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Mobile Number <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <input id="contact-mobile" v-model="form.mobile" type="text" placeholder="09171234567" class="input-field" required />
-          </div>
-          <div>
-            <label for="contact-email" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Email Address <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-            <input id="contact-email" v-model="form.email" type="email" placeholder="name@example.com" class="input-field" required />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="contact-type" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Inquiry Type</label>
-            <select id="contact-type" v-model="form.type" class="input-field">
-              <option value="customer_support">Customer Support Inquiry</option>
-              <option value="billing">Billing Concern</option>
-              <option value="general">General Inquiry</option>
-              <option value="sales">Sales & Marketing</option>
-            </select>
-          </div>
-          <div>
-            <label for="contact-location" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Barangay (Location in Rizal)</label>
-            <input id="contact-location" v-model="form.location" type="text" placeholder="e.g. Batingan, Binangonan" class="input-field" />
-          </div>
-        </div>
-
-        <div>
-          <label for="contact-message" class="block text-xs font-bold uppercase dark:text-slate-300 text-slate-700 mb-1">Your Message <span class="text-[#ee2824] dark:text-[#ff6b67] font-bold ml-0.5">*</span></label>
-          <textarea id="contact-message" v-model="form.message" rows="4" placeholder="How can we assist you today?" class="input-field" required></textarea>
-        </div>
-
-        <button type="submit" class="btn-primary w-full flex items-center justify-center gap-2">
-          <Send class="w-4 h-4" />
-          <span>Send Inquiry via Email</span>
-        </button>
-      </form>
-
-      <div v-if="submitted" class="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-500 text-xs font-semibold flex items-center gap-2">
-        <CheckCircle2 class="w-5 h-5 shrink-0" />
-        <span>
-          Your email app should now be open with your message ready to send — press <strong>Send</strong> there to deliver it.
-          If nothing opened, email us directly at
-          <a href="mailto:customercare@switchfiber.ph" class="underline font-bold">customercare@switchfiber.ph</a>.
-        </span>
+      <h2 class="text-2xl font-bold font-heading dark:text-white text-slate-900">
+        Need Immediate Assistance or Inquiry?
+      </h2>
+      <p class="text-sm dark:text-slate-300 text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        For reliable customer support, billing verification, and plan applications, reach out to our verified official channels directly:
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <a 
+          href="mailto:customercare@switchfiber.ph" 
+          class="btn-primary py-3 px-6 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#ee2824]/20 min-h-11"
+        >
+          <Mail class="w-4 h-4" />
+          <span>customercare@switchfiber.ph</span>
+        </a>
+        <a 
+          href="tel:09154077565" 
+          class="btn-secondary py-3 px-6 text-xs sm:text-sm font-bold flex items-center gap-2 min-h-11 hover:text-[#ee2824] dark:hover:text-[#ff6b67]"
+        >
+          <PhoneCall class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Hotline: 0915 407 7565</span>
+        </a>
+        <a 
+          href="https://m.me/switchfiber.ph" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="btn-secondary py-3 px-6 text-xs sm:text-sm font-bold flex items-center gap-2 min-h-11 hover:text-[#ee2824] dark:hover:text-[#ff6b67]"
+        >
+          <MessageSquare class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Facebook Messenger</span>
+        </a>
       </div>
     </div>
 
@@ -489,8 +465,8 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { 
   Headphones, Mail, MapPin, AlertTriangle, ShieldAlert, 
-  CheckCircle2, Send, Maximize2, X, Building2, Clock, 
-  Navigation, ExternalLink, Sparkles 
+  CheckCircle2, Maximize2, X, Building2, Clock, 
+  Navigation, ExternalLink, Sparkles, PhoneCall, MessageSquare 
 } from 'lucide-vue-next'
 
 // Binangonan Office Locations
@@ -571,36 +547,4 @@ function onKeydown(e) {
 
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
-
-const form = ref({
-  name: '',
-  mobile: '',
-  email: '',
-  type: 'customer_support',
-  location: '',
-  message: ''
-})
-
-const submitted = ref(false)
-
-// There is no inquiry backend, so the form composes an email in the visitor's
-// own mail app instead of pretending the message was delivered.
-function sendMessage() {
-  const typeLabels = {
-    customer_support: 'Customer Support Inquiry',
-    billing: 'Billing Concern',
-    general: 'General Inquiry',
-    sales: 'Sales & Marketing Inquiry'
-  }
-  const to = form.value.type === 'sales' ? 'sales@switchfiber.ph' : 'customercare@switchfiber.ph'
-  const subject = `[Website Inquiry] ${typeLabels[form.value.type] || 'Inquiry'} — ${form.value.name}`
-  const body =
-    `Name: ${form.value.name}\n` +
-    `Mobile: ${form.value.mobile}\n` +
-    `Email: ${form.value.email}\n` +
-    (form.value.location ? `Location: ${form.value.location}\n` : '') +
-    `\n${form.value.message}`
-  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  submitted.value = true
-}
 </script>
