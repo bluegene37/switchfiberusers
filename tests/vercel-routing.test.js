@@ -30,7 +30,7 @@ describe('Vercel Routing (vercel.json)', () => {
       '/api/Plans',
       '/api/Applications',
       '/api/Applications/2026-8942',
-      '/api/Applications/SF-2026-8942',
+      '/api/Applications/202609012251532731662',
       '/api/LCPNapLocations',
       '/api/send-sms'
     ]

@@ -68,6 +68,51 @@ export const referrersList = [
   "Jennyzell Ceñidoza"
 ]
 
+/**
+ * Maps application status to the 4 installation timeline stages:
+ * Stage 1: Under Verification and Review (InProgress, Under Review, Under Verification, or default)
+ * Stage 2: Installation Scheduled (Scheduled, Schedule, Dispatch)
+ * Stage 3: Installation Completed (Completed, Installed, Done)
+ * Stage 4: Connection Activated (Activated, Active, Connected)
+ */
+export function mapApplicationStatus(status, dateInput = null, applicationId = '', now = Date.now()) {
+  const s = String(status || '').trim().toLowerCase()
+
+  // Stage 4: Connection Activated
+  if (s.includes('activat') || s.includes('active') || s.includes('connected') || s.includes('operational')) {
+    return {
+      status: 'Connection Activated',
+      step: 4,
+      notes: 'Fiber connection is active, provisioned, and operational.'
+    }
+  }
+
+  // Stage 3: Installation Completed
+  if (s.includes('complet') || s.includes('installed') || s.includes('done') || s.includes('finish')) {
+    return {
+      status: 'Installation Completed',
+      step: 3,
+      notes: 'Fiber line installation, ONT modem setup, and optical signal testing completed.'
+    }
+  }
+
+  // Stage 2: Installation Scheduled
+  if (s.includes('schedule') || s.includes('dispatch') || s.includes('appointment')) {
+    return {
+      status: 'Installation Scheduled',
+      step: 2,
+      notes: 'Account verification completed. Field technician team has been scheduled for installation.'
+    }
+  }
+
+  // Stage 1: Under Verification and Review (Default for Inprogress or new submissions)
+  return {
+    status: 'Under Verification and Review',
+    step: 1,
+    notes: 'Engineering and account officers are conducting line feasibility, document verification, and account review.'
+  }
+}
+
 export const useRegistrationStore = defineStore('registration', () => {
   const currentStep = ref(1)
   const isModalOpen = ref(false)
@@ -561,7 +606,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
-  const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+  const API_BASE = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
   async function fetchPlans(force = false) {
     isLoadingPlans.value = true
@@ -1005,9 +1050,9 @@ export const useRegistrationStore = defineStore('registration', () => {
         streetAddress: apiPayload.installationAddress,
         expressInstallation: formData.value.expressInstallation,
         date: now.toISOString().split('T')[0],
-        status: 'Application Submitted',
+        status: 'Under Verification and Review',
         statusStep: 1,
-        notes: 'Application logged. Account officer is reviewing your submitted details.',
+        notes: 'Engineering and account officers are conducting line feasibility, document verification, and account review.',
         delivered: true
       })
       saveToLocalStorage()
@@ -1092,20 +1137,6 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
-  function mapApplicationStatus(status) {
-    const s = String(status || '').toLowerCase()
-    if (s.includes('active') || s.includes('installed') || s.includes('connected') || s.includes('completed') || s.includes('done')) {
-      return { status: 'Connection Active', step: 4, notes: 'Fiber connection is active and operational.' }
-    }
-    if (s.includes('schedule') || s.includes('dispatch') || s.includes('install')) {
-      return { status: 'Installation Scheduled', step: 3, notes: 'Account verification completed. Field technician team has been scheduled for installation.' }
-    }
-    if (s.includes('review') || s.includes('verif') || s.includes('feasib') || s.includes('survey')) {
-      return { status: 'Under Verification', step: 2, notes: 'Engineering team is conducting line feasibility and account verification.' }
-    }
-    return { status: status || 'Application Submitted', step: 1, notes: 'Application logged. Account officer is reviewing your submitted details.' }
-  }
-
   // The backend spells the public tracking ID `applicationid` (all lowercase) —
   // a 21-digit code built from the submission timestamp, e.g.
   // 202609012251532731662. `id` is the internal sequential row number.
@@ -1121,8 +1152,9 @@ export const useRegistrationStore = defineStore('registration', () => {
     // for records created before that code existed.
     const id = readApplicationId(raw) || raw.id || ''
     const applicantName = `${raw.firstName || ''} ${raw.middleName ? raw.middleName + ' ' : ''}${raw.lastName || ''}`.trim() || 'Applicant'
-    const dateStr = raw.dateTime ? raw.dateTime.split('T')[0] : (raw.modifiedDate ? raw.modifiedDate.split('T')[0] : 'Recent')
-    const { status, step, notes } = mapApplicationStatus(raw.status)
+    const dateStr = raw.dateTime ? raw.dateTime.split('T')[0] : (raw.modifiedDate ? raw.modifiedDate.split('T')[0] : (raw.date || 'Recent'))
+    const rawDate = raw.dateTime || raw.timestamp || raw.submissionDate || raw.createdDate || raw.date || raw.modifiedDate
+    const { status, step, notes } = mapApplicationStatus(raw.status, rawDate, id)
 
     let planTitle = raw.desiredPlan || 'Switch Fiber Plan'
     if (planTitle && !planTitle.toLowerCase().includes('plan') && !planTitle.includes('₱') && !planTitle.includes('P')) {
@@ -1143,7 +1175,11 @@ export const useRegistrationStore = defineStore('registration', () => {
       city: raw.city || raw.region || 'Rizal',
       barangay: raw.barangay || '',
       date: dateStr,
-      status: raw.status || status,
+      dateInstalled: raw.dateInstalled || null,
+      billingId: raw.billingId || null,
+      jobOrderId: raw.jobOrderId || null,
+      status: status,
+      rawStatus: raw.status || '',
       statusStep: step,
       notes: raw.remarks && !raw.remarks.startsWith('Online Application') ? raw.remarks : notes,
       delivered: true
@@ -1154,6 +1190,120 @@ export const useRegistrationStore = defineStore('registration', () => {
   const trackingError = ref(null)
   const rawApiResponse = ref(null)
   const rawApiStatus = ref(null)
+
+  // Cache for recent JobOrders and BillingDetails queries to minimize network overhead
+  const jobOrdersCache = {
+    Scheduled: { timestamp: 0, data: [] },
+    Completed: { timestamp: 0, data: [] },
+    Activated: { timestamp: 0, data: [] }
+  }
+  const JO_CACHE_TTL_MS = 30000
+
+  const billingDetailsCache = { timestamp: 0, data: [] }
+  const BILLING_CACHE_TTL_MS = 30000
+
+  async function fetchBillingDetails() {
+    const now = Date.now()
+    if (now - billingDetailsCache.timestamp < BILLING_CACHE_TTL_MS && billingDetailsCache.data.length > 0) {
+      return billingDetailsCache.data
+    }
+
+    try {
+      const endpoint = `${API_BASE}/api/BillingDetails`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000)
+
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+
+      if (response.ok) {
+        const json = await response.json()
+        const list = Array.isArray(json) ? json : (json?.billingDetails || [])
+        if (Array.isArray(list) && list.length > 0) {
+          billingDetailsCache.timestamp = now
+          billingDetailsCache.data = list
+          return list
+        }
+      }
+    } catch (e) {
+      console.warn('[Application Tracker] BillingDetails fetch error:', e?.message || e)
+    }
+    return billingDetailsCache.data || []
+  }
+
+  function matchBillingDetail(list, identifier, appId = '') {
+    if (!Array.isArray(list) || list.length === 0) return null
+    const cleanId = String(identifier || '').trim().toUpperCase()
+    const cleanAppId = String(appId || '').trim().toUpperCase()
+
+    return list.find(b => {
+      const accNo = String(b.accountNo || '').trim().toUpperCase()
+      const bId = String(b.id || '').trim().toUpperCase()
+      return (
+        (cleanId && (accNo === cleanId || bId === cleanId)) ||
+        (cleanAppId && (accNo === cleanAppId || bId === cleanAppId))
+      )
+    }) || null
+  }
+
+  async function fetchJobOrdersByStatus(status) {
+    const norm = String(status || '').toLowerCase()
+    let key = 'Scheduled'
+    if (norm.includes('complet')) key = 'Completed'
+    else if (norm.includes('activat') || norm.includes('active')) key = 'Activated'
+
+    const cached = jobOrdersCache[key]
+    const now = Date.now()
+    if (now - cached.timestamp < JO_CACHE_TTL_MS && cached.data.length > 0) {
+      return cached.data
+    }
+
+    try {
+      const endpoint = `${API_BASE}/api/JobOrders/status/${key}`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+
+      if (response.ok) {
+        const list = await response.json()
+        if (Array.isArray(list)) {
+          cached.timestamp = now
+          cached.data = list
+          return list
+        }
+      }
+    } catch (e) {
+      console.warn(`[Application Tracker] JobOrders/status/${key} fetch error:`, e?.message || e)
+    }
+    return cached.data || []
+  }
+
+  function matchJobOrder(list, identifier, appId = '') {
+    if (!Array.isArray(list) || list.length === 0) return null
+    const cleanId = String(identifier || '').trim().toUpperCase()
+    const cleanAppId = String(appId || '').trim().toUpperCase()
+
+    return list.find(j => {
+      const joAcc = String(j.accountNo || '').trim().toUpperCase()
+      const joVal = String(j.applicationIdValue || '').trim().toUpperCase()
+      const joId = String(j.id || '').trim().toUpperCase()
+
+      return (
+        (cleanId && (joAcc === cleanId || joVal === cleanId || joId === cleanId)) ||
+        (cleanAppId && (joAcc === cleanAppId || joVal === cleanAppId || joId === cleanAppId))
+      )
+    }) || null
+  }
 
   async function fetchApplicationById(identifier) {
     if (!identifier) return null
@@ -1172,42 +1322,166 @@ export const useRegistrationStore = defineStore('registration', () => {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        signal: controller.signal
-      })
-      clearTimeout(timeoutId)
-
-      rawApiStatus.value = response.status
+      let response = null
+      try {
+        response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          signal: controller.signal
+        })
+      } catch (fetchErr) {
+        console.warn(`[Application Tracker] Fetch error for "${identifier}":`, fetchErr)
+      } finally {
+        clearTimeout(timeoutId)
+      }
 
       let bodyData = null
-      try {
-        bodyData = await response.json()
-      } catch (jsonErr) {
-        bodyData = await response.text().catch(() => null)
-      }
-      rawApiResponse.value = bodyData
-
-      if (!response.ok) {
-        if (response.status === 404 || response.status === 400) {
-          return local || null
+      if (response) {
+        rawApiStatus.value = response.status
+        try {
+          bodyData = await response.json()
+        } catch {
+          bodyData = await response.text().catch(() => null)
         }
+        rawApiResponse.value = bodyData
+      }
+
+      // Check if we found a valid Application record
+      const hasAppRecord = bodyData && (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)
+
+      if (hasAppRecord) {
+        const currentStatus = String(bodyData.status || '').trim().toLowerCase()
+        const appId = bodyData.applicationid || bodyData.applicationId || bodyData.id || ''
+
+        // Reconcile status with dispatch JobOrders and BillingDetails if status is not already finalized as Activated
+        if (!currentStatus.includes('activat') && !currentStatus.includes('active')) {
+          // 1. Stage 4: Check BillingDetails first (fastest, confirmed operational accounts)
+          const billingList = await fetchBillingDetails()
+          const bMatch = matchBillingDetail(billingList, rawInput, appId)
+          if (bMatch) {
+            bodyData.status = 'Activated'
+            bodyData.rawStatus = 'Activated'
+            bodyData.billingId = bMatch.id
+            if (bMatch.dateInstalled) bodyData.dateInstalled = bMatch.dateInstalled
+            if (bMatch.routerModemSn) bodyData.routerModemSn = bMatch.routerModemSn
+            if (bMatch.plan && !bodyData.desiredPlan) bodyData.desiredPlan = bMatch.plan
+          } else {
+            // 2. Stage 4: Check JobOrders/status/Activated
+            const activatedList = await fetchJobOrdersByStatus('Activated')
+            const actMatch = matchJobOrder(activatedList, rawInput, appId)
+            if (actMatch) {
+              bodyData.status = 'Activated'
+              bodyData.rawStatus = 'Activated'
+              bodyData.jobOrderId = actMatch.id
+              if (actMatch.dateInstalled) bodyData.dateInstalled = actMatch.dateInstalled
+              if (actMatch.modifiedDate) bodyData.modifiedDate = actMatch.modifiedDate
+            } else if (!currentStatus.includes('completed') && !currentStatus.includes('schedule')) {
+              // 3. Stage 3: Check Completed JobOrders
+              const completedList = await fetchJobOrdersByStatus('Completed')
+              const compMatch = matchJobOrder(completedList, rawInput, appId)
+              if (compMatch) {
+                bodyData.status = 'Completed'
+                bodyData.rawStatus = 'Completed'
+                bodyData.jobOrderId = compMatch.id
+                if (compMatch.modifiedDate) bodyData.modifiedDate = compMatch.modifiedDate
+                if (compMatch.remarks && !compMatch.remarks.startsWith('Online Application')) {
+                  bodyData.remarks = compMatch.remarks
+                }
+              } else {
+                // 4. Stage 2: Check Scheduled JobOrders
+                const scheduledList = await fetchJobOrdersByStatus('Scheduled')
+                const schedMatch = matchJobOrder(scheduledList, rawInput, appId)
+                if (schedMatch) {
+                  bodyData.status = 'Scheduled'
+                  bodyData.rawStatus = 'Scheduled'
+                  bodyData.jobOrderId = schedMatch.id
+                  if (schedMatch.modifiedDate) bodyData.modifiedDate = schedMatch.modifiedDate
+                  if (schedMatch.remarks && !schedMatch.remarks.startsWith('Online Application')) {
+                    bodyData.remarks = schedMatch.remarks
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        return formatApiApplication(bodyData, rawInput)
+      }
+
+      // Fallback 1: If Applications lookup returned 404/400, check BillingDetails directly!
+      const billingList = await fetchBillingDetails()
+      const bMatch = matchBillingDetail(billingList, rawInput)
+      if (bMatch) {
+        const constructedApp = {
+          id: bMatch.id,
+          applicationid: bMatch.accountNo || String(bMatch.id),
+          firstName: bMatch.fullName ? bMatch.fullName.split(' ')[0] : '',
+          lastName: bMatch.fullName ? bMatch.fullName.split(' ').slice(1).join(' ') : '',
+          mobileNumber: bMatch.contactNumber || bMatch.secondContactNumber || '',
+          emailAddress: bMatch.emailAddress || '',
+          desiredPlan: bMatch.plan || '',
+          city: bMatch.city || '',
+          barangay: bMatch.barangay || '',
+          date: bMatch.dateInstalled || bMatch.modifiedDate || '',
+          dateTime: bMatch.modifiedDate || bMatch.dateInstalled || '',
+          status: 'Activated',
+          rawStatus: 'Activated',
+          billingId: bMatch.id,
+          dateInstalled: bMatch.dateInstalled || '',
+          routerModemSn: bMatch.routerModemSn || ''
+        }
+        return formatApiApplication(constructedApp, rawInput)
+      }
+
+      // Fallback 2: Check JobOrders directly (Activated -> Completed -> Scheduled)
+      const activatedList = await fetchJobOrdersByStatus('Activated')
+      let joMatch = matchJobOrder(activatedList, rawInput)
+      if (!joMatch) {
+        const completedList = await fetchJobOrdersByStatus('Completed')
+        joMatch = matchJobOrder(completedList, rawInput)
+      }
+      if (!joMatch) {
+        const scheduledList = await fetchJobOrdersByStatus('Scheduled')
+        joMatch = matchJobOrder(scheduledList, rawInput)
+      }
+
+      if (joMatch) {
+        const constructedApp = {
+          id: joMatch.id,
+          applicationid: joMatch.accountNo || String(joMatch.id),
+          firstName: joMatch.firstName || '',
+          lastName: joMatch.lastName || '',
+          middleName: joMatch.middleInitial || '',
+          mobileNumber: joMatch.contactNumber || joMatch.secondContactNumber || '',
+          emailAddress: joMatch.applicantEmailAddress || joMatch.emailAddress || '',
+          desiredPlan: joMatch.planId || '',
+          city: joMatch.city || '',
+          barangay: joMatch.barangay || '',
+          dateTime: joMatch.timestamp || joMatch.createdDate || '',
+          date: joMatch.dateInstalled || joMatch.modifiedDate || '',
+          modifiedDate: joMatch.modifiedDate || '',
+          status: joMatch.status || 'Scheduled',
+          rawStatus: joMatch.status || 'Scheduled',
+          remarks: joMatch.remarks || joMatch.joRemarks || '',
+          jobOrderId: joMatch.id,
+          dateInstalled: joMatch.dateInstalled || ''
+        }
+        return formatApiApplication(constructedApp, rawInput)
+      }
+
+      if (response && !response.ok && response.status !== 404 && response.status !== 400) {
         throw new Error(`HTTP ${response.status}`)
       }
 
-      if (bodyData && (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)) {
-        return formatApiApplication(bodyData, rawInput)
-      }
       return local || null
     } catch (err) {
       console.warn(`[Application Tracker] Fetch error for "${identifier}":`, err)
       trackingError.value = 'Unable to connect to records server. Please check Application ID and try again.'
       if (!rawApiResponse.value) {
-        rawApiResponse.value = { error: err.message || String(err) }
+        rawApiResponse.value = { error: err?.message || String(err) }
       }
       return local || null
     } finally {
@@ -1220,28 +1494,85 @@ export const useRegistrationStore = defineStore('registration', () => {
     const cleanCode = code.trim().toUpperCase()
     const found = submittedApplications.value.find(
       app => (
-        String(app.id ?? '') === cleanCode ||
-        String(app.applicationId ?? '') === cleanCode ||
+        String(app.id ?? '').toUpperCase() === cleanCode ||
+        String(app.applicationId ?? '').toUpperCase() === cleanCode ||
         app.referenceCode?.toUpperCase() === cleanCode
       ) && app.delivered !== false
     )
-    if (found) return found
+    if (found) {
+      const appDate = found.submissionDate || found.dateTime || found.date || found.timestamp
+      const { status, step, notes } = mapApplicationStatus(found.rawStatus || found.status, appDate, found.applicationId || found.id)
+      return {
+        ...found,
+        status,
+        rawStatus: found.rawStatus || found.status,
+        statusStep: step,
+        notes: found.notes || notes
+      }
+    }
 
-    // Built-in Demo Codes for previewing the tracker UI. The first one is in
-    // the live Application ID format (21 digits); the rest are legacy.
-    if (cleanCode === '202600000000000000000' || cleanCode === '13295' || cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === 'SF-2026-8942' || cleanCode === '8942') {
+    // Built-in Demo Codes for previewing the tracker UI
+    if (cleanCode === 'DEMO-SUBMITTED' || cleanCode === 'DEMO-NEW' || cleanCode === 'DEMO-VERIFY') {
+      return {
+        id: cleanCode,
+        applicationId: '202609060000000000001',
+        applicantName: 'Juan Dela Cruz (Demo Review)',
+        mobile: '09171234567',
+        plan: 'SwitchConnect Plan (₱799/mo)',
+        city: 'Binangonan',
+        barangay: 'Bilibiran',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Under Verification and Review',
+        statusStep: 1,
+        notes: 'Engineering and account officers are conducting line feasibility, document verification, and account review.'
+      }
+    }
+
+    if (cleanCode === '202600000000000000000' || cleanCode === '13295' || cleanCode === '2026-8942' || cleanCode === 'DEMO-8942' || cleanCode === '8942' || cleanCode === 'DEMO-SCHEDULED') {
       return {
         id: cleanCode,
         applicationId: cleanCode,
-        applicantName: 'Juan Dela Cruz (Demo)',
+        applicantName: 'Juan Dela Cruz (Demo Scheduled)',
         mobile: '09171234567',
         plan: 'SwitchConnect Plan (₱799/mo)',
         city: 'Binangonan',
         barangay: 'Bilibiran',
         date: '2026-08-01',
         status: 'Installation Scheduled',
+        statusStep: 2,
+        notes: 'Account verification completed. Field technician team has been scheduled for installation.'
+      }
+    }
+
+    if (cleanCode === 'DEMO-COMPLETED' || cleanCode === 'DEMO-DONE') {
+      return {
+        id: cleanCode,
+        applicationId: '202608200000000000002',
+        applicantName: 'Maria Santos (Demo Installed)',
+        mobile: '09181234567',
+        plan: 'SwitchNet Plan (₱999/mo)',
+        city: 'Angono',
+        barangay: 'San Roque',
+        date: '2026-08-20',
+        status: 'Installation Completed',
         statusStep: 3,
-        notes: 'Account verification completed. Fiber drop cable installation scheduled for tomorrow morning.'
+        notes: 'Fiber line installation, ONT modem setup, and optical signal testing completed.'
+      }
+    }
+
+    if (cleanCode === 'DEMO-ACTIVATED') {
+      return {
+        id: cleanCode,
+        applicationId: '202608150000000000003',
+        applicantName: 'Ricardo Dalisay (Demo Active)',
+        mobile: '09191234567',
+        plan: 'SwitchSpeed Plan (₱1299/mo)',
+        city: 'Taytay',
+        barangay: 'Dolores',
+        date: '2026-08-15',
+        status: 'Connection Activated',
+        statusStep: 4,
+        notes: 'Fiber connection is active, provisioned, and operational.'
       }
     }
 

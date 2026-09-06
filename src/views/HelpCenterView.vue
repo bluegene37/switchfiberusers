@@ -197,10 +197,10 @@
           <li class="leading-relaxed">
             Read your stage on the timeline:
             <ul class="mt-2 ml-6 space-y-1.5 text-xs dark:text-slate-400 text-slate-600 list-disc">
-              <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Application Submitted</strong> — we received your details.</li>
-              <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Under Verification</strong> — engineering checks line feasibility at your address.</li>
+              <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Under Verification and Review</strong> — engineering and account officers verify details and check line feasibility.</li>
               <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Installation Scheduled</strong> — a field crew has been assigned to your slot.</li>
-              <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Connection Active</strong> — installation signed off and your account is live.</li>
+              <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Installation Completed</strong> — fiber line setup and optical testing signed off.</li>
+              <li><strong class="dark:text-slate-200 text-slate-900 font-bold">Connection Activated</strong> — account provisioned and your connection is live.</li>
             </ul>
           </li>
         </ol>
@@ -454,7 +454,7 @@ const journey = [
   {
     title: 'Track Your Application',
     icon: Search,
-    description: 'Use your Application ID on the Track Status page to follow the four stages: Application Submitted, Under Verification, Installation Scheduled, and Connection Active.',
+    description: 'Use your Application ID on the Track Status page to follow the four stages: Under Verification and Review, Installation Scheduled, Installation Completed, and Connection Activated.',
     link: { label: 'Track your application status', to: '/status' }
   },
   {

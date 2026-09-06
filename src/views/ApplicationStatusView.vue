@@ -11,7 +11,7 @@
         Track Your Fiber Application
       </h1>
       <p class="sf-tracker-subtitle dark:text-slate-300 text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-        Enter your unique Application ID to check your engineering verification status and technician installation schedule.
+        Enter your Application ID to check your engineering verification status and technician installation schedule.
       </p>
     </div>
 
@@ -27,7 +27,6 @@
             v-model="inputCode"
             @keyup.enter="handleSearch"
             type="text"
-            inputmode="numeric"
             autocapitalize="characters"
             maxlength="40"
             autocomplete="off"
@@ -53,7 +52,7 @@
         </p>
 
         <div class="sf-tracker-format-hint flex items-center justify-between text-xs dark:text-slate-400 text-slate-500 mt-2">
-          <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">21 digits, e.g. 202609012251532731662</strong></span>
+          <span>Format: <strong class="font-mono text-slate-700 dark:text-slate-300">21-digit Application ID</strong></span>
           <span class="text-[11px] text-slate-400">Found in confirmation email / SMS</span>
         </div>
       </div>
@@ -203,14 +202,14 @@
             :class="[
               `sf-tracker-stage-item sf-tracker-stage-${idx + 1}`,
               'p-4 sm:p-5 rounded-2xl border flex flex-col justify-between space-y-3 transition-all',
-              foundApp.statusStep > idx + 1 ? 'dark:bg-emerald-500/10 bg-emerald-50/90 dark:border-emerald-500/40 border-emerald-300 dark:text-emerald-300 text-emerald-900 font-bold' :
+              foundApp.statusStep > idx + 1 || (foundApp.statusStep >= 4 && idx === 3) ? 'dark:bg-emerald-500/10 bg-emerald-50/90 dark:border-emerald-500/40 border-emerald-300 dark:text-emerald-300 text-emerald-900 font-bold' :
               foundApp.statusStep === idx + 1 ? 'dark:bg-[#ee2824]/10 bg-rose-50 dark:border-[#ee2824] border-[#ee2824] dark:text-[#ff6b67] text-[#ee2824] font-bold shadow-lg shadow-[#ee2824]/20' :
               'dark:bg-slate-900/60 bg-slate-100 dark:border-slate-800 border-slate-300 dark:text-slate-400 text-slate-700 font-semibold'
             ]"
           >
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-bold uppercase tracking-wider">Stage {{ idx + 1 }}</span>
-              <CheckCircle2 v-if="foundApp.statusStep > idx + 1" class="w-4 h-4 text-emerald-500" />
+              <CheckCircle2 v-if="foundApp.statusStep > idx + 1 || (foundApp.statusStep >= 4 && idx === 3)" class="w-4 h-4 text-emerald-500" />
               <Clock v-else-if="foundApp.statusStep === idx + 1" class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67] animate-spin" />
             </div>
             <h4 class="font-bold text-sm">{{ stage }}</h4>
@@ -324,10 +323,10 @@ const copied = ref(false)
 const isLoading = ref(false)
 
 const stages = [
-  'Application Submitted',
-  'Under Verification',
+  'Under Verification and Review',
   'Installation Scheduled',
-  'Connection Active'
+  'Installation Completed',
+  'Connection Activated'
 ]
 
 // PII Data Masking function for Data Privacy Act compliance on public screens

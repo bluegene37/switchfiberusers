@@ -7,7 +7,7 @@ import {
   normalizeCityName,
   samePlace
 } from '../src/data/calabarzonLocations.js'
-import { referrersList } from '../src/stores/registration.js'
+import { referrersList, mapApplicationStatus } from '../src/stores/registration.js'
 
 describe('QA Form Validation & Domain Model Integrity', () => {
 
@@ -92,7 +92,7 @@ describe('QA Form Validation & Domain Model Integrity', () => {
       assert.equal(isValidAppId('13295'), true)
       assert.equal(isValidAppId('2026-8942'), true)
       assert.equal(isValidAppId('DEMO-8942'), true)
-      assert.equal(isValidAppId('SF-20260901-223707-54'), true)
+      assert.equal(isValidAppId('202609012251532731662'), true)
       assert.equal(isValidAppId(''), false)
       assert.equal(isValidAppId('ID with spaces'), false)
       assert.equal(isValidAppId('<script>'), false)
@@ -125,29 +125,103 @@ describe('QA Form Validation & Domain Model Integrity', () => {
   })
 
   describe('Application Status & Timeline Progression Mapping', () => {
-    const mapStatus = (status) => {
-      const s = String(status || '').toLowerCase()
-      if (s.includes('active') || s.includes('installed') || s.includes('connected') || s.includes('completed') || s.includes('done')) {
-        return { status: 'Connection Active', step: 4 }
-      }
-      if (s.includes('schedule') || s.includes('dispatch') || s.includes('install')) {
-        return { status: 'Installation Scheduled', step: 3 }
-      }
-      if (s.includes('review') || s.includes('verif') || s.includes('feasib') || s.includes('survey')) {
-        return { status: 'Under Verification', step: 2 }
-      }
-      return { status: status || 'Application Submitted', step: 1 }
-    }
+    it('maps InProgress / default to Under Verification and Review (Stage 1)', () => {
+      const res1 = mapApplicationStatus('In Progress')
+      assert.equal(res1.status, 'Under Verification and Review')
+      assert.equal(res1.step, 1)
 
-    it('maps upstream API status values to standard 4-stage tracker steps', () => {
-      assert.equal(mapStatus('Schedule').step, 3)
-      assert.equal(mapStatus('Scheduled').step, 3)
-      assert.equal(mapStatus('In Progress').step, 1)
-      assert.equal(mapStatus('Under Review').step, 2)
-      assert.equal(mapStatus('For Verification').step, 2)
-      assert.equal(mapStatus('Active').step, 4)
-      assert.equal(mapStatus('Installed').step, 4)
-      assert.equal(mapStatus('Unknown').step, 1)
+      const res2 = mapApplicationStatus('InProgress')
+      assert.equal(res2.status, 'Under Verification and Review')
+      assert.equal(res2.step, 1)
+
+      const res3 = mapApplicationStatus('Under Review')
+      assert.equal(res3.status, 'Under Verification and Review')
+      assert.equal(res3.step, 1)
+
+      const res4 = mapApplicationStatus(null)
+      assert.equal(res4.status, 'Under Verification and Review')
+      assert.equal(res4.step, 1)
+    })
+
+    it('maps Scheduled to Installation Scheduled (Stage 2)', () => {
+      const res1 = mapApplicationStatus('Scheduled')
+      assert.equal(res1.status, 'Installation Scheduled')
+      assert.equal(res1.step, 2)
+
+      const res2 = mapApplicationStatus('Schedule')
+      assert.equal(res2.status, 'Installation Scheduled')
+      assert.equal(res2.step, 2)
+
+      const res3 = mapApplicationStatus('Dispatch')
+      assert.equal(res3.status, 'Installation Scheduled')
+      assert.equal(res3.step, 2)
+    })
+
+    it('maps Completed to Installation Completed (Stage 3)', () => {
+      const res1 = mapApplicationStatus('Completed')
+      assert.equal(res1.status, 'Installation Completed')
+      assert.equal(res1.step, 3)
+
+      const res2 = mapApplicationStatus('Installed')
+      assert.equal(res2.status, 'Installation Completed')
+      assert.equal(res2.step, 3)
+
+      const res3 = mapApplicationStatus('Done')
+      assert.equal(res3.status, 'Installation Completed')
+      assert.equal(res3.step, 3)
+    })
+
+    it('maps Activated to Connection Activated (Stage 4)', () => {
+      const res1 = mapApplicationStatus('Activated')
+      assert.equal(res1.status, 'Connection Activated')
+      assert.equal(res1.step, 4)
+
+      const res2 = mapApplicationStatus('Active')
+      assert.equal(res2.status, 'Connection Activated')
+      assert.equal(res2.step, 4)
+
+      const res3 = mapApplicationStatus('Connected')
+      assert.equal(res3.status, 'Connection Activated')
+      assert.equal(res3.step, 4)
+    })
+
+    it('correctly maps user case 1 (ID 202609030028571738368) Scheduled status to Stage 2 (Installation Scheduled)', () => {
+      // Blaine Ivory Medel: JobOrder #3980 Scheduled
+      const res = mapApplicationStatus('Scheduled', '2026-09-03T00:28:57.1876546+08:00', '202609030028571738368')
+      assert.equal(res.status, 'Installation Scheduled')
+      assert.equal(res.step, 2)
+      assert.match(res.notes, /Field technician team has been scheduled/i)
+    })
+
+    it('correctly maps user case 2 (ID 202609022108129601933) Completed status to Stage 3 (Installation Completed)', () => {
+      // JobOrder #3979 Completed
+      const res = mapApplicationStatus('Completed', '2026-09-02T21:08:12.9632238+08:00', '202609022108129601933')
+      assert.equal(res.status, 'Installation Completed')
+      assert.equal(res.step, 3)
+      assert.match(res.notes, /testing completed/i)
+    })
+
+    it('correctly maps user case 3 (ID 202609031055503936888) Inprogress to Stage 1 (Under Verification and Review)', () => {
+      const res = mapApplicationStatus('Inprogress', '2026-09-03T10:55:50.405419+08:00', '202609031055503936888')
+      assert.equal(res.status, 'Under Verification and Review')
+      assert.equal(res.step, 1)
+      assert.match(res.notes, /feasibility.*document verification/i)
+    })
+
+    it('correctly maps active billing account (ID 202609051237540773019) to Stage 4 (Connection Activated)', () => {
+      const res = mapApplicationStatus('Active', '2026-09-05T12:55:34.077', '202609051237540773019')
+      assert.equal(res.status, 'Connection Activated')
+      assert.equal(res.step, 4)
+      assert.match(res.notes, /active, provisioned, and operational/i)
+    })
+
+    it('correctly maps activated customer (ID 202609051554363299355) to Stage 4 (Connection Activated)', () => {
+      // Activated in JobOrders #4101 and BillingDetails #857
+      const res = mapApplicationStatus('Activated', '2026-09-05T16:19:35.18', '202609051554363299355')
+      assert.equal(res.status, 'Connection Activated')
+      assert.equal(res.step, 4)
+      assert.match(res.notes, /active, provisioned, and operational/i)
     })
   })
 })
+

@@ -81,7 +81,7 @@ describe('Serverless Backend Proxy (api/_proxy.js)', () => {
     const { getAllowedMethods } = await import('../api/_proxy.js')
     assert.deepEqual(getAllowedMethods('/api/Applications/13295'), ['GET'])
     assert.deepEqual(getAllowedMethods('/api/Applications/202609010000000000000'), ['GET'])
-    assert.deepEqual(getAllowedMethods('/api/Applications/SF-2026-8942'), ['GET'])
+    assert.deepEqual(getAllowedMethods('/api/Applications/202609012251532731662'), ['GET'])
   })
 
   it('rejects disallowed methods on single application route with 405', async () => {
@@ -190,8 +190,61 @@ describe('LCPNapLocations sanitization', () => {
     assert.equal(rows[0].id, 1503)
   })
 
-  it('returns an empty list when upstream payload is not an array', async () => {
+    it('returns an empty list when upstream payload is not an array', async () => {
     const { sanitizeNapLocations } = await import('../api/LCPNapLocations.js')
     assert.deepEqual(sanitizeNapLocations({ error: 'oops' }), [])
   })
 })
+
+describe('BillingDetails sanitization & routes (api/BillingDetails.js)', () => {
+  const sampleBilling = {
+    id: 857,
+    accountNo: '202609051554363299355',
+    dateInstalled: '2026-09-04T16:00:00',
+    fullName: 'TEST 100 - Blaine Ivory  Medel',
+    contactNumber: '09760504123',
+    emailAddress: 'blainei.medel@gmail.com',
+    address: '(Bagumbayan, Angono, Rizal)',
+    plan: 'SwitchNet - P999',
+    status: 'Active',
+    routerModel: 'Huawei 5v5',
+    accountBalance: 999,
+    ip: '192.168.1.100',
+    splynxId: 999,
+    mikrotikId: 888,
+    modifiedBy: '2',
+    userEmail: 'staff@switchfiber.ph',
+    attachment1: 'secret-contract.pdf'
+  }
+
+  it('allows GET on BillingDetails routes in proxy', async () => {
+    const { getAllowedMethods } = await import('../api/_proxy.js')
+    assert.deepEqual(getAllowedMethods('/api/BillingDetails'), ['GET'])
+    assert.deepEqual(getAllowedMethods('/api/BillingDetails/857'), ['GET'])
+    assert.deepEqual(getAllowedMethods('/api/JobOrders/status/Activated'), ['GET'])
+  })
+
+  it('strips private payment balances, internal IP, staff identifiers, and contract attachments', async () => {
+    const { sanitizeBillingDetailRecord } = await import('../api/BillingDetails.js')
+    const sanitized = sanitizeBillingDetailRecord(sampleBilling)
+
+    assert.equal(sanitized.id, 857)
+    assert.equal(sanitized.accountNo, '202609051554363299355')
+    assert.equal(sanitized.status, 'Active')
+    assert.equal(sanitized.accountBalance, undefined)
+    assert.equal(sanitized.ip, undefined)
+    assert.equal(sanitized.splynxId, undefined)
+    assert.equal(sanitized.mikrotikId, undefined)
+    assert.equal(sanitized.modifiedBy, undefined)
+    assert.equal(sanitized.userEmail, undefined)
+    assert.equal(sanitized.attachment1, undefined)
+  })
+
+  it('handles null, empty or array billing payloads gracefully', async () => {
+    const { sanitizeBillingDetailsData } = await import('../api/BillingDetails.js')
+    assert.deepEqual(sanitizeBillingDetailsData(null), [])
+    assert.deepEqual(sanitizeBillingDetailsData([sampleBilling]).length, 1)
+    assert.deepEqual(sanitizeBillingDetailsData({ billingDetails: [sampleBilling] }).length, 1)
+  })
+})
+

@@ -2,15 +2,19 @@ import https from 'https'
 import http from 'http'
 import { URL } from 'url'
 
-const BACKEND_BASE_URL = process.env.BACKEND_API_URL || 'https://103.249.198.50:8090'
+export const BACKEND_BASE_URL = process.env.BACKEND_API_URL || 'https://103.249.198.50:8090'
 
-// Only the two routes the public site actually calls. Without this allowlist
+// Only the routes the public site actually calls. Without this allowlist
 // the function is an unauthenticated relay into the internal API — anyone
 // could reach any upstream path (including reads of applicant records).
 const ALLOWED_ROUTES = {
   '/api/Plans': ['GET'],
   '/api/Applications': ['POST'],
-  '/api/LCPNapLocations': ['GET']
+  '/api/LCPNapLocations': ['GET'],
+  '/api/JobOrders/status/Scheduled': ['GET'],
+  '/api/JobOrders/status/Completed': ['GET'],
+  '/api/JobOrders/status/Activated': ['GET'],
+  '/api/BillingDetails': ['GET']
 }
 
 export function getAllowedMethods(routeKey) {
@@ -21,11 +25,19 @@ export function getAllowedMethods(routeKey) {
   if (/^\/api\/Applications\/[a-zA-Z0-9_-]+$/i.test(routeKey)) {
     return ['GET']
   }
+  // Allow JobOrders status lookup: /api/JobOrders/status/:status (GET only)
+  if (/^\/api\/JobOrders\/status\/[a-zA-Z0-9_-]+$/i.test(routeKey)) {
+    return ['GET']
+  }
+  // Allow BillingDetails lookup: /api/BillingDetails or /api/BillingDetails/:id (GET only)
+  if (/^\/api\/BillingDetails(\/[a-zA-Z0-9_-]+)?$/i.test(routeKey)) {
+    return ['GET']
+  }
   return null
 }
 
 // Upstream serves a self-signed certificate.
-const httpsAgent = new https.Agent({
+export const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
   keepAlive: true
 })
@@ -147,9 +159,11 @@ export async function proxyRequest(req, res, targetPath = null, { transform = nu
     let responseBody = upstream.body
     let responseContentType = upstream.contentType
     if (transform && upstream.status >= 200 && upstream.status < 300) {
-      // Sanitizing transform: upstream rows can carry internal-only fields
+      // Sanitizing/enriching transform: upstream rows can carry internal-only fields
       // (staff emails, file paths) that must not reach a public browser.
-      responseBody = JSON.stringify(transform(JSON.parse(upstream.body)))
+      const parsedData = JSON.parse(upstream.body)
+      const transformedData = await transform(parsedData)
+      responseBody = JSON.stringify(transformedData)
       responseContentType = 'application/json'
     }
 
