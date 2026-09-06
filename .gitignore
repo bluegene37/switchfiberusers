@@ -21,16 +21,33 @@ dist-ssr
 *.zip
 checksums.txt
 
-# Test Coverage & Reports
-coverage
-.nyc_output
+# Documents, Manuals, Guides, Reports & Exports
 documents/
 personal_projects/
+docs/
+manuals/
+guides/
+reports/
 screenshots/
 *.pdf
+*.docx
+*.doc
+*.odt
+*.rtf
+*.pptx
+*.ppt
+*.xlsx
+*.xls
 QA_*.md
+*_REPORT.md
+*_MANUAL.md
+*_GUIDE.md
+API_INTEGRATION_GUIDE.md
+RELEASING.md
 
-# Playwright
+# Playwright & Testing Artifacts
+coverage
+.nyc_output
 test-results/
 playwright-report/
 blob-report/
@@ -48,13 +65,23 @@ Thumbs.db
 *.sln
 *.sw?
 
-# AI Agents & Tooling (Logs, Local State & Scratchpads)
-.gstack/
-.gemini/
-.agy/
-scratch/
-.cursor/
+# AI Agents, Tools, Prompts & LLM Configurations (DO NOT TRACK)
+.agents/
 .claude/
+.gemini/
+.cursor/
+.gstack/
+.agy/
+.windsurf/
+.copilot/
+AGENTS.md
+GEMINI.md
+CLAUDE.md
+COPILOT.md
+AI.md
+scratch/
+prompt/
+prompts/
 *.log
 npm-debug.log*
 yarn-debug.log*
