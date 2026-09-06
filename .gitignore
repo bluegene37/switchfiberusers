@@ -39,9 +39,26 @@ screenshots/
 *.xlsx
 *.xls
 QA_*.md
+qa_*.md
 *_REPORT.md
+*_report.md
 *_MANUAL.md
+*_manual.md
 *_GUIDE.md
+*_guide.md
+*_ARCHIVE.md
+*_archive.md
+*_NOTES.md
+*_notes.md
+NOTES.md
+notes.md
+TODO.md
+todo.md
+*.tmp.md
+task.md
+tasks.md
+implementation_plan.md
+walkthrough.md
 API_INTEGRATION_GUIDE.md
 RELEASING.md
 
