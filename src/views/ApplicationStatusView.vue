@@ -30,7 +30,7 @@
             autocapitalize="characters"
             maxlength="40"
             autocomplete="off"
-            placeholder="e.g. 202609012251532731662"
+            placeholder="e.g. 202609482710394827103"
             aria-label="Application ID"
             @input="emptyError = false"
             class="sf-tracker-search-input input-field uppercase font-mono text-lg sm:text-xl py-3.5 pl-4 pr-12 tracking-wide font-bold"
