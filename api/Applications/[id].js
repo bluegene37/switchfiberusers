@@ -3,6 +3,7 @@ import http from 'http'
 import { URL } from 'url'
 import { proxyRequest, BACKEND_BASE_URL, httpsAgent } from '../_proxy.js'
 import { sanitizeApplicationData } from '../Applications.js'
+import { readScheduledDate, extractRescheduleReason } from '../../src/services/jobOrderSchedule.js'
 
 async function fetchUpstreamJson(path) {
   return new Promise((resolve) => {
@@ -117,13 +118,14 @@ async function enrichAndSanitizeApplication(data) {
       return sanitized
     }
 
-    // If already marked completed or scheduled in application record, don't downgrade
-    if (currentStatus.includes('completed') || currentStatus.includes('schedule')) {
+    // If already marked completed in the application record, don't downgrade
+    if (currentStatus.includes('completed')) {
       return sanitized
     }
 
-    // 3. Stage 3: Check Completed JobOrders
-    const completed = await getJobOrders('Completed')
+    // 3. Stage 3: Check Completed JobOrders (skipped when the application
+    // itself still says Scheduled — a stale row must not jump a stage)
+    const completed = currentStatus.includes('schedule') ? [] : await getJobOrders('Completed')
     const compMatch = completed.find(j =>
       String(j.accountNo || '').trim() === appId ||
       String(j.applicationIdValue || '').trim() === appId ||
@@ -139,7 +141,8 @@ async function enrichAndSanitizeApplication(data) {
       return sanitized
     }
 
-    // 4. Stage 2: Check Scheduled JobOrders
+    // 4. Stage 2: Check Scheduled JobOrders. Also runs when the application
+    // already says Scheduled so the tracker can show the booked visit date.
     const scheduled = await getJobOrders('Scheduled')
     const schedMatch = scheduled.find(j =>
       String(j.accountNo || '').trim() === appId ||
@@ -149,6 +152,8 @@ async function enrichAndSanitizeApplication(data) {
     if (schedMatch) {
       sanitized.status = 'Scheduled'
       sanitized.jobOrderId = schedMatch.id
+      sanitized.scheduledDate = readScheduledDate(schedMatch)
+      sanitized.rescheduleReason = extractRescheduleReason(schedMatch.joRemarks)
       if (schedMatch.modifiedDate) sanitized.modifiedDate = schedMatch.modifiedDate
       if (schedMatch.remarks && !schedMatch.remarks.startsWith('Online Application')) {
         sanitized.remarks = schedMatch.remarks

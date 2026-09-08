@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { readScheduledDate, extractRescheduleReason } from '../services/jobOrderSchedule.js'
 import { ref, computed, watch } from 'vue'
 import { sendApplicationSms } from '../services/smsService.js'
 
@@ -1178,6 +1179,9 @@ export const useRegistrationStore = defineStore('registration', () => {
       dateInstalled: raw.dateInstalled || null,
       billingId: raw.billingId || null,
       jobOrderId: raw.jobOrderId || null,
+      // Booked installation visit (YYYY-MM-DD) while in the Scheduled stage
+      scheduledDate: raw.scheduledDate || null,
+      rescheduleReason: raw.rescheduleReason || null,
       status: status,
       rawStatus: raw.status || '',
       statusStep: step,
@@ -1378,9 +1382,10 @@ export const useRegistrationStore = defineStore('registration', () => {
               bodyData.jobOrderId = actMatch.id
               if (actMatch.dateInstalled) bodyData.dateInstalled = actMatch.dateInstalled
               if (actMatch.modifiedDate) bodyData.modifiedDate = actMatch.modifiedDate
-            } else if (!currentStatus.includes('completed') && !currentStatus.includes('schedule')) {
-              // 3. Stage 3: Check Completed JobOrders
-              const completedList = await fetchJobOrdersByStatus('Completed')
+            } else if (!currentStatus.includes('completed')) {
+              // 3. Stage 3: Check Completed JobOrders (skipped when the
+              // application itself still says Scheduled — never jump a stage)
+              const completedList = currentStatus.includes('schedule') ? [] : await fetchJobOrdersByStatus('Completed')
               const compMatch = matchJobOrder(completedList, rawInput, appId)
               if (compMatch) {
                 bodyData.status = 'Completed'
@@ -1391,13 +1396,16 @@ export const useRegistrationStore = defineStore('registration', () => {
                   bodyData.remarks = compMatch.remarks
                 }
               } else {
-                // 4. Stage 2: Check Scheduled JobOrders
+                // 4. Stage 2: Check Scheduled JobOrders. Also runs when the
+                // application already says Scheduled, to pick up the visit date.
                 const scheduledList = await fetchJobOrdersByStatus('Scheduled')
                 const schedMatch = matchJobOrder(scheduledList, rawInput, appId)
                 if (schedMatch) {
                   bodyData.status = 'Scheduled'
                   bodyData.rawStatus = 'Scheduled'
                   bodyData.jobOrderId = schedMatch.id
+                  bodyData.scheduledDate = readScheduledDate(schedMatch)
+                  bodyData.rescheduleReason = extractRescheduleReason(schedMatch.joRemarks)
                   if (schedMatch.modifiedDate) bodyData.modifiedDate = schedMatch.modifiedDate
                   if (schedMatch.remarks && !schedMatch.remarks.startsWith('Online Application')) {
                     bodyData.remarks = schedMatch.remarks
@@ -1467,6 +1475,8 @@ export const useRegistrationStore = defineStore('registration', () => {
           rawStatus: joMatch.status || 'Scheduled',
           remarks: joMatch.remarks || joMatch.joRemarks || '',
           jobOrderId: joMatch.id,
+          scheduledDate: readScheduledDate(joMatch),
+          rescheduleReason: extractRescheduleReason(joMatch.joRemarks),
           dateInstalled: joMatch.dateInstalled || ''
         }
         return formatApiApplication(constructedApp, rawInput)
@@ -1486,6 +1496,42 @@ export const useRegistrationStore = defineStore('registration', () => {
       return local || null
     } finally {
       isTracking.value = false
+    }
+  }
+
+  /**
+   * Applicant moves a Scheduled installation to a new date.
+   * Resolves to { ok: true, scheduledDate, rescheduleReason } or { ok: false, error }.
+   */
+  async function rescheduleInstallation({ jobOrderId, applicationId, newDate, reason, isDemo = false }) {
+    if (isDemo) {
+      return { ok: true, scheduledDate: newDate, rescheduleReason: String(reason || '').trim() }
+    }
+    if (!jobOrderId) {
+      return { ok: false, error: 'No installation schedule is linked to this application yet.' }
+    }
+    try {
+      const endpoint = `${API_BASE}/api/JobOrders/${encodeURIComponent(jobOrderId)}/reschedule`
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 20000)
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ applicationId, newDate, reason }),
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      let json = null
+      try { json = await response.json() } catch { json = null }
+      if (!response.ok || !json?.ok) {
+        return { ok: false, error: json?.message || 'Unable to update the schedule right now. Please try again.' }
+      }
+      // The Scheduled list is cached for 30s; drop it so a re-track shows the new date.
+      jobOrdersCache.Scheduled = { timestamp: 0, data: [] }
+      return { ok: true, scheduledDate: json.scheduledDate, rescheduleReason: json.rescheduleReason || null }
+    } catch (err) {
+      console.warn('[Application Tracker] Reschedule error:', err?.message || err)
+      return { ok: false, error: 'Unable to reach our records system. Please try again shortly.' }
     }
   }
 
@@ -1534,6 +1580,8 @@ export const useRegistrationStore = defineStore('registration', () => {
         id: cleanCode,
         applicationId: cleanCode,
         applicantName: 'Juan Dela Cruz (Demo Scheduled)',
+        isDemo: true,
+        scheduledDate: '2026-09-18',
         mobile: '09171234567',
         email: 'juan.delacruz@gmail.com',
         plan: 'SwitchConnect Plan (₱799/mo)',
@@ -1620,6 +1668,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     submitApplication,
     findApplicationByCode,
     fetchApplicationById,
+    rescheduleInstallation,
     isTracking,
     trackingError,
     rawApiResponse,

@@ -22,8 +22,34 @@ export default defineConfig(({ mode }) => {
               (await import('./api/send-sms.js')).sendConfirmationSms(data)
           }
 
+          // Mirrors api/JobOrders/[id]/reschedule.js — a server-orchestrated
+          // write that must never be forwarded to the backend as-is.
+          const RESCHEDULE = /^\/api\/JobOrders\/(\d{1,12})\/reschedule$/
+
           server.middlewares.use(async (req, res, next) => {
             const cleanUrl = req.url?.split('?')[0]
+            const rescheduleMatch = RESCHEDULE.exec(cleanUrl || '')
+            if (rescheduleMatch) {
+              let body = ''
+              req.on('data', chunk => {
+                body += chunk
+                if (body.length > 64 * 1024) req.destroy()
+              })
+              req.on('end', async () => {
+                try {
+                  const { default: handler } = await import('./api/JobOrders/[id]/reschedule.js')
+                  req.query = { id: rescheduleMatch[1] }
+                  req.body = body
+                  await handler(req, res)
+                } catch (err) {
+                  console.error('[reschedule dev]:', err)
+                  res.statusCode = 500
+                  res.setHeader('Content-Type', 'application/json')
+                  res.end(JSON.stringify({ error: 'Reschedule failed.' }))
+                }
+              })
+              return
+            }
             const route = routes[cleanUrl]
             if (!route) return next()
             if (req.method !== 'POST') {

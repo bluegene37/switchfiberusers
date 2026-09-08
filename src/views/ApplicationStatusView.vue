@@ -233,6 +233,111 @@
         </div>
       </div>
 
+      <!-- Scheduled Installation Visit (Stage 2 only) -->
+      <div v-if="foundApp.statusStep === 2" class="sf-tracker-schedule-box p-5 sm:p-6 rounded-2xl dark:bg-slate-900/70 bg-amber-50/70 border dark:border-amber-500/30 border-amber-300/70 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="sf-tracker-schedule-label flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+              <CalendarDays class="w-4 h-4" />
+              <span>Scheduled Installation Visit</span>
+            </div>
+            <p class="sf-tracker-schedule-date text-lg sm:text-xl font-extrabold dark:text-white text-slate-900">
+              {{ foundApp.scheduledDate ? formatScheduledDate(foundApp.scheduledDate) : 'Date to be confirmed by dispatch' }}
+            </p>
+            <p v-if="foundApp.scheduledDate" class="text-xs dark:text-slate-400 text-slate-600">
+              Please keep someone at home with a valid ID on this day.
+            </p>
+            <p v-if="foundApp.rescheduleReason" class="sf-tracker-reschedule-reason text-xs dark:text-slate-300 text-slate-700 italic">
+              Your reschedule note: “{{ foundApp.rescheduleReason }}”
+            </p>
+          </div>
+
+          <button
+            v-if="!showReschedule && (foundApp.jobOrderId || foundApp.isDemo)"
+            @click="openReschedule"
+            type="button"
+            class="sf-tracker-reschedule-btn inline-flex items-center justify-center gap-2 min-h-11 px-5 py-2.5 rounded-xl border-2 border-amber-400/70 dark:border-amber-500/50 bg-white dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white hover:border-[#ee2824] hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-all cursor-pointer shadow-sm shrink-0"
+          >
+            <CalendarClock class="w-4 h-4" />
+            <span>{{ foundApp.scheduledDate ? 'Change this date' : 'Request a date' }}</span>
+          </button>
+        </div>
+
+        <p v-if="rescheduleSuccess" role="status" class="sf-tracker-reschedule-success flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3">
+          <CheckCircle2 class="w-4 h-4 shrink-0" />
+          <span>{{ rescheduleSuccess }}</span>
+        </p>
+
+        <form v-if="showReschedule" @submit.prevent="submitReschedule" class="sf-tracker-reschedule-form space-y-4 pt-4 border-t dark:border-slate-800 border-amber-200/80">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="reschedule-date" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase tracking-wider mb-2">
+                New preferred date <span class="text-[#ee2824] dark:text-[#ff6b67]">*</span>
+              </label>
+              <input
+                id="reschedule-date"
+                v-model="rescheduleDate"
+                type="date"
+                :min="minRescheduleDate"
+                :max="maxRescheduleDate"
+                required
+                class="sf-tracker-reschedule-date input-field py-3 px-4 font-semibold"
+                @input="rescheduleError = ''"
+              />
+              <p class="text-[11px] dark:text-slate-400 text-slate-500 mt-1.5">
+                From tomorrow up to {{ RESCHEDULE_MAX_DAYS_AHEAD }} days ahead.
+              </p>
+            </div>
+            <div>
+              <label for="reschedule-reason" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase tracking-wider mb-2">
+                Reason for the change <span class="text-[#ee2824] dark:text-[#ff6b67]">*</span>
+              </label>
+              <textarea
+                id="reschedule-reason"
+                v-model="rescheduleReason"
+                rows="3"
+                :maxlength="RESCHEDULE_REASON_MAX"
+                required
+                placeholder="e.g. Nobody will be home that day; please move it to the following week."
+                class="sf-tracker-reschedule-reason input-field py-3 px-4 text-sm resize-none"
+                @input="rescheduleError = ''"
+              ></textarea>
+              <p class="text-[11px] dark:text-slate-400 text-slate-500 mt-1.5 text-right">
+                {{ rescheduleReason.length }}/{{ RESCHEDULE_REASON_MAX }}
+              </p>
+            </div>
+          </div>
+
+          <p v-if="rescheduleError" role="alert" class="sf-tracker-reschedule-error text-[13px] text-[#ee2824] dark:text-[#ff6b67] font-semibold flex items-center gap-1.5">
+            <AlertCircle class="w-4 h-4 shrink-0" />
+            <span>{{ rescheduleError }}</span>
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button
+              type="submit"
+              :disabled="isRescheduling"
+              class="sf-tracker-reschedule-submit btn-primary py-3 px-6 text-sm font-extrabold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Loader2 v-if="isRescheduling" class="w-4 h-4 animate-spin" />
+              <CalendarCheck v-else class="w-4 h-4" />
+              <span>{{ isRescheduling ? 'Updating schedule...' : 'Confirm new date' }}</span>
+            </button>
+            <button
+              type="button"
+              @click="closeReschedule"
+              :disabled="isRescheduling"
+              class="sf-tracker-reschedule-cancel py-3 px-6 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-sm font-bold transition-all cursor-pointer disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">
+            The new date goes straight to our dispatch team. They will text you if the slot needs adjusting.
+          </p>
+        </form>
+      </div>
+
       <!-- Current Dispatch Notes -->
       <div class="sf-tracker-notes-box p-5 sm:p-6 rounded-2xl dark:bg-slate-950 bg-rose-50/70 border dark:border-slate-800 border-[#ee2824]/20 space-y-2 shadow-inner">
         <div class="sf-tracker-notes-label flex items-center gap-2 text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] uppercase tracking-wider">
@@ -305,7 +410,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
   Search, 
@@ -325,9 +430,20 @@ import {
   Check,
   Loader2,
   Phone,
-  Mail
+  Mail,
+  CalendarDays,
+  CalendarClock,
+  CalendarCheck
 } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
+import {
+  formatScheduledDate,
+  validateRescheduleRequest,
+  manilaToday,
+  RESCHEDULE_MIN_DAYS_AHEAD,
+  RESCHEDULE_MAX_DAYS_AHEAD,
+  RESCHEDULE_REASON_MAX
+} from '../services/jobOrderSchedule'
 
 const route = useRoute()
 const router = useRouter()
@@ -339,6 +455,80 @@ const foundApp = ref(null)
 const emptyError = ref(false)
 const copied = ref(false)
 const isLoading = ref(false)
+
+// Reschedule form state (Stage 2 only)
+const showReschedule = ref(false)
+const rescheduleDate = ref('')
+const rescheduleReason = ref('')
+const rescheduleError = ref('')
+const rescheduleSuccess = ref('')
+const isRescheduling = ref(false)
+
+function addDays(ymd, days) {
+  const d = new Date(`${ymd}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+const minRescheduleDate = computed(() => addDays(manilaToday(), RESCHEDULE_MIN_DAYS_AHEAD))
+const maxRescheduleDate = computed(() => addDays(manilaToday(), RESCHEDULE_MAX_DAYS_AHEAD))
+
+function resetRescheduleForm() {
+  showReschedule.value = false
+  rescheduleDate.value = ''
+  rescheduleReason.value = ''
+  rescheduleError.value = ''
+  isRescheduling.value = false
+}
+
+function openReschedule() {
+  rescheduleSuccess.value = ''
+  rescheduleError.value = ''
+  rescheduleDate.value = ''
+  rescheduleReason.value = ''
+  showReschedule.value = true
+}
+
+function closeReschedule() {
+  resetRescheduleForm()
+}
+
+async function submitReschedule() {
+  if (!foundApp.value || isRescheduling.value) return
+  const check = validateRescheduleRequest({ newDate: rescheduleDate.value, reason: rescheduleReason.value })
+  if (!check.ok) {
+    rescheduleError.value = check.error
+    return
+  }
+  if (check.newDate === foundApp.value.scheduledDate) {
+    rescheduleError.value = 'That is already your scheduled date. Pick a different day.'
+    return
+  }
+
+  isRescheduling.value = true
+  rescheduleError.value = ''
+  try {
+    const result = await registrationStore.rescheduleInstallation({
+      jobOrderId: foundApp.value.jobOrderId,
+      applicationId: foundApp.value.applicationId || foundApp.value.id,
+      newDate: check.newDate,
+      reason: check.reason,
+      isDemo: Boolean(foundApp.value.isDemo)
+    })
+    if (!result.ok) {
+      rescheduleError.value = result.error
+      return
+    }
+    foundApp.value = {
+      ...foundApp.value,
+      scheduledDate: result.scheduledDate,
+      rescheduleReason: result.rescheduleReason
+    }
+    resetRescheduleForm()
+    rescheduleSuccess.value = `Installation moved to ${formatScheduledDate(result.scheduledDate)}.`
+  } finally {
+    isRescheduling.value = false
+  }
+}
 
 const stages = [
   'Under Verification and Review',
@@ -418,6 +608,8 @@ async function handleSearch() {
   }
   emptyError.value = false
   isLoading.value = true
+  resetRescheduleForm()
+  rescheduleSuccess.value = ''
 
   try {
     const result = await registrationStore.fetchApplicationById(code)
@@ -435,6 +627,8 @@ async function handleSearch() {
 function handleReset() {
   inputCode.value = ''
   emptyError.value = false
+  resetRescheduleForm()
+  rescheduleSuccess.value = ''
   searched.value = false
   foundApp.value = null
   if (route.query.code) {

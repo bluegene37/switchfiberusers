@@ -197,3 +197,48 @@ function readRequestBody(req) {
     req.on('error', reject)
   })
 }
+
+/**
+ * Server-side call to the fiber backend (bypasses the public allowlist — only
+ * ever invoke from a function that has already validated its own input).
+ * Resolves to { status, data } and never throws; network failures map to 502.
+ */
+export function upstreamJson(path, { method = 'GET', body = null, timeoutMs = 15000 } = {}) {
+  return new Promise((resolve) => {
+    let targetUrl
+    try {
+      targetUrl = new URL(path, BACKEND_BASE_URL)
+    } catch {
+      resolve({ status: 500, data: null })
+      return
+    }
+    const isHttps = targetUrl.protocol === 'https:'
+    const client = isHttps ? https : http
+    const payload = body === null ? null : JSON.stringify(body)
+    const headers = { Accept: 'application/json' }
+    if (payload !== null) {
+      headers['Content-Type'] = 'application/json'
+      headers['Content-Length'] = Buffer.byteLength(payload)
+    }
+
+    const req = client.request(
+      targetUrl,
+      { method, agent: isHttps ? httpsAgent : undefined, headers },
+      (res) => {
+        const chunks = []
+        res.on('data', (c) => chunks.push(c))
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8')
+          let data = null
+          try { data = text ? JSON.parse(text) : null } catch { data = null }
+          resolve({ status: res.statusCode || 502, data })
+        })
+        res.on('error', () => resolve({ status: 502, data: null }))
+      }
+    )
+    req.setTimeout(timeoutMs, () => req.destroy(new Error('upstream timeout')))
+    req.on('error', () => resolve({ status: 502, data: null }))
+    if (payload !== null) req.write(payload)
+    req.end()
+  })
+}
