@@ -14,7 +14,7 @@
           <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-panel border-[#ee2824]/30 text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] uppercase tracking-widest animate-pulse-glow">
               <Zap class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
-              <span>Rizal's Fastest Growing Fiber ISP</span>
+              <span>Rizal's Fast-Growing Fiber ISP</span>
             </div>
 
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-heading dark:text-white text-slate-900 leading-tight tracking-tight">
@@ -22,7 +22,7 @@
             </h1>
 
             <p class="text-lg dark:text-slate-300 text-slate-600 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-              Enjoy the freedom of endless possibilities with Switch Fiber. Download & upload songs, stream in 4K, play online games with ultra-low ping, and work seamlessly with no data caps.
+              Enjoy the freedom of endless possibilities with Switch Fiber. Download and upload any songs you like, play your favorite online games, share large files and videos, and work from home with no data caps.
             </p>
 
             <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
@@ -44,7 +44,7 @@
             <div class="pt-6 grid grid-cols-3 gap-4 border-t dark:border-slate-800/80 border-slate-200 max-w-lg mx-auto lg:mx-0">
               <div>
                 <div class="text-2xl font-extrabold font-heading dark:text-white text-slate-900">100%</div>
-                <div class="text-xs dark:text-slate-400 text-slate-500">Pure Fiber Optic</div>
+                <div class="text-xs dark:text-slate-400 text-slate-500">Fiber-to-the-Home</div>
               </div>
               <div>
                 <div class="text-2xl font-extrabold font-heading text-[#ee2824] dark:text-[#ff6b67]">₱{{ minPlanPrice }}</div>
@@ -106,8 +106,8 @@
           <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500">
             <HeartHandshake class="w-6 h-6" />
           </div>
-          <h3 class="text-lg font-bold font-heading dark:text-white text-slate-900">Local 24/7 Support</h3>
-          <p class="dark:text-slate-400 text-slate-600 text-sm">As your local Rizal internet partner, our friendly support team is always just a call away.</p>
+          <h3 class="text-lg font-bold font-heading dark:text-white text-slate-900">Friendly Local Support</h3>
+          <p class="dark:text-slate-400 text-slate-600 text-sm">As your local Rizal internet partner, our support team is just a call away, Monday to Saturday, 8:00 AM to 5:00 PM.</p>
         </div>
       </div>
     </section>
@@ -155,7 +155,7 @@
             <div class="flex items-center gap-2 flex-wrap">
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 text-xs font-bold uppercase">
                 <Gift class="w-3.5 h-3.5" />
-                <span>Active Campaign</span>
+                <span>{{ connectEdHasEnded ? 'Promo period ended' : 'Active Campaign' }}</span>
               </span>
               <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold uppercase">
                 <Briefcase class="w-3.5 h-3.5" />
@@ -166,7 +166,9 @@
               Get ConnectED Back to School & SmartBiz MSME Bundles!
             </h3>
             <p class="dark:text-slate-300 text-slate-600 text-sm leading-relaxed max-w-2xl">
-              Enjoy <strong>15% OFF for 6 months + Free Switch Tumbler</strong> for students & teachers, or scale your enterprise with our <strong>SmartBiz Bundle Deals</strong> (Free CCTV, Mesh & Laptop).
+              <template v-if="!connectEdHasEnded">Enjoy <strong>15% OFF for 6 months + Free Switch Tumbler</strong> for students & teachers, or scale</template>
+              <template v-else>The Get ConnectED student and educator promo ended on {{ CONNECTED_PROMO.endsOnLabel }}. Ask our team whether it has been extended, or scale</template>
+              your enterprise with our <strong>SmartBiz Bundle Deals</strong> (choose one device bundle with any MSME plan).
             </p>
           </div>
 
@@ -274,6 +276,13 @@ import { useRegistrationStore } from '../stores/registration'
 
 const router = useRouter()
 const registrationStore = useRegistrationStore()
+
+// Mirrors the promo dates on PlansView so an ended promo never presents as live.
+const CONNECTED_PROMO = { endsOn: '2026-06-30', endsOnLabel: 'June 30, 2026' }
+const connectEdHasEnded = computed(() => {
+  const end = new Date(`${CONNECTED_PROMO.endsOn}T23:59:59`)
+  return Number.isFinite(end.valueOf()) && Date.now() > end.valueOf()
+})
 const availablePlans = computed(() => registrationStore.availablePlans)
 const isLoadingPlans = computed(() => registrationStore.isLoadingPlans)
 const featuredPlans = computed(() => registrationStore.availablePlans.slice(0, 3))

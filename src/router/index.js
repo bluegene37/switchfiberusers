@@ -13,7 +13,7 @@ const routes = [
     component: HomeView,
     meta: {
       title: 'Home',
-      description: 'Unlimited, no-data-cap fiber internet in Binangonan and across Rizal. Plans from ₱699/mo with free installation and local 24/7 support.'
+      description: 'Unlimited, no-data-cap fiber internet in Binangonan and across Rizal. Plans from ₱699/mo with free installation promos and friendly local support.'
     }
   },
   {
@@ -31,7 +31,7 @@ const routes = [
     component: PlansView,
     meta: {
       title: 'Fiber Plans & Pricing',
-      description: 'Compare Switch Fiber plans from ₱699/mo. Unlimited data, symmetrical speeds, free router and transparent billing.'
+      description: 'Compare Switch Fiber plans from ₱699/mo. Unlimited data, no hidden charges, one-year lock-in and transparent billing.'
     }
   },
   {
@@ -105,6 +105,24 @@ const routes = [
     meta: {
       title: 'Sales Agent Careers',
       description: 'Become an independent Switch Fiber sales agent in Rizal. Earn commission per installed subscriber with flexible hours.'
+    }
+  },
+  {
+    path: '/privacy-policy',
+    name: 'PrivacyPolicy',
+    component: () => import('../views/PrivacyPolicyView.vue'),
+    meta: {
+      title: 'Privacy Policy',
+      description: 'How Switch Fiber collects, uses, shares and protects your personal information under the Data Privacy Act of 2012 (RA 10173).'
+    }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: () => import('../views/TermsView.vue'),
+    meta: {
+      title: 'Terms & Conditions',
+      description: 'Switch Fiber service agreement: application, installation, billing, lock-in, equipment, acceptable use and your rights as a subscriber.'
     }
   },
   {

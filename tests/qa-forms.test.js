@@ -1,5 +1,8 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   provincesList,
   fallbackCitiesByProvince,
@@ -8,6 +11,8 @@ import {
   samePlace
 } from '../src/data/calabarzonLocations.js'
 import { referrersList, mapApplicationStatus } from '../src/stores/registration.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('QA Form Validation & Domain Model Integrity', () => {
 
@@ -108,19 +113,17 @@ describe('QA Form Validation & Domain Model Integrity', () => {
       { id: '5', title: 'SwitchUltra Plan', price: 1499, router: 'Wi-Fi 6 Dual Band', mesh: '2 Nodes' }
     ]
 
-    const derivePromo = (plan) => {
-      if (!plan) return 'Free Installation Promo'
-      if (/node/i.test(plan.mesh || '')) return 'Free Mesh Wi-Fi Router'
-      if (/wi-?fi\s*6/i.test(plan.router || '')) return 'Free Dual-Band Wi-Fi 6 Router'
-      return 'Free Installation Promo'
-    }
+    // No plan publishes a free router or free installation, so without an
+    // active campaign every plan carries the ops default 'None'.
+    const storeSource = fs.readFileSync(path.resolve(__dirname, '../src/stores/registration.js'), 'utf8')
 
-    it('correctly maps plan hardware inclusions to promotional entitlements', () => {
-      assert.equal(derivePromo(plans[0]), 'Free Installation Promo')
-      assert.equal(derivePromo(plans[1]), 'Free Installation Promo')
-      assert.equal(derivePromo(plans[2]), 'Free Dual-Band Wi-Fi 6 Router')
-      assert.equal(derivePromo(plans[3]), 'Free Mesh Wi-Fi Router')
-      assert.equal(derivePromo(plans[4]), 'Free Mesh Wi-Fi Router')
+    it('never implies a hardware or installation promo from the plan alone', () => {
+      assert.match(storeSource, /const NO_PROMO = 'None'/)
+      assert.match(storeSource, /function baselinePromoForPlan\(\) \{\s*return NO_PROMO\s*\}/)
+      assert.ok(!storeSource.includes("'Free Installation Promo'"), 'free installation must not be a default promise')
+      assert.ok(!storeSource.includes("'Free Mesh Wi-Fi Router'"))
+      assert.ok(!storeSource.includes("'Free Dual-Band Wi-Fi 6 Router'"))
+      assert.equal(plans.length, 5)
     })
   })
 

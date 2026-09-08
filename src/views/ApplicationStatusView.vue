@@ -133,7 +133,7 @@
             <span>Need assistance with your Application ID?</span>
           </h4>
           <p class="text-xs dark:text-slate-400 text-slate-600">
-            If you did not receive a confirmation email or need to update your details, our customer support team is available 24/7.
+            If you did not receive a confirmation email or need to update your details, our customer support team is available Monday to Saturday, 8:00 AM to 5:00 PM.
           </p>
         </div>
         <router-link 
@@ -248,7 +248,7 @@
               Please keep someone at home with a valid ID on this day.
             </p>
             <p v-if="foundApp.rescheduleReason" class="sf-tracker-reschedule-reason text-xs dark:text-slate-300 text-slate-700 italic">
-              Your reschedule note: “{{ foundApp.rescheduleReason }}”
+              Your note to dispatch: “{{ foundApp.rescheduleReason }}”
             </p>
           </div>
 
@@ -290,15 +290,20 @@
             </div>
             <div>
               <label for="reschedule-reason" class="block text-xs font-bold dark:text-slate-300 text-slate-700 uppercase tracking-wider mb-2">
-                Reason for the change <span class="text-[#ee2824] dark:text-[#ff6b67]">*</span>
+                Notes for our dispatch team <span class="text-[#ee2824] dark:text-[#ff6b67]">*</span>
               </label>
+              <p id="reschedule-reason-help" class="text-[11px] dark:text-slate-400 text-slate-500 mb-2 leading-relaxed">
+                Tell us why you need the new date, plus anything the technician should know:
+                your preferred time of day, who will be home, landmarks or gate instructions, pets, or any concerns.
+              </p>
               <textarea
                 id="reschedule-reason"
                 v-model="rescheduleReason"
-                rows="3"
+                rows="4"
                 :maxlength="RESCHEDULE_REASON_MAX"
                 required
-                placeholder="e.g. Nobody will be home that day; please move it to the following week."
+                aria-describedby="reschedule-reason-help"
+                placeholder="e.g. Nobody is home on the original date. Best time is 9am to 12nn, please call my number at the gate. Blue gate beside the sari-sari store."
                 class="sf-tracker-reschedule-reason input-field py-3 px-4 text-sm resize-none"
                 @input="rescheduleError = ''"
               ></textarea>

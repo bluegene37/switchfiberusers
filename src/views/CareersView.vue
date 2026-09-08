@@ -70,7 +70,7 @@
           <li><strong>NBI Clearance</strong></li>
         </ul>
         <p class="text-[11px] dark:text-slate-400 text-slate-500 pt-1">
-          You can also email your documents directly to <a href="mailto:sales@switchfiber.ph" class="text-[#ee2824] dark:text-[#ff6b67] font-bold underline">sales@switchfiber.ph</a> or submit them in person at our Binangonan Head Office.
+          You can also email your documents directly to <a :href="`mailto:${CAREERS_EMAIL}`" class="text-[#ee2824] dark:text-[#ff6b67] font-bold underline">{{ CAREERS_EMAIL }}</a> (subject: the job title) or submit them in person at our Binangonan Head Office.
         </p>
       </div>
     </div>
@@ -187,11 +187,38 @@
             ></textarea>
           </div>
 
-          <div class="pt-4">
+          <!-- Privacy consent -->
+          <div
+            class="sf-careers-consent p-4 rounded-2xl border space-y-2 transition-all"
+            :class="touched.consent && !form.consent ? 'border-[#ee2824] bg-rose-500/10' : 'dark:border-slate-800 border-slate-200 dark:bg-slate-900/50 bg-slate-50'"
+          >
+            <label class="flex items-start gap-3 cursor-pointer text-xs dark:text-slate-300 text-slate-700">
+              <input
+                type="checkbox"
+                v-model="form.consent"
+                @change="touch('consent')"
+                class="w-4 h-4 rounded accent-[#ee2824] mt-0.5 cursor-pointer"
+              />
+              <span>
+                I consent to Switch Fiber collecting and using the details above to evaluate my sales agent application and to contact me about it, as described in the
+                <router-link to="/privacy-policy" target="_blank" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Privacy Policy</router-link>.
+                <span class="text-[#ee2824] font-bold">*</span>
+              </span>
+            </label>
+            <p v-if="touched.consent && !form.consent" class="text-[11px] text-[#ee2824] font-medium flex items-center gap-1">
+              <AlertCircle class="w-3.5 h-3.5" />
+              <span>Please tick the box so we can process your application.</span>
+            </p>
+          </div>
+
+          <div class="pt-2 space-y-2">
             <button type="submit" class="btn-primary w-full py-3.5">
               <Sparkles class="w-4 h-4" />
               <span>Submit Sales Agent Application</span>
             </button>
+            <p class="text-[11px] text-center dark:text-slate-500 text-slate-500">
+              Submitting opens a pre-filled email to <strong>{{ CAREERS_EMAIL }}</strong> in your mail app. Send it to complete your application.
+            </p>
           </div>
 
         </form>
@@ -201,9 +228,14 @@
         <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto">
           <CheckCircle2 class="w-10 h-10" />
         </div>
-        <h3 class="text-2xl font-bold font-heading dark:text-white text-slate-900">Application Submitted!</h3>
+        <h3 class="text-2xl font-bold font-heading dark:text-white text-slate-900">One more step: send the email</h3>
         <p class="text-sm dark:text-slate-300 text-slate-600 max-w-md mx-auto">
-          Thank you {{ form.fullName }}! Our Sales Agent Onboarding Team will review your application and contact you via <strong class="text-[#ee2824] dark:text-[#ff6b67]">{{ form.mobile }}</strong>.
+          Thank you {{ form.fullName }}! Your mail app should have opened with your application pre-filled. Press <strong>Send</strong> and our Sales Agent Onboarding Team will contact you via <strong class="text-[#ee2824] dark:text-[#ff6b67]">{{ form.mobile }}</strong>.
+        </p>
+        <p class="text-xs dark:text-slate-400 text-slate-500 max-w-md mx-auto">
+          Nothing opened? Email your details to
+          <a :href="mailtoHref" class="font-bold text-[#ee2824] dark:text-[#ff6b67] underline">{{ CAREERS_EMAIL }}</a>
+          or call <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] underline">0915 407 7565</a>.
         </p>
       </div>
 
@@ -212,8 +244,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Briefcase, DollarSign, Clock, Award, Sparkles, CheckCircle2, AlertCircle, FileText } from 'lucide-vue-next'
+import { CAREERS_EMAIL } from '../data/legal'
 
 const submitted = ref(false)
 
@@ -222,8 +255,31 @@ const form = reactive({
   email: '',
   mobile: '',
   municipality: 'Binangonan',
-  experience: ''
+  experience: '',
+  consent: false
 })
+
+// The form has no backend of its own: it hands the applicant a pre-filled
+// email to the sales inbox, so nothing is silently dropped.
+function buildCareersMailto(data, to = CAREERS_EMAIL) {
+  const subject = `Sales Agent Application - ${(data.fullName || '').trim()}`
+  const body = [
+    'Sales Agent Application (switchfiber.ph/careers)',
+    '',
+    `Full name: ${(data.fullName || '').trim()}`,
+    `Email: ${(data.email || '').trim()}`,
+    `Mobile: ${(data.mobile || '').trim()}`,
+    `Municipality: ${(data.municipality || '').trim()}`,
+    '',
+    'Sales background:',
+    (data.experience || '').trim() || '(none provided)',
+    '',
+    'I consent to Switch Fiber processing these details for my application per the Privacy Policy.'
+  ].join('\n')
+  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
+
+const mailtoHref = computed(() => buildCareersMailto(form))
 
 const touched = reactive({})
 
@@ -265,11 +321,13 @@ function handleSubmit() {
   touch('email')
   touch('mobile')
   touch('municipality')
+  touch('consent')
 
-  if (!isValid('fullName') || !isValid('email') || !isValid('mobile') || !isValid('municipality')) {
+  if (!isValid('fullName') || !isValid('email') || !isValid('mobile') || !isValid('municipality') || !form.consent) {
     return
   }
 
+  window.location.href = mailtoHref.value
   submitted.value = true
 }
 </script>

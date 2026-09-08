@@ -554,7 +554,7 @@
             <span class="font-semibold truncate">{{ formData.applicablePromo || derivedPromo }}</span>
           </div>
           <p class="text-[11px] dark:text-slate-400 text-slate-500 mt-1">
-            Included automatically with your selected plan.
+            Applied automatically when a published promo covers your plan. Ask our team about the Switch &amp; Save promo or barangay No Cash Out days before you apply.
           </p>
         </div>
       </div>
@@ -840,7 +840,14 @@
                 @change="touchField('termsAndConditionsAgreement'); submissionError = ''"
                 class="sf-wizard-checkbox-terms w-4 h-4 rounded accent-[#ee2824] mt-0.5 cursor-pointer" 
               />
-              <span>I agree to the Terms & Conditions of Switch Fiber and confirm that all information provided is true and correct. <span class="text-[#ee2824] font-bold">*</span></span>
+              <span>
+                I have read and agree to the Switch Fiber
+                <router-link to="/terms" target="_blank" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Terms &amp; Conditions</router-link>
+                and
+                <router-link to="/privacy-policy" target="_blank" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Privacy Policy</router-link>.
+                I consent to Switch Fiber collecting and processing my personal information, including my government ID, house photo, and location data, for application verification, installation, billing and service communications by call, SMS or email, in accordance with the Data Privacy Act of 2012 (RA 10173).
+                I confirm that all information provided is true and correct. <span class="text-[#ee2824] font-bold">*</span>
+              </span>
             </label>
 
             <button 
@@ -848,12 +855,12 @@
               type="button" 
               class="sf-wizard-btn-read-terms text-xs font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline shrink-0 sm:ml-4 cursor-pointer"
             >
-              Read Terms & Conditions
+              Read Summary
             </button>
           </div>
           <p v-if="touched['termsAndConditionsAgreement'] && !formData.termsAndConditionsAgreement" class="text-[11px] text-[#ee2824] font-medium flex items-center gap-1">
             <AlertCircle class="w-3.5 h-3.5" />
-            <span>You must agree to the Terms & Conditions to proceed.</span>
+            <span>You must agree to the Terms &amp; Conditions and Privacy Policy to proceed.</span>
           </p>
         </div>
       </div>
@@ -1460,7 +1467,7 @@ async function handleSubmit() {
 
   // Check terms agreement
   if (!formData.value.termsAndConditionsAgreement) {
-    submissionError.value = 'Please check the box to agree to the Terms & Conditions.'
+    submissionError.value = 'Please check the box to agree to the Terms & Conditions and Privacy Policy.'
     await revealError()
     return
   }

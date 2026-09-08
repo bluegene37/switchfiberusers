@@ -410,7 +410,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       lockIn: '1 Year Lock-In',
       tag: 'Best Budget',
       recommended: false,
-      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Router Unit']
+      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges']
     },
     {
       id: '2',
@@ -422,7 +422,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       lockIn: '1 Year Lock-In',
       tag: 'Most Popular',
       recommended: true,
-      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Dual-Band Router', '24/7 Priority Support']
+      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges']
     },
     {
       id: '3',
@@ -434,7 +434,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       lockIn: '1 Year Lock-In',
       tag: 'High Performance',
       recommended: false,
-      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Dual-Band Wi-Fi 6 Router', 'Zero Activation Fee']
+      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges']
     },
     {
       id: '4',
@@ -446,7 +446,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       lockIn: '1 Year Lock-In',
       tag: 'Gamer & Streaming',
       recommended: false,
-      features: ['Unlimited Fiber Internet', 'No Data Cap', 'Ultra-Low Ping Routing', 'Free Wi-Fi Mesh Node included']
+      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges']
     },
     {
       id: '5',
@@ -454,11 +454,11 @@ export const useRegistrationStore = defineStore('registration', () => {
       slug: 'ultra-1499',
       title: 'SwitchUltra Plan',
       price: 1499,
-      speed: 'Turbo Speed (200 Mbps)',
+      speed: 'Turbo Speed (220 Mbps)',
       lockIn: '1 Year Lock-In',
       tag: 'Ultimate Power',
       recommended: false,
-      features: ['Unlimited Fiber Internet', 'No Data Cap', 'Priority Support Line', '2x Mesh Nodes included', 'Symmetrical Upload/Download']
+      features: ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges']
     }
   ]
 
@@ -485,11 +485,13 @@ export const useRegistrationStore = defineStore('registration', () => {
       /no data cap|unlimited/.test(haystack) ? 'Unlimited' : 'Fair Use Policy'
     )
 
+    // Hardware and support tiers are only claimed when the plan data says so.
+    // Nothing published by Switch Fiber promises Wi-Fi 6 routers, mesh nodes
+    // or priority support per plan, so price never implies them.
     let router = item.router || ''
     if (!router) {
       if (/wi-?fi\s*6|wifi6/.test(haystack)) router = 'Wi-Fi 6 Dual Band'
-      else if (/mesh/.test(haystack)) router = 'Wi-Fi 6 Dual Band'
-      else router = price >= 1299 ? 'Wi-Fi 6 Dual Band' : 'Dual-Band ONU'
+      else router = 'Fiber modem (ONT) installed'
     }
 
     let mesh = item.mesh || ''
@@ -498,15 +500,11 @@ export const useRegistrationStore = defineStore('registration', () => {
       if (meshMatch) {
         const count = Number(meshMatch[1] || meshMatch[2])
         mesh = `${count} Node${count > 1 ? 's' : ''}`
-      } else if (price >= 1499) mesh = '2 Nodes'
-      else if (price >= 1299) mesh = '1 Node'
-      else mesh = 'Optional Add-on'
+      } else mesh = 'Optional Add-on'
     }
 
     const support = item.support || (
-      /priority support/.test(haystack)
-        ? 'Priority 24/7'
-        : (price >= 799 ? 'Priority 24/7' : 'Standard 24/7')
+      /priority support/.test(haystack) ? 'Priority' : 'Standard'
     )
 
     return { dataCap, router, mesh, support }
@@ -533,7 +531,7 @@ export const useRegistrationStore = defineStore('registration', () => {
         else if (price <= 850) speed = 'Turbo Speed (90 Mbps)'
         else if (price <= 1100) speed = 'Turbo Speed (120 Mbps)'
         else if (price <= 1350) speed = 'Turbo Speed (150 Mbps)'
-        else speed = 'Turbo Speed (200 Mbps)'
+        else speed = 'Turbo Speed (220 Mbps)'
       }
     } else if (!speed.toLowerCase().startsWith('turbo speed')) {
       speed = `Turbo Speed (${speed.replace(/[()]/g, '')})`
@@ -585,7 +583,7 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
 
     if (features.length === 0) {
-      features = ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges', 'Free Router Unit']
+      features = ['Unlimited Fiber Internet', 'No Data Cap', 'No Hidden Charges']
     }
 
     const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.round(price)
@@ -685,14 +683,12 @@ export const useRegistrationStore = defineStore('registration', () => {
     // }
   ]
 
-  // Baseline entitlement, derived from what the plan itself already includes.
-  // Mirrors the inclusions shown on the plan cards so the applicant sees the
-  // same promise on the form that they saw on the pricing page.
-  function baselinePromoForPlan(plan) {
-    if (!plan) return 'Free Installation Promo'
-    if (/node/i.test(plan.mesh || '')) return 'Free Mesh Wi-Fi Router'
-    if (/wi-?fi\s*6/i.test(plan.router || '')) return 'Free Dual-Band Wi-Fi 6 Router'
-    return 'Free Installation Promo'
+  // Baseline when no campaign is running. 'None' is the value ops already use
+  // for the bulk of applications; the old free-installation promo ended in
+  // August 2024 and no plan publishes a free router, so nothing is implied.
+  const NO_PROMO = 'None'
+  function baselinePromoForPlan() {
+    return NO_PROMO
   }
 
   function isCampaignActive(c, now = Date.now()) {
@@ -702,7 +698,7 @@ export const useRegistrationStore = defineStore('registration', () => {
   }
 
   function derivePromoForPlan(plan) {
-    if (!plan) return 'Free Installation Promo'
+    if (!plan) return NO_PROMO
     const campaign = promoCampaigns.find(c =>
       isCampaignActive(c) &&
       (!c.appliesToPlanTitles || c.appliesToPlanTitles.includes(plan.title))
@@ -1535,6 +1531,10 @@ export const useRegistrationStore = defineStore('registration', () => {
     }
   }
 
+  // Vite exposes import.meta.env in the browser; node tests import this file
+  // without it, so guard the access.
+  const DEMO_TRACKER_CODES_ENABLED = Boolean(import.meta.env?.DEV)
+
   function findApplicationByCode(code) {
     if (!code) return null
     const cleanCode = code.trim().toUpperCase()
@@ -1557,7 +1557,10 @@ export const useRegistrationStore = defineStore('registration', () => {
       }
     }
 
-    // Built-in Demo Codes for previewing the tracker UI
+    // Built-in Demo Codes for previewing the tracker UI. Dev builds only:
+    // in production a real Application ID must never be shadowed by demo data.
+    if (!DEMO_TRACKER_CODES_ENABLED) return null
+
     if (cleanCode === 'DEMO-SUBMITTED' || cleanCode === 'DEMO-NEW' || cleanCode === 'DEMO-VERIFY') {
       return {
         id: cleanCode,

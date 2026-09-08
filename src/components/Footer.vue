@@ -16,7 +16,7 @@
           </div>
           
           <p class="text-sm dark:text-slate-400 text-slate-600 max-w-sm leading-relaxed">
-            Rizal’s fast-growing and affordable internet provider. Delivering ultra-fast, unlimited fiber internet with transparent pricing and local 24/7 dedicated support.
+            Rizal’s fast-growing and affordable internet provider. Delivering high-speed, unlimited fiber internet with transparent pricing and no hidden charges. We are just a call away.
           </p>
 
           <div class="pt-2 flex items-center gap-3">
@@ -29,6 +29,18 @@
             <a href="https://invite.viber.com/?g=HF_4mUx80VGD5igbMKZi5lV0ai8R6_ld&lang=en" target="_blank" rel="noopener noreferrer" aria-label="Join the Switch Fiber Viber community" class="w-11 h-11 rounded-lg dark:bg-slate-900 dark:border-slate-800 bg-white border-slate-200 border flex items-center justify-center dark:text-slate-400 text-slate-600 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:border-[#ee2824]/40 transition-colors">
               <MessageSquare class="w-4 h-4" />
             </a>
+          </div>
+
+          <!-- Sister company mark, carried over from the switchfiber.ph footer -->
+          <div class="sf-footer-sister pt-3 flex items-center gap-3">
+            <span class="text-xs dark:text-slate-500 text-slate-500 whitespace-nowrap">Sister Company of</span>
+            <img
+              src="/grind-logo-white.png"
+              alt="GRIND Global Communications Solutions Inc."
+              width="720" height="303"
+              class="h-8 w-auto object-contain invert dark:invert-0 opacity-80"
+              loading="lazy"
+            />
           </div>
         </div>
 
@@ -86,13 +98,18 @@
 
       </div>
 
-      <!-- Footer Bottom -->
+      <!-- Footer Bottom: copyright + legal links -->
       <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs dark:text-slate-500 text-slate-500 gap-4">
-        <div class="flex items-center gap-6">
+        <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+          <span>&copy; {{ COPYRIGHT_YEAR }} {{ LEGAL_ENTITY }}</span>
+          <span class="hidden sm:inline">•</span>
           <span>Binangonan, Rizal, Philippines</span>
-          <span>•</span>
-          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center py-1 text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
         </div>
+        <nav aria-label="Legal" class="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+          <router-link to="/privacy-policy" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:underline">Privacy Policy</router-link>
+          <router-link to="/terms" class="inline-flex items-center py-1 hover:text-[#ee2824] dark:hover:text-[#ff6b67] hover:underline">Terms &amp; Conditions</router-link>
+          <router-link to="/register" @click="registrationStore.clearCompletedApplication()" class="inline-flex items-center py-1 text-[#ee2824] dark:text-[#ff6b67] hover:underline">Online Registration Portal</router-link>
+        </nav>
       </div>
 
     </div>
@@ -102,6 +119,7 @@
 <script setup>
 import { Zap, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock, MapPin } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
+import { LEGAL_ENTITY, COPYRIGHT_YEAR } from '../data/legal'
 
 const registrationStore = useRegistrationStore()
 </script>

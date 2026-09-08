@@ -67,7 +67,7 @@ describe('jobOrderSchedule helpers', () => {
   })
 
   it('requires a reason of sensible length', () => {
-    assert.match(validateRescheduleRequest({ newDate: '2026-09-15', reason: 'no' }, NOW).error, /why/i)
+    assert.match(validateRescheduleRequest({ newDate: '2026-09-15', reason: 'no' }, NOW).error, /note for our dispatch team/i)
     assert.match(validateRescheduleRequest({ newDate: '2026-09-15', reason: 'x'.repeat(301) }, NOW).error, /under/i)
   })
 
@@ -202,6 +202,8 @@ describe('Tracking screen wiring', () => {
     assert.match(statusSource, /foundApp\.scheduledDate/)
     assert.match(statusSource, /formatScheduledDate/)
     assert.match(statusSource, /type="date"/)
+    assert.match(statusSource, /Notes for our dispatch team/)
+    assert.match(statusSource, /aria-describedby="reschedule-reason-help"/)
     assert.match(statusSource, /rescheduleInstallation/)
   })
 

@@ -79,10 +79,10 @@ export function validateRescheduleRequest(input, now = Date.now()) {
     return { ok: false, error: `Pick a date within the next ${RESCHEDULE_MAX_DAYS_AHEAD} days.` }
   }
   if (reason.length < RESCHEDULE_REASON_MIN) {
-    return { ok: false, error: `Tell us why you need a new date (at least ${RESCHEDULE_REASON_MIN} characters).` }
+    return { ok: false, error: `Add a short note for our dispatch team, such as why you need the new date (at least ${RESCHEDULE_REASON_MIN} characters).` }
   }
   if (reason.length > RESCHEDULE_REASON_MAX) {
-    return { ok: false, error: `Keep the reason under ${RESCHEDULE_REASON_MAX} characters.` }
+    return { ok: false, error: `Keep your note under ${RESCHEDULE_REASON_MAX} characters.` }
   }
   return { ok: true, newDate, reason }
 }

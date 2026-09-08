@@ -86,7 +86,7 @@
           Our Journey & Expansion
         </h2>
         <p class="text-sm sm:text-base dark:text-slate-300 text-slate-600 leading-relaxed">
-          The company began its operations and is currently providing services in Binangonan, Rizal. Switch Fiber is also set to launch to the neighboring municipalities, starting from Angono by year 2025.
+          The company began its operations and is currently providing services in Binangonan, Rizal. Switch Fiber has since been expanding to neighboring municipalities, starting with Angono. Check the Coverage page for the barangays currently served.
         </p>
         <p class="text-sm sm:text-base dark:text-slate-300 text-slate-600 leading-relaxed">
           They introduced its FTTH (fiber-to-the-home) subscription plans in the market to address the increasing demand for a reliable, affordable, and trusted internet service in the area especially to isolated locations.

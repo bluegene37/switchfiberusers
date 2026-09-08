@@ -126,7 +126,7 @@
 
           <p class="text-xs dark:text-slate-300 text-slate-700 leading-relaxed">
             <span v-if="serviceabilityInfo.isCovered">
-              Pure Fiber lines are installed and operational. Enjoy <strong>{{ serviceabilityInfo.speed }}</strong> with <strong>0 Data Cap</strong>.
+              Fiber lines are installed and operational. Enjoy <strong>{{ serviceabilityInfo.speed }}</strong> with <strong>0 Data Cap</strong>.
             </span>
             <span v-else>
               Engineering teams are planning line extension. Pre-register now to speed up deployment to your street!
@@ -270,7 +270,7 @@ const serviceabilityInfo = computed(() => {
   if (matched) {
     return {
       isCovered: true,
-      speed: matched.speed || 'Up to 500 Mbps',
+      speed: matched.speed || 'Up to 220 Mbps',
       nodes: matched.activeNodes || 'Fiber Node Active',
       connectedHomes: matched.connectedHomes || 'Connected Homes',
       coveredStreets: matched.coveredAreas || [],
@@ -286,7 +286,7 @@ const serviceabilityInfo = computed(() => {
   if (isBinangonanActive) {
     return {
       isCovered: true,
-      speed: 'Up to 500 Mbps',
+      speed: 'Up to 220 Mbps',
       nodes: 'Active Fiber Node',
       connectedHomes: 'Active Coverage',
       coveredStreets: [],
@@ -296,7 +296,7 @@ const serviceabilityInfo = computed(() => {
 
   return {
     isCovered: false,
-    speed: 'Up to 500 Mbps planned',
+    speed: 'Up to 220 Mbps planned',
     nodes: 'Under expansion survey',
     connectedHomes: 'Pending Rollout',
     coveredStreets: [],

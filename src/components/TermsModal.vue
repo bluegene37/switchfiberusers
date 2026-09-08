@@ -14,7 +14,7 @@
           </div>
           <div>
             <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900">Switch Fiber Service Agreement</h3>
-            <p class="text-xs dark:text-slate-400 text-slate-500">Terms & Conditions, Privacy Policy & Acceptable Use</p>
+            <p class="text-xs dark:text-slate-400 text-slate-500">Summary of the Terms &amp; Conditions, Privacy Policy &amp; Acceptable Use</p>
           </div>
         </div>
         <button 
@@ -63,7 +63,7 @@
             4. Data Privacy & Use of Information
           </h4>
           <p>
-            In compliance with the Data Privacy Act of 2012 (RA 10173), Switch Fiber strictly collects personal information (Name, Address, Mobile, Email, Government IDs, House Front Photo) solely for application verification, credit evaluation, technical installation dispatch, and official billing statements. We do not sell or share subscriber data with unauthorized third parties.
+            In compliance with the Data Privacy Act of 2012 (RA 10173), Switch Fiber collects personal information (name, address, mobile, email, government IDs, house front photo including any location data saved in the photo, and your device location if you choose to share it) solely for application verification, credit evaluation, technical installation dispatch, official billing statements and service communications. We do not sell subscriber data, and we share it only with parties who help us deliver the service, as listed in the Privacy Policy.
           </p>
         </section>
 
@@ -76,11 +76,19 @@
             Subscribers shall not use Switch Fiber services for illegal activities, unauthorized commercial bandwidth resale, distribution of malicious software, or activities that compromise network security. Switch Fiber reserves the right to suspend accounts violating the AUP.
           </p>
         </section>
+
+        <p class="sf-terms-full-links p-3 rounded-xl border dark:border-slate-800 border-slate-200 dark:bg-slate-950/60 bg-slate-50 text-[11px]">
+          This is a summary. The full
+          <router-link to="/terms" target="_blank" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Terms &amp; Conditions</router-link>
+          and
+          <router-link to="/privacy-policy" target="_blank" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Privacy Policy</router-link>
+          open in a new tab so you do not lose your application.
+        </p>
       </div>
 
       <!-- Footer Buttons -->
       <div class="px-6 py-4 border-t dark:border-slate-800 border-slate-200 flex items-center justify-between shrink-0 dark:bg-slate-950 bg-slate-50">
-        <span class="text-[11px] dark:text-slate-400 text-slate-500 font-medium">Switch Fiber Telecommunications Inc. © 2026</span>
+        <span class="text-[11px] dark:text-slate-400 text-slate-500 font-medium">{{ LEGAL_ENTITY }} &copy; {{ COPYRIGHT_YEAR }}</span>
         <button 
           @click="accept" 
           class="btn-primary py-2.5 px-6 text-xs"
@@ -97,6 +105,7 @@
 
 <script setup>
 import { FileText, ShieldCheck, CreditCard, Lock, CheckCircle2, Radio, X } from 'lucide-vue-next'
+import { LEGAL_ENTITY, COPYRIGHT_YEAR } from '../data/legal'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false }

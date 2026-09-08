@@ -146,7 +146,7 @@
             Loading live fiber NAP points&hellip;
           </template>
           <template v-else>
-            4,500+ Connected Homes &amp; Active Fiber Subscribers across Rizal
+            Fiber coverage across Binangonan and Rizal. Search your barangay to check serviceability.
           </template>
         </p>
         <p class="text-[10px] dark:text-slate-500 text-slate-400">
@@ -444,7 +444,7 @@ function renderCoverageItems() {
           Brgy. ${escapeHtml(item.name)}
         </div>
         <div style="font-size: 11px; font-weight: 700; color: #0284c7; margin-bottom: 8px;">
-          🏠 ${escapeHtml(item.connectedHomes || 'Connected Subscribers')} • ${escapeHtml(item.activeNodes || 'Fiber Terminal Active')}
+          🏠 ${escapeHtml(item.connectedHomes || 'Fiber Coverage Active')} • ${escapeHtml(item.activeNodes || 'Fiber Terminal Active')}
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #334155;">
           <span style="font-weight: 700;">Speed:</span>

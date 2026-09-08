@@ -116,6 +116,7 @@
         <!-- Google Map Container -->
         <div class="lg:col-span-7 rounded-2xl overflow-hidden border dark:border-slate-800 border-slate-300 shadow-lg min-h-[340px] relative bg-slate-100 dark:bg-slate-900">
           <iframe 
+            v-if="mapConsented"
             :key="currentOffice.id"
             :title="`${currentOffice.name} Google Map`"
             :src="currentOffice.mapSrc" 
@@ -124,6 +125,25 @@
             loading="lazy" 
             referrerpolicy="no-referrer-when-downgrade"
           ></iframe>
+          <!-- Click-to-load placeholder: Google Maps sets its own cookies, so it is
+               only embedded once the visitor asks for it. -->
+          <div v-else class="sf-map-consent w-full h-80 sm:h-96 flex flex-col items-center justify-center text-center gap-4 p-6">
+            <div class="w-14 h-14 rounded-2xl bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] flex items-center justify-center">
+              <MapPin class="w-7 h-7" />
+            </div>
+            <div class="space-y-1 max-w-sm">
+              <p class="font-bold dark:text-white text-slate-900">{{ currentOffice.name }}</p>
+              <p class="text-xs dark:text-slate-400 text-slate-600">{{ currentOffice.address }}</p>
+            </div>
+            <button type="button" @click="mapConsented = true" class="btn-primary text-xs py-2.5 px-5">
+              <MapPin class="w-4 h-4" />
+              <span>Load Google Map</span>
+            </button>
+            <p class="text-[11px] dark:text-slate-500 text-slate-500 max-w-xs">
+              Loading the map embeds content from Google Maps, which may set cookies. See our
+              <router-link to="/privacy-policy" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">Privacy Policy</router-link>.
+            </p>
+          </div>
           
           <!-- Map Overlay Tag -->
           <div class="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/10 shadow-lg">
@@ -505,6 +525,7 @@ const offices = [
 
 const selectedOfficeIndex = ref(0)
 const currentOffice = computed(() => offices[selectedOfficeIndex.value])
+const mapConsented = ref(false)
 
 // Official advisory graphics from switchfiber.ph, served locally from
 // public/advisories/ (WebP, optimized from the originals).

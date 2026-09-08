@@ -15,7 +15,9 @@ const ROUTES = [
   { path: '/pay-bills', title: 'Pay Bills', heading: true },
   { path: '/tech-support', title: 'Router & Wi-Fi Setup Guide', heading: true },
   { path: '/help', title: 'Help Center & User Guide', heading: true },
-  { path: '/careers', title: 'Sales Agent Careers', heading: true }
+  { path: '/careers', title: 'Sales Agent Careers', heading: true },
+  { path: '/privacy-policy', title: 'Privacy Policy', heading: true },
+  { path: '/terms', title: 'Terms & Conditions', heading: true }
 ]
 
 for (const route of ROUTES) {

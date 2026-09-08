@@ -11,7 +11,7 @@
         Fiber Plans, Business Bundles & Promos
       </h1>
       <p class="dark:text-slate-300 text-slate-600 text-base leading-relaxed">
-        Choose the perfect turbo-speed fiber internet plan for your home or enterprise in Rizal. Enjoy 0 data capping, symmetrical speeds, and transparent billing.
+        Choose the perfect turbo-speed fiber internet plan for your home or enterprise in Rizal. Enjoy 0 data capping, no hidden charges, and transparent billing.
       </p>
 
       <!-- Live Pricing Status Indicator -->

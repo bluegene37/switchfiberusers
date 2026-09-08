@@ -6,8 +6,8 @@
       <div class="max-w-[1440px] mx-auto flex items-center justify-between">
         <div class="flex items-center gap-6 dark:text-slate-400 text-slate-600">
           <span class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span>Rizal Fiber Network: <strong class="text-emerald-500 font-bold">100% Operational</strong></span>
+            <MapPin class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67]" />
+            <span>Local fiber provider in <strong class="font-bold dark:text-slate-200 text-slate-800">Binangonan &amp; Rizal</strong></span>
           </span>
           <span class="hidden lg:inline-block">•</span>
           <span class="hidden lg:flex items-center gap-1.5">
