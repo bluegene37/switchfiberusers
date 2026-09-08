@@ -195,7 +195,8 @@ describe('POST /api/JobOrders/:id/reschedule (rescheduleJobOrder)', () => {
 describe('Tracking screen wiring', () => {
   const statusSource = fs.readFileSync(path.resolve(__dirname, '../src/views/ApplicationStatusView.vue'), 'utf8')
   const storeSource = fs.readFileSync(path.resolve(__dirname, '../src/stores/registration.js'), 'utf8')
-  const enrichSource = fs.readFileSync(path.resolve(__dirname, '../api/Applications/[id].js'), 'utf8')
+  const enrichSource = fs.readFileSync(path.resolve(__dirname, '../api/_tracker.js'), 'utf8')
+  const handlerSource = fs.readFileSync(path.resolve(__dirname, '../api/Applications/[id].js'), 'utf8')
   const viteSource = fs.readFileSync(path.resolve(__dirname, '../vite.config.js'), 'utf8')
 
   it('shows the scheduled installation date and a reschedule form', () => {
@@ -207,13 +208,21 @@ describe('Tracking screen wiring', () => {
     assert.match(statusSource, /rescheduleInstallation/)
   })
 
-  it('exposes scheduledDate from both server and client enrichment', () => {
+  it('exposes scheduledDate from server enrichment and passes it through the store', () => {
     assert.match(enrichSource, /readScheduledDate/)
-    assert.match(storeSource, /readScheduledDate/)
+    assert.match(handlerSource, /_tracker\.js/)
     assert.match(storeSource, /scheduledDate:/)
   })
 
-  it('mirrors the reschedule function in the Vite dev server', () => {
+  it('reads job orders by id and never scans the status lists from the browser', () => {
+    assert.match(enrichSource, /\/api\/JobOrders\/\$\{clean\}/)
+    assert.match(storeSource, /\?jo=/)
+    assert.doesNotMatch(storeSource, /JobOrders\/status\//)
+    assert.doesNotMatch(storeSource, /api\/BillingDetails/)
+  })
+
+  it('mirrors the reschedule and tracker functions in the Vite dev server', () => {
     assert.match(viteSource, /reschedule/)
+    assert.match(viteSource, /Applications\/\[id\]\.js/)
   })
 })

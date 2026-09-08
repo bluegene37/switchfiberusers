@@ -25,9 +25,29 @@ export default defineConfig(({ mode }) => {
           // Mirrors api/JobOrders/[id]/reschedule.js — a server-orchestrated
           // write that must never be forwarded to the backend as-is.
           const RESCHEDULE = /^\/api\/JobOrders\/(\d{1,12})\/reschedule$/
+          // Mirrors api/Applications/[id].js — the tracker lookup reconciles
+          // the row with dispatch/billing server-side, so the raw backend
+          // proxy would show the wrong stage in dev.
+          const TRACKER = /^\/api\/Applications\/([a-zA-Z0-9_-]{1,64})$/
 
           server.middlewares.use(async (req, res, next) => {
-            const cleanUrl = req.url?.split('?')[0]
+            const [cleanUrl, queryString = ''] = (req.url || '').split('?')
+            const trackerMatch = req.method === 'GET' ? TRACKER.exec(cleanUrl || '') : null
+            if (trackerMatch) {
+              try {
+                const { default: handler } = await import('./api/Applications/[id].js')
+                const params = new URLSearchParams(queryString)
+                req.query = { id: trackerMatch[1] }
+                if (params.has('jo')) req.query.jo = params.get('jo')
+                await handler(req, res)
+              } catch (err) {
+                console.error('[tracker dev]:', err)
+                res.statusCode = 500
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ error: 'Lookup failed.' }))
+              }
+              return
+            }
             const rescheduleMatch = RESCHEDULE.exec(cleanUrl || '')
             if (rescheduleMatch) {
               let body = ''

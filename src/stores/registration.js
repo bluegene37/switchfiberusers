@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { readScheduledDate, extractRescheduleReason } from '../services/jobOrderSchedule.js'
 import { ref, computed, watch } from 'vue'
 import { sendApplicationSms } from '../services/smsService.js'
 
@@ -1191,124 +1190,54 @@ export const useRegistrationStore = defineStore('registration', () => {
   const rawApiResponse = ref(null)
   const rawApiStatus = ref(null)
 
-  // Cache for recent JobOrders and BillingDetails queries to minimize network overhead
-  const jobOrdersCache = {
-    Scheduled: { timestamp: 0, data: [] },
-    Completed: { timestamp: 0, data: [] },
-    Activated: { timestamp: 0, data: [] }
-  }
-  const JO_CACHE_TTL_MS = 30000
+  // The browser remembers the job order id behind each tracked application.
+  // Sent back as ?jo=<id>, it lets the server read GET /api/JobOrders/{id}
+  // directly (~50 ms) instead of scanning the JobOrders/status lists.
+  const JOB_ORDER_HINTS_KEY = 'switch_job_order_hints'
+  const JOB_ORDER_HINT_LIMIT = 50
+  const JOB_ORDER_ID = /^\d{1,12}$/
 
-  const billingDetailsCache = { timestamp: 0, data: [] }
-  const BILLING_CACHE_TTL_MS = 30000
-
-  async function fetchBillingDetails() {
-    const now = Date.now()
-    if (now - billingDetailsCache.timestamp < BILLING_CACHE_TTL_MS && billingDetailsCache.data.length > 0) {
-      return billingDetailsCache.data
-    }
-
+  function readJobOrderHints() {
     try {
-      const endpoint = `${API_BASE}/api/BillingDetails`
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 8000)
-
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        signal: controller.signal
-      })
-      clearTimeout(timeoutId)
-
-      if (response.ok) {
-        const json = await response.json()
-        const list = Array.isArray(json) ? json : (json?.billingDetails || [])
-        if (Array.isArray(list) && list.length > 0) {
-          billingDetailsCache.timestamp = now
-          billingDetailsCache.data = list
-          return list
-        }
-      }
-    } catch (e) {
-      console.warn('[Application Tracker] BillingDetails fetch error:', e?.message || e)
+      if (typeof localStorage === 'undefined') return {}
+      const parsed = JSON.parse(localStorage.getItem(JOB_ORDER_HINTS_KEY) || '{}')
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+    } catch {
+      return {}
     }
-    return billingDetailsCache.data || []
   }
 
-  function matchBillingDetail(list, identifier, appId = '') {
-    if (!Array.isArray(list) || list.length === 0) return null
-    const cleanId = String(identifier || '').trim().toUpperCase()
-    const cleanAppId = String(appId || '').trim().toUpperCase()
-
-    return list.find(b => {
-      const accNo = String(b.accountNo || '').trim().toUpperCase()
-      const bId = String(b.id || '').trim().toUpperCase()
-      return (
-        (cleanId && (accNo === cleanId || bId === cleanId)) ||
-        (cleanAppId && (accNo === cleanAppId || bId === cleanAppId))
-      )
-    }) || null
+  function readJobOrderHint(identifier) {
+    const value = readJobOrderHints()[String(identifier || '').trim().toUpperCase()]
+    return JOB_ORDER_ID.test(String(value ?? '')) ? String(value) : null
   }
 
-  async function fetchJobOrdersByStatus(status) {
-    const norm = String(status || '').toLowerCase()
-    let key = 'Scheduled'
-    if (norm.includes('complet')) key = 'Completed'
-    else if (norm.includes('activat') || norm.includes('active')) key = 'Activated'
-
-    const cached = jobOrdersCache[key]
-    const now = Date.now()
-    if (now - cached.timestamp < JO_CACHE_TTL_MS && cached.data.length > 0) {
-      return cached.data
-    }
-
+  function rememberJobOrderHint(identifier, jobOrderId) {
+    const key = String(identifier || '').trim().toUpperCase()
+    if (!key) return
     try {
-      const endpoint = `${API_BASE}/api/JobOrders/status/${key}`
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000)
-
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        signal: controller.signal
-      })
-      clearTimeout(timeoutId)
-
-      if (response.ok) {
-        const list = await response.json()
-        if (Array.isArray(list)) {
-          cached.timestamp = now
-          cached.data = list
-          return list
-        }
+      if (typeof localStorage === 'undefined') return
+      const hints = readJobOrderHints()
+      if (JOB_ORDER_ID.test(String(jobOrderId ?? ''))) {
+        delete hints[key]
+        hints[key] = String(jobOrderId)
+      } else {
+        delete hints[key]
       }
-    } catch (e) {
-      console.warn(`[Application Tracker] JobOrders/status/${key} fetch error:`, e?.message || e)
+      const keys = Object.keys(hints)
+      for (const stale of keys.slice(0, Math.max(0, keys.length - JOB_ORDER_HINT_LIMIT))) {
+        delete hints[stale]
+      }
+      localStorage.setItem(JOB_ORDER_HINTS_KEY, JSON.stringify(hints))
+    } catch (err) {
+      console.warn('[Application Tracker] Could not store job order hint:', err?.message || err)
     }
-    return cached.data || []
-  }
-
-  function matchJobOrder(list, identifier, appId = '') {
-    if (!Array.isArray(list) || list.length === 0) return null
-    const cleanId = String(identifier || '').trim().toUpperCase()
-    const cleanAppId = String(appId || '').trim().toUpperCase()
-
-    return list.find(j => {
-      const joAcc = String(j.accountNo || '').trim().toUpperCase()
-      const joVal = String(j.applicationIdValue || '').trim().toUpperCase()
-      const joId = String(j.id || '').trim().toUpperCase()
-
-      return (
-        (cleanId && (joAcc === cleanId || joVal === cleanId || joId === cleanId)) ||
-        (cleanAppId && (joAcc === cleanAppId || joVal === cleanAppId || joId === cleanAppId))
-      )
-    }) || null
   }
 
   async function fetchApplicationById(identifier) {
     if (!identifier) return null
     const rawInput = String(identifier).trim()
-    
+
     isTracking.value = true
     trackingError.value = null
     rawApiResponse.value = null
@@ -1318,7 +1247,11 @@ export const useRegistrationStore = defineStore('registration', () => {
     const local = findApplicationByCode(rawInput)
 
     try {
-      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}`
+      // One request. /api/Applications/{id} (api/Applications/[id].js) already
+      // reconciles the row with dispatch and billing, so nothing is re-fetched here.
+      const hint = readJobOrderHint(rawInput)
+      const query = hint ? `?jo=${encodeURIComponent(hint)}` : ''
+      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}${query}`
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
@@ -1326,10 +1259,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       try {
         response = await fetch(endpoint, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
+          headers: { 'Accept': 'application/json' },
           signal: controller.signal
         })
       } catch (fetchErr) {
@@ -1349,133 +1279,12 @@ export const useRegistrationStore = defineStore('registration', () => {
         rawApiResponse.value = bodyData
       }
 
-      // Check if we found a valid Application record
-      const hasAppRecord = bodyData && (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)
+      const hasAppRecord = response?.ok && bodyData && typeof bodyData === 'object' &&
+        (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)
 
       if (hasAppRecord) {
-        const currentStatus = String(bodyData.status || '').trim().toLowerCase()
-        const appId = bodyData.applicationid || bodyData.applicationId || bodyData.id || ''
-
-        // Reconcile status with dispatch JobOrders and BillingDetails if status is not already finalized as Activated
-        if (!currentStatus.includes('activat') && !currentStatus.includes('active')) {
-          // 1. Stage 4: Check BillingDetails first (fastest, confirmed operational accounts)
-          const billingList = await fetchBillingDetails()
-          const bMatch = matchBillingDetail(billingList, rawInput, appId)
-          if (bMatch) {
-            bodyData.status = 'Activated'
-            bodyData.rawStatus = 'Activated'
-            bodyData.billingId = bMatch.id
-            if (bMatch.dateInstalled) bodyData.dateInstalled = bMatch.dateInstalled
-            if (bMatch.routerModemSn) bodyData.routerModemSn = bMatch.routerModemSn
-            if (bMatch.plan && !bodyData.desiredPlan) bodyData.desiredPlan = bMatch.plan
-          } else {
-            // 2. Stage 4: Check JobOrders/status/Activated
-            const activatedList = await fetchJobOrdersByStatus('Activated')
-            const actMatch = matchJobOrder(activatedList, rawInput, appId)
-            if (actMatch) {
-              bodyData.status = 'Activated'
-              bodyData.rawStatus = 'Activated'
-              bodyData.jobOrderId = actMatch.id
-              if (actMatch.dateInstalled) bodyData.dateInstalled = actMatch.dateInstalled
-              if (actMatch.modifiedDate) bodyData.modifiedDate = actMatch.modifiedDate
-            } else if (!currentStatus.includes('completed')) {
-              // 3. Stage 3: Check Completed JobOrders (skipped when the
-              // application itself still says Scheduled — never jump a stage)
-              const completedList = currentStatus.includes('schedule') ? [] : await fetchJobOrdersByStatus('Completed')
-              const compMatch = matchJobOrder(completedList, rawInput, appId)
-              if (compMatch) {
-                bodyData.status = 'Completed'
-                bodyData.rawStatus = 'Completed'
-                bodyData.jobOrderId = compMatch.id
-                if (compMatch.modifiedDate) bodyData.modifiedDate = compMatch.modifiedDate
-                if (compMatch.remarks && !compMatch.remarks.startsWith('Online Application')) {
-                  bodyData.remarks = compMatch.remarks
-                }
-              } else {
-                // 4. Stage 2: Check Scheduled JobOrders. Also runs when the
-                // application already says Scheduled, to pick up the visit date.
-                const scheduledList = await fetchJobOrdersByStatus('Scheduled')
-                const schedMatch = matchJobOrder(scheduledList, rawInput, appId)
-                if (schedMatch) {
-                  bodyData.status = 'Scheduled'
-                  bodyData.rawStatus = 'Scheduled'
-                  bodyData.jobOrderId = schedMatch.id
-                  bodyData.scheduledDate = readScheduledDate(schedMatch)
-                  bodyData.rescheduleReason = extractRescheduleReason(schedMatch.joRemarks)
-                  if (schedMatch.modifiedDate) bodyData.modifiedDate = schedMatch.modifiedDate
-                  if (schedMatch.remarks && !schedMatch.remarks.startsWith('Online Application')) {
-                    bodyData.remarks = schedMatch.remarks
-                  }
-                }
-              }
-            }
-          }
-        }
-
+        rememberJobOrderHint(rawInput, bodyData.jobOrderId)
         return formatApiApplication(bodyData, rawInput)
-      }
-
-      // Fallback 1: If Applications lookup returned 404/400, check BillingDetails directly!
-      const billingList = await fetchBillingDetails()
-      const bMatch = matchBillingDetail(billingList, rawInput)
-      if (bMatch) {
-        const constructedApp = {
-          id: bMatch.id,
-          applicationid: bMatch.accountNo || String(bMatch.id),
-          firstName: bMatch.fullName ? bMatch.fullName.split(' ')[0] : '',
-          lastName: bMatch.fullName ? bMatch.fullName.split(' ').slice(1).join(' ') : '',
-          mobileNumber: bMatch.contactNumber || bMatch.secondContactNumber || '',
-          emailAddress: bMatch.emailAddress || '',
-          desiredPlan: bMatch.plan || '',
-          city: bMatch.city || '',
-          barangay: bMatch.barangay || '',
-          date: bMatch.dateInstalled || bMatch.modifiedDate || '',
-          dateTime: bMatch.modifiedDate || bMatch.dateInstalled || '',
-          status: 'Activated',
-          rawStatus: 'Activated',
-          billingId: bMatch.id,
-          dateInstalled: bMatch.dateInstalled || '',
-          routerModemSn: bMatch.routerModemSn || ''
-        }
-        return formatApiApplication(constructedApp, rawInput)
-      }
-
-      // Fallback 2: Check JobOrders directly (Activated -> Completed -> Scheduled)
-      const activatedList = await fetchJobOrdersByStatus('Activated')
-      let joMatch = matchJobOrder(activatedList, rawInput)
-      if (!joMatch) {
-        const completedList = await fetchJobOrdersByStatus('Completed')
-        joMatch = matchJobOrder(completedList, rawInput)
-      }
-      if (!joMatch) {
-        const scheduledList = await fetchJobOrdersByStatus('Scheduled')
-        joMatch = matchJobOrder(scheduledList, rawInput)
-      }
-
-      if (joMatch) {
-        const constructedApp = {
-          id: joMatch.id,
-          applicationid: joMatch.accountNo || String(joMatch.id),
-          firstName: joMatch.firstName || '',
-          lastName: joMatch.lastName || '',
-          middleName: joMatch.middleInitial || '',
-          mobileNumber: joMatch.contactNumber || joMatch.secondContactNumber || '',
-          emailAddress: joMatch.applicantEmailAddress || joMatch.emailAddress || '',
-          desiredPlan: joMatch.planId || '',
-          city: joMatch.city || '',
-          barangay: joMatch.barangay || '',
-          dateTime: joMatch.timestamp || joMatch.createdDate || '',
-          date: joMatch.dateInstalled || joMatch.modifiedDate || '',
-          modifiedDate: joMatch.modifiedDate || '',
-          status: joMatch.status || 'Scheduled',
-          rawStatus: joMatch.status || 'Scheduled',
-          remarks: joMatch.remarks || joMatch.joRemarks || '',
-          jobOrderId: joMatch.id,
-          scheduledDate: readScheduledDate(joMatch),
-          rescheduleReason: extractRescheduleReason(joMatch.joRemarks),
-          dateInstalled: joMatch.dateInstalled || ''
-        }
-        return formatApiApplication(constructedApp, rawInput)
       }
 
       if (response && !response.ok && response.status !== 404 && response.status !== 400) {
@@ -1522,8 +1331,6 @@ export const useRegistrationStore = defineStore('registration', () => {
       if (!response.ok || !json?.ok) {
         return { ok: false, error: json?.message || 'Unable to update the schedule right now. Please try again.' }
       }
-      // The Scheduled list is cached for 30s; drop it so a re-track shows the new date.
-      jobOrdersCache.Scheduled = { timestamp: 0, data: [] }
       return { ok: true, scheduledDate: json.scheduledDate, rescheduleReason: json.rescheduleReason || null }
     } catch (err) {
       console.warn('[Application Tracker] Reschedule error:', err?.message || err)
