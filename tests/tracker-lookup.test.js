@@ -3,8 +3,9 @@ import assert from 'node:assert/strict'
 import { createTrackerLookup, jobOrderBelongsTo, APPLICATION_ROW_ID, TRACKER_ID } from '../api/_tracker.js'
 
 // Shapes mirror live rows (sample IDs, not real customers).
-// Applications.applicationid is the public 21-digit code; Applications.id is
-// the row number that JobOrders.applicationId links to.
+// Applications.applicationid is the public 21-digit code and is what
+// JobOrders.applicationId carries for online applications; Applications.id is
+// only the row number.
 const APP_ID = '202609030028571738368'
 const ROW_ID = 15476
 const application = {
@@ -20,7 +21,7 @@ const application = {
 }
 const scheduledRow = {
   id: 3980,
-  applicationId: String(ROW_ID),
+  applicationId: APP_ID,
   accountNo: '202609123',
   applicationIdValue: '',
   firstName: 'BLAINE',
@@ -36,7 +37,7 @@ const scheduledRow = {
   clientSignature: 'data:image/png;base64,AAAA',
   houseFront: 'data:image/jpeg;base64,BBBB'
 }
-const completedRow = { id: 3975, applicationId: String(ROW_ID), accountNo: '202609123', firstName: 'Blaine', lastName: 'Sample', status: 'Completed', modifiedDate: '2026-09-10T00:00:00', remarks: 'Installed, modem SN 123' }
+const completedRow = { id: 3975, applicationId: APP_ID, accountNo: '202609123', firstName: 'Blaine', lastName: 'Sample', status: 'Completed', modifiedDate: '2026-09-10T00:00:00', remarks: 'Installed, modem SN 123' }
 // Staff-entered application (no public code): job order 1 links to row 10928.
 const activatedRow = {
   id: 1,
@@ -72,7 +73,7 @@ function fakeUpstream(routes) {
 }
 
 const appRoute = { [`/api/Applications/${APP_ID}`]: { status: 200, data: application } }
-const JO_BY_ROW = `/api/JobOrders/applicationid/${ROW_ID}`
+const JO_BY_ROW = `/api/JobOrders/applicationid/${APP_ID}`
 
 describe('tracker id patterns', () => {
   it('accepts application row numbers and public application ids only', () => {
@@ -87,7 +88,7 @@ describe('tracker id patterns', () => {
 })
 
 describe('tracker lookup (api/_tracker.js)', () => {
-  it('reads the Application row, then its job order by row id, and nothing else', async () => {
+  it('reads the Application row, then its job order by the 21-digit code, and nothing else', async () => {
     const { upstream, calls } = fakeUpstream({ ...appRoute, [JO_BY_ROW]: { status: 200, data: scheduledRow } })
     const t = createTrackerLookup({ upstream })
     const r = await t.lookupApplication(APP_ID)
@@ -118,9 +119,25 @@ describe('tracker lookup (api/_tracker.js)', () => {
     assert.deepEqual(calls, [`/api/Applications/${APP_ID}`, JO_BY_ROW], 'no list or billing scans for a 404')
   })
 
-  it('ignores a job order for another applicant even when the backend links it to this row', async () => {
-    // Live data: Applications.id - JobOrders.applicationId is 4, so the row
-    // the backend hands back is usually someone else's.
+  it('never reads a job order by the Applications row number', async () => {
+    const { upstream, calls } = fakeUpstream({ ...appRoute, [`/api/JobOrders/applicationid/${ROW_ID}`]: { status: 200, data: scheduledRow } })
+    const t = createTrackerLookup({ upstream })
+    const r = await t.lookupApplication(APP_ID)
+    assert.equal(r.body.status, 'Inprogress')
+    assert.ok(!calls.includes(`/api/JobOrders/applicationid/${ROW_ID}`))
+  })
+
+  it('leaves an application Inprogress while its job order is still Inprogress', async () => {
+    // Live shape: job order 4108 for 202609092047231836775 was created with status Inprogress.
+    const { upstream } = fakeUpstream({ ...appRoute, [JO_BY_ROW]: { status: 200, data: { ...scheduledRow, id: 4108, status: 'Inprogress', installationDate: null } } })
+    const t = createTrackerLookup({ upstream })
+    const r = await t.lookupApplication(APP_ID)
+    assert.equal(r.body.status, 'Inprogress')
+    assert.equal(r.body.jobOrderId, undefined)
+    assert.equal(r.body.scheduledDate, undefined)
+  })
+
+  it('ignores a job order for another applicant even when the backend links it to this code', async () => {
     const stranger = { ...scheduledRow, firstName: 'Rochelle', lastName: 'Cebanico', contactNumber: '9922269573', secondContactNumber: '' }
     const { upstream } = fakeUpstream({ ...appRoute, [JO_BY_ROW]: { status: 200, data: stranger } })
     const t = createTrackerLookup({ upstream })
@@ -177,9 +194,9 @@ describe('tracker lookup (api/_tracker.js)', () => {
     let billingFetches = 0
     const { upstream, calls } = fakeUpstream({
       ...appRoute,
-      [JO_BY_ROW]: { status: 200, data: { ...activatedRow, id: 4001, applicationId: String(ROW_ID), firstName: "Blaine", lastName: "Sample", contactNumber: "9171234567" } },
+      [JO_BY_ROW]: { status: 200, data: { ...activatedRow, id: 4001, applicationId: APP_ID, firstName: "Blaine", lastName: "Sample", contactNumber: "9171234567" } },
       '/api/Applications/202608099999999999999': { status: 200, data: { ...application, id: 2, applicationid: '202608099999999999999' } },
-      '/api/JobOrders/applicationid/2': { status: 200, data: { ...completedRow, applicationId: '2' } },
+      '/api/JobOrders/applicationid/202608099999999999999': { status: 200, data: { ...completedRow, applicationId: '202608099999999999999' } },
       '/api/BillingDetails': () => {
         billingFetches++
         return { status: 200, data: [{ id: 1, accountNo: 'other' }] }

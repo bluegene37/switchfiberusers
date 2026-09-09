@@ -233,7 +233,7 @@ describe('Tracking screen wiring', () => {
   })
 
   it('reads the job order by application row id and never scans the status lists', () => {
-    assert.match(enrichSource, /\/api\/JobOrders\/applicationid\/\$\{clean\}/)
+    assert.match(enrichSource, /\/api\/JobOrders\/applicationid\//)
     assert.doesNotMatch(enrichSource, /JobOrders\/status\/(Scheduled|Completed|Activated)/)
     assert.doesNotMatch(storeSource, /\?jo=/)
     assert.doesNotMatch(storeSource, /JobOrders\/status\//)

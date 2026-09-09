@@ -5,29 +5,34 @@
 // - GET /api/Applications/{applicationid} answers by the public 21-digit code
 //   (Applications.applicationid). It does NOT answer by the row number `id`
 //   (404 "Application not found").
-// - Every JobOrders row carries a numeric `applicationId` meant to be the
-//   Applications row it was raised for, and GET /api/JobOrders/applicationid/
-//   {applicationId} returns that single job order (~3 KB, ~65 ms) or 404 "Job
-//   order not found". It is the only job order read the tracker makes; the
-//   old JobOrders/status list scans (the Activated list alone is ~11 MB of
-//   base64 photos) are gone.
-// - CAUTION: on the live data the link is off. Matching 3,156 job orders to
-//   Application rows by applicant name, Applications.id - JobOrders.applicationId
-//   was 4 for 3,126 of them and 0 for none (job order 1 says applicationId
-//   10928 = Mahater Ibra, but Applications row 10928 is a different person;
-//   Ibra's row is 10932). Reading the job order for an Application's own `id`
-//   would therefore show another applicant's schedule. The job order is only
-//   applied when the applicant's phone or name matches (jobOrderBelongsTo).
+// - Every JobOrders row carries `applicationId`, and
+//   GET /api/JobOrders/applicationid/{applicationId} returns that single job
+//   order (~3 KB, ~65 ms) or 404 "Job order not found". It is the only job
+//   order read the tracker makes; the old JobOrders/status list scans (the
+//   Activated list alone is ~11 MB of base64 photos) are gone.
+// - For online applications the link IS the 21-digit code: Application
+//   202609092047231836775 (row 15588) has job order 4108 with
+//   applicationId "202609092047231836775". The tracker therefore reads the job
+//   order by `applicationid`, never by the row number.
+// - Legacy job orders (raised before online applications) carry a short
+//   number instead, e.g. job order 1 has applicationId "10928". Those
+//   applicants track with that number; Applications/{number} 404s, so the
+//   record is built from the job order. Do not treat that number as an
+//   Applications row id: matched by applicant name, Applications.id was 4
+//   higher than JobOrders.applicationId for 3,126 of 3,156 legacy rows.
 //
 // A lookup is therefore two small reads: the Application row, then the job
-// order by the row's id. BillingDetails (~1 MB, cached 5 minutes) is read only
-// to promote a Completed job order to Activated once billing has the account.
+// order by its public code. BillingDetails (~1 MB, cached 5 minutes) is read
+// only to promote a Completed job order to Activated once billing has the
+// account. jobOrderBelongsTo() still checks phone or name before a job order
+// is merged into an Application row, so a mislinked row can never surface
+// another applicant's schedule.
 import { upstreamJson } from './_proxy.js'
 import { sanitizeApplicationRecord } from './Applications.js'
 import { sanitizeJobOrderRecord } from './JobOrders/status/[status].js'
 import { readScheduledDate, extractRescheduleReason } from '../src/services/jobOrderSchedule.js'
 
-/** Applications row number, also the JobOrders.applicationId link. */
+/** Legacy tracking number (job order applicationId before online applications). */
 export const APPLICATION_ROW_ID = /^\d{1,12}$/
 // Same shape the proxy allowlist accepts for /api/Applications/:id
 export const TRACKER_ID = /^[a-zA-Z0-9_-]{1,64}$/
@@ -64,11 +69,11 @@ const isInternalRemark = (r) => String(r ?? '').startsWith('Online Application')
 export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } = {}) {
   const billing = { at: 0, rows: [] }
 
-  /** The job order raised for an Applications row number, or null. */
-  async function jobOrderByApplicationId(rowId) {
-    const clean = String(rowId ?? '').trim()
-    if (!APPLICATION_ROW_ID.test(clean)) return null
-    const res = await upstream(`/api/JobOrders/applicationid/${clean}`, { timeoutMs: ROW_TIMEOUT_MS })
+  /** The job order whose applicationId is `key` (21-digit code or legacy number), or null. */
+  async function jobOrderByApplicationId(key) {
+    const clean = String(key ?? '').trim()
+    if (!TRACKER_ID.test(clean)) return null
+    const res = await upstream(`/api/JobOrders/applicationid/${encodeURIComponent(clean)}`, { timeoutMs: ROW_TIMEOUT_MS })
     if (res.status !== 200 || !res.data || typeof res.data !== 'object' || Array.isArray(res.data)) return null
     // The endpoint is keyed by applicationId; never trust a row that claims a
     // different link, whatever the backend answered.
@@ -152,10 +157,11 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
     if (!app || typeof app !== 'object') return app
     const current = statusOf(app.status)
     if (isActivated(current)) return app
-    if (!APPLICATION_ROW_ID.test(String(app.id ?? ''))) return app
+    const code = String(app.applicationid ?? app.applicationId ?? '').trim()
+    if (!TRACKER_ID.test(code)) return app
 
     try {
-      const row = await jobOrderByApplicationId(app.id)
+      const row = await jobOrderByApplicationId(code)
       if (!row) return app
       if (!jobOrderBelongsTo(app, row)) {
         console.warn(`[Tracker] job order ${row.id} (applicationId ${row.applicationId}) does not match Application row ${app.id}; ignored`)
@@ -199,9 +205,8 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
   }
 
   /**
-   * Applications created by staff have no public `applicationid`, so the row
-   * number is the only code those applicants can be given. Build a tracker
-   * record straight from the job order raised for that row.
+   * Legacy applicants (before online applications) have no Application row
+   * answering to their number; build the tracker record from the job order.
    */
   async function lookupByRowId(identifier) {
     const row = await jobOrderByApplicationId(identifier)
