@@ -14,7 +14,8 @@ const ALLOWED_ROUTES = {
   '/api/JobOrders/status/Scheduled': ['GET'],
   '/api/JobOrders/status/Completed': ['GET'],
   '/api/JobOrders/status/Activated': ['GET'],
-  '/api/BillingDetails': ['GET']
+  '/api/BillingDetails': ['GET'],
+  '/api/ServiceOrders': ['GET', 'POST']
 }
 
 export function getAllowedMethods(routeKey) {
@@ -32,6 +33,10 @@ export function getAllowedMethods(routeKey) {
   // Allow BillingDetails lookup: /api/BillingDetails or /api/BillingDetails/:id (GET only)
   if (/^\/api\/BillingDetails(\/[a-zA-Z0-9_-]+)?$/i.test(routeKey)) {
     return ['GET']
+  }
+  // Allow ServiceOrders single record lookup or update: /api/ServiceOrders/:id (GET, PUT)
+  if (/^\/api\/ServiceOrders\/[a-zA-Z0-9_-]+$/i.test(routeKey)) {
+    return ['GET', 'PUT']
   }
   return null
 }

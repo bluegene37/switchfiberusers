@@ -29,9 +29,34 @@ export default defineConfig(({ mode }) => {
           // the row with dispatch/billing server-side, so the raw backend
           // proxy would show the wrong stage in dev.
           const TRACKER = /^\/api\/Applications\/([a-zA-Z0-9_-]{1,64})$/
+          // Mirrors api/ServiceOrders.js — customer concern & service order submissions
+          const SERVICE_ORDERS = /^\/api\/ServiceOrders(\/(\d{1,12}))?$/
 
           server.middlewares.use(async (req, res, next) => {
             const [cleanUrl, queryString = ''] = (req.url || '').split('?')
+            const soMatch = SERVICE_ORDERS.exec(cleanUrl || '')
+            if (soMatch) {
+              let body = ''
+              req.on('data', chunk => {
+                body += chunk
+                if (body.length > 256 * 1024) req.destroy()
+              })
+              req.on('end', async () => {
+                try {
+                  const { default: handler } = await import('./api/ServiceOrders.js')
+                  req.query = {}
+                  if (soMatch[2]) req.query.id = soMatch[2]
+                  req.body = body
+                  await handler(req, res)
+                } catch (err) {
+                  console.error('[service orders dev]:', err)
+                  res.statusCode = 500
+                  res.setHeader('Content-Type', 'application/json')
+                  res.end(JSON.stringify({ error: 'Service Order operation failed.' }))
+                }
+              })
+              return
+            }
             const trackerMatch = req.method === 'GET' ? TRACKER.exec(cleanUrl || '') : null
             if (trackerMatch) {
               try {

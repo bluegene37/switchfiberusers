@@ -13,6 +13,22 @@
       <p class="text-base sm:text-lg dark:text-slate-300 text-slate-600">
         Reach out to our customer care hotlines, send an inquiry, or visit our offices in Binangonan, Rizal (Head Office & Gaisano Capital Branch).
       </p>
+      <div v-if="showServiceOrderForm" class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <a
+          href="#concern-form"
+          class="btn-primary py-2.5 px-5 text-xs font-bold flex items-center gap-2 min-h-11 shadow-md shadow-[#ee2824]/20"
+        >
+          <LifeBuoy class="w-4 h-4" />
+          <span>File a Concern or Complaint</span>
+        </a>
+        <a
+          href="#offices-map"
+          class="btn-secondary py-2.5 px-5 text-xs font-bold flex items-center gap-2 min-h-11"
+        >
+          <MapPin class="w-4 h-4 text-[#ee2824]" />
+          <span>View Binangonan Offices</span>
+        </a>
+      </div>
     </div>
 
     <!-- Official 4 Contact Cards Grid -->
@@ -73,8 +89,13 @@
 
     </div>
 
+    <!-- Customer Concern & Complaint Form Section (Hidden by default; revisit after backend team finishes) -->
+    <section v-if="showServiceOrderForm" id="concern-form" class="scroll-mt-24">
+      <ServiceConcernForm />
+    </section>
+
     <!-- Visit Us Section & Embedded Google Map -->
-    <div class="space-y-6">
+    <div id="offices-map" class="space-y-6 scroll-mt-24">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] text-xs font-bold mb-2">
@@ -483,11 +504,18 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { 
   Headphones, Mail, MapPin, AlertTriangle, ShieldAlert, 
   CheckCircle2, Maximize2, X, Building2, Clock, 
-  Navigation, ExternalLink, Sparkles, PhoneCall, MessageSquare 
+  Navigation, ExternalLink, Sparkles, PhoneCall, MessageSquare,
+  LifeBuoy
 } from 'lucide-vue-next'
+import ServiceConcernForm from '../components/ServiceConcernForm.vue'
+
+const route = useRoute()
+// Feature hidden until backend team finishes; can be toggled via ?serviceOrder=true
+const showServiceOrderForm = computed(() => route?.query?.serviceOrder === 'true')
 
 // Binangonan Office Locations
 const offices = [
