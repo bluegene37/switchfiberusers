@@ -200,7 +200,7 @@ Configured out of the box via `vercel.json`:
 ## 🛡️ Security & Access Control
 
 - **Serverless API Proxy**: The browser client communicates exclusively with same-origin serverless endpoints. Upstream endpoints and certificates remain protected behind the proxy.
-- **Strict Route & Method Allowlisting**: Only `/api/Plans` (`GET`) and `/api/Applications` (`POST`) are permitted.
+- **Strict Route & Method Allowlisting**: Only the routes the site calls are relayed: `/api/Plans` (`GET`), `/api/Applications` (`POST`), `/api/LCPNapLocations` (`GET`), `/api/BillingDetails` (`GET`, concern form account lookup) and `/api/ServiceOrders` (`GET`/`POST`). The tracker and reschedule functions call the backend server-side only.
 - **Payload Guard**: Requests exceeding 256 KB are rejected before upstream processing.
 - **HTML Sanitization**: All applicant input fields are escaped before inclusion in email and SMS dispatches.
 - **Defensive Response Headers**: Configured with `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy`.

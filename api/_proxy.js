@@ -11,9 +11,8 @@ const ALLOWED_ROUTES = {
   '/api/Plans': ['GET'],
   '/api/Applications': ['POST'],
   '/api/LCPNapLocations': ['GET'],
-  '/api/JobOrders/status/Scheduled': ['GET'],
-  '/api/JobOrders/status/Completed': ['GET'],
-  '/api/JobOrders/status/Activated': ['GET'],
+  // BillingDetails is used only by the customer concern form's account
+  // lookup (src/stores/serviceOrder.js). The tracker no longer reads it.
   '/api/BillingDetails': ['GET'],
   '/api/ServiceOrders': ['GET', 'POST']
 }
@@ -24,10 +23,6 @@ export function getAllowedMethods(routeKey) {
   }
   // Allow single application lookup by ID: /api/Applications/:id (GET only)
   if (/^\/api\/Applications\/[a-zA-Z0-9_-]+$/i.test(routeKey)) {
-    return ['GET']
-  }
-  // Allow JobOrders status lookup: /api/JobOrders/status/:status (GET only)
-  if (/^\/api\/JobOrders\/status\/[a-zA-Z0-9_-]+$/i.test(routeKey)) {
     return ['GET']
   }
   // Allow BillingDetails lookup: /api/BillingDetails or /api/BillingDetails/:id (GET only)

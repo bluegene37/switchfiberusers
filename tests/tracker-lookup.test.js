@@ -176,45 +176,36 @@ describe('tracker lookup (api/_tracker.js)', () => {
     assert.equal(r.body.jobOrderId, undefined)
   })
 
-  it('upgrades a Completed row to Activated when billing carries the job order account', async () => {
+  it('shows Completed from the job order alone and never consults BillingDetails', async () => {
+    // Live case: job order 4108 for 202609092047231836775 was Completed with
+    // account number 202311803, which BillingDetails (dummy data) lists for a
+    // different customer. The old billing match wrongly showed Activated.
     const { upstream, calls } = fakeUpstream({
       ...appRoute,
-      [JO_BY_ROW]: { status: 200, data: completedRow },
-      '/api/BillingDetails': { status: 200, data: [{ id: 901, accountNo: '202609123', dateInstalled: '2026-09-11T00:00:00', routerModemSn: 'SN-1' }] }
+      [JO_BY_ROW]: { status: 200, data: { ...completedRow, accountNo: '202311803', dateInstalled: '2026-09-06T00:00:00' } },
+      '/api/BillingDetails': { status: 200, data: [{ id: 704, accountNo: '202311803', fullName: 'Someone Else', routerModemSn: 'SN-OTHER' }] }
+    })
+    const t = createTrackerLookup({ upstream })
+    const r = await t.lookupApplication(APP_ID)
+    assert.equal(r.body.status, 'Completed')
+    assert.equal(r.body.jobOrderId, 3975)
+    assert.equal(r.body.dateInstalled, '2026-09-06T00:00:00')
+    assert.equal(r.body.billingId, undefined)
+    assert.equal(r.body.routerModemSn, undefined)
+    assert.deepEqual(calls, [`/api/Applications/${APP_ID}`, JO_BY_ROW])
+  })
+
+  it('reads Activated straight from the job order', async () => {
+    const { upstream, calls } = fakeUpstream({
+      ...appRoute,
+      [JO_BY_ROW]: { status: 200, data: { ...activatedRow, id: 4001, applicationId: APP_ID, firstName: "Blaine", lastName: "Sample", contactNumber: "9171234567" } }
     })
     const t = createTrackerLookup({ upstream })
     const r = await t.lookupApplication(APP_ID)
     assert.equal(r.body.status, 'Activated')
-    assert.equal(r.body.billingId, 901)
-    assert.equal(r.body.routerModemSn, 'SN-1')
-    assert.ok(calls.includes('/api/BillingDetails'))
-  })
-
-  it('reads Activated straight from the job order and caches billing across Completed lookups', async () => {
-    let billingFetches = 0
-    const { upstream, calls } = fakeUpstream({
-      ...appRoute,
-      [JO_BY_ROW]: { status: 200, data: { ...activatedRow, id: 4001, applicationId: APP_ID, firstName: "Blaine", lastName: "Sample", contactNumber: "9171234567" } },
-      '/api/Applications/202608099999999999999': { status: 200, data: { ...application, id: 2, applicationid: '202608099999999999999' } },
-      '/api/JobOrders/applicationid/202608099999999999999': { status: 200, data: { ...completedRow, applicationId: '202608099999999999999' } },
-      '/api/BillingDetails': () => {
-        billingFetches++
-        return { status: 200, data: [{ id: 1, accountNo: 'other' }] }
-      }
-    })
-    let clock = 1_000_000
-    const t = createTrackerLookup({ upstream, now: () => clock })
-
-    const first = await t.lookupApplication(APP_ID)
-    assert.equal(first.body.status, 'Activated')
-    assert.equal(first.body.jobOrderId, 4001)
-    assert.ok(!calls.includes('/api/BillingDetails'), 'an Activated job order needs no billing read')
-
-    await t.lookupApplication('202608099999999999999')
-    clock += 60_000
-    const again = await t.lookupApplication('202608099999999999999')
-    assert.equal(again.body.status, 'Completed')
-    assert.equal(billingFetches, 1, 'billing is cached, not re-downloaded per lookup')
+    assert.equal(r.body.jobOrderId, 4001)
+    assert.equal(r.body.dateInstalled, '2025-03-11T00:00:00')
+    assert.deepEqual(calls, [`/api/Applications/${APP_ID}`, JO_BY_ROW])
   })
 
   it('builds a record from the job order when an application row number is typed', async () => {
@@ -239,17 +230,17 @@ describe('tracker lookup (api/_tracker.js)', () => {
     assert.equal(text.includes('switchfiber.ph'), false)
   })
 
-  it('promotes a Completed row-number lookup through billing', async () => {
-    const { upstream } = fakeUpstream({
+  it('keeps a Completed legacy-number lookup at Completed', async () => {
+    const { upstream, calls } = fakeUpstream({
       '/api/Applications/10928': { status: 404, data: null },
       '/api/JobOrders/applicationid/10928': { status: 200, data: { ...activatedRow, status: 'Completed' } },
       '/api/BillingDetails': { status: 200, data: [{ id: 289, accountNo: '202308503', routerModemSn: 'SN-9' }] }
     })
     const t = createTrackerLookup({ upstream })
     const r = await t.lookupApplication('10928')
-    assert.equal(r.body.status, 'Activated')
-    assert.equal(r.body.billingId, 289)
-    assert.equal(r.body.routerModemSn, 'SN-9')
+    assert.equal(r.body.status, 'Completed')
+    assert.equal(r.body.billingId, undefined)
+    assert.ok(!calls.includes('/api/BillingDetails'))
   })
 
   it('never asks the job order endpoint about a non-numeric unknown identifier', async () => {

@@ -10,7 +10,7 @@
 // function therefore reads the full upstream row, changes only the schedule
 // fields, and writes the whole row back. The browser never gets raw PUT access.
 import { upstreamJson } from '../../_proxy.js'
-import { sanitizeJobOrderRecord } from '../status/[status].js'
+import { sanitizeJobOrderRecord } from '../../_jobOrder.js'
 import {
   validateRescheduleRequest,
   jobOrderMatchesApplication,
