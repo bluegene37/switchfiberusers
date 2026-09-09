@@ -1190,50 +1190,6 @@ export const useRegistrationStore = defineStore('registration', () => {
   const rawApiResponse = ref(null)
   const rawApiStatus = ref(null)
 
-  // The browser remembers the job order id behind each tracked application.
-  // Sent back as ?jo=<id>, it lets the server read GET /api/JobOrders/{id}
-  // directly (~50 ms) instead of scanning the JobOrders/status lists.
-  const JOB_ORDER_HINTS_KEY = 'switch_job_order_hints'
-  const JOB_ORDER_HINT_LIMIT = 50
-  const JOB_ORDER_ID = /^\d{1,12}$/
-
-  function readJobOrderHints() {
-    try {
-      if (typeof localStorage === 'undefined') return {}
-      const parsed = JSON.parse(localStorage.getItem(JOB_ORDER_HINTS_KEY) || '{}')
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
-    } catch {
-      return {}
-    }
-  }
-
-  function readJobOrderHint(identifier) {
-    const value = readJobOrderHints()[String(identifier || '').trim().toUpperCase()]
-    return JOB_ORDER_ID.test(String(value ?? '')) ? String(value) : null
-  }
-
-  function rememberJobOrderHint(identifier, jobOrderId) {
-    const key = String(identifier || '').trim().toUpperCase()
-    if (!key) return
-    try {
-      if (typeof localStorage === 'undefined') return
-      const hints = readJobOrderHints()
-      if (JOB_ORDER_ID.test(String(jobOrderId ?? ''))) {
-        delete hints[key]
-        hints[key] = String(jobOrderId)
-      } else {
-        delete hints[key]
-      }
-      const keys = Object.keys(hints)
-      for (const stale of keys.slice(0, Math.max(0, keys.length - JOB_ORDER_HINT_LIMIT))) {
-        delete hints[stale]
-      }
-      localStorage.setItem(JOB_ORDER_HINTS_KEY, JSON.stringify(hints))
-    } catch (err) {
-      console.warn('[Application Tracker] Could not store job order hint:', err?.message || err)
-    }
-  }
-
   async function fetchApplicationById(identifier) {
     if (!identifier) return null
     const rawInput = String(identifier).trim()
@@ -1248,10 +1204,9 @@ export const useRegistrationStore = defineStore('registration', () => {
 
     try {
       // One request. /api/Applications/{id} (api/Applications/[id].js) already
-      // reconciles the row with dispatch and billing, so nothing is re-fetched here.
-      const hint = readJobOrderHint(rawInput)
-      const query = hint ? `?jo=${encodeURIComponent(hint)}` : ''
-      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}${query}`
+      // reconciles the row with its job order (GET /api/JobOrders/applicationid/
+      // {row id} server-side) and billing, so nothing is re-fetched here.
+      const endpoint = `${API_BASE}/api/Applications/${encodeURIComponent(rawInput)}`
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
@@ -1283,7 +1238,6 @@ export const useRegistrationStore = defineStore('registration', () => {
         (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)
 
       if (hasAppRecord) {
-        rememberJobOrderHint(rawInput, bodyData.jobOrderId)
         return formatApiApplication(bodyData, rawInput)
       }
 
@@ -1308,7 +1262,7 @@ export const useRegistrationStore = defineStore('registration', () => {
    * Applicant moves a Scheduled installation to a new date.
    * Resolves to { ok: true, scheduledDate, rescheduleReason } or { ok: false, error }.
    */
-  async function rescheduleInstallation({ jobOrderId, applicationId, newDate, reason, isDemo = false }) {
+  async function rescheduleInstallation({ jobOrderId, applicationId, applicationRecordId = null, newDate, reason, isDemo = false }) {
     if (isDemo) {
       return { ok: true, scheduledDate: newDate, rescheduleReason: String(reason || '').trim() }
     }
@@ -1322,7 +1276,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ applicationId, newDate, reason }),
+        body: JSON.stringify({ applicationId, applicationRecordId, newDate, reason }),
         signal: controller.signal
       })
       clearTimeout(timeoutId)

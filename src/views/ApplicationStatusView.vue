@@ -515,6 +515,8 @@ async function submitReschedule() {
     const result = await registrationStore.rescheduleInstallation({
       jobOrderId: foundApp.value.jobOrderId,
       applicationId: foundApp.value.applicationId || foundApp.value.id,
+      // Applications row number: how the job order links back (JobOrders.applicationId)
+      applicationRecordId: foundApp.value.id,
       newDate: check.newDate,
       reason: check.reason,
       isDemo: Boolean(foundApp.value.isDemo)

@@ -1,5 +1,9 @@
 // Serverless Function: applicant reschedules a Scheduled installation.
-// Handles POST /api/JobOrders/:id/reschedule  { applicationId, newDate, reason }
+// Handles POST /api/JobOrders/:id/reschedule
+//   { applicationId, applicationRecordId?, newDate, reason }
+// applicationId is the code the applicant tracks with (21-digit public code,
+// or an Applications row number); applicationRecordId is the Applications row
+// number the tracker resolved, which is how JobOrders.applicationId links back.
 //
 // The fiber backend has no reschedule endpoint and no reason column; the only
 // write path is PUT /api/JobOrders/{id}, which REPLACES the whole row. This
@@ -17,10 +21,13 @@ import {
 } from '../../../src/services/jobOrderSchedule.js'
 
 const JOB_ORDER_ID = /^\d{1,12}$/
+const APPLICATION_ROW_ID = /^\d{1,12}$/
 
 export async function rescheduleJobOrder(input, { upstream = upstreamJson, now = Date.now() } = {}) {
   const id = String(input?.id ?? '').trim()
   const applicationId = String(input?.applicationId ?? '').trim()
+  const recordId = String(input?.applicationRecordId ?? '').trim()
+  const owners = [applicationId, APPLICATION_ROW_ID.test(recordId) ? recordId : ''].filter(Boolean)
 
   if (!JOB_ORDER_ID.test(id)) {
     return { status: 400, body: { error: 'Bad Request', message: 'Invalid job order reference.' } }
@@ -39,8 +46,8 @@ export async function rescheduleJobOrder(input, { upstream = upstreamJson, now =
     return { status: 404, body: { error: 'Not Found', message: 'No installation schedule found for this Application ID.' } }
   }
   const row = current.data
-  // Ownership: the caller must present the Application ID this job order belongs to.
-  if (!jobOrderMatchesApplication(row, applicationId)) {
+  // Ownership: the caller must present an identifier this job order belongs to.
+  if (!owners.some(o => jobOrderMatchesApplication(row, o))) {
     return { status: 404, body: { error: 'Not Found', message: 'No installation schedule found for this Application ID.' } }
   }
   if (!isScheduledJobOrder(row)) {

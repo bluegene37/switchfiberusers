@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
           const SERVICE_ORDERS = /^\/api\/ServiceOrders(\/(\d{1,12}))?$/
 
           server.middlewares.use(async (req, res, next) => {
-            const [cleanUrl, queryString = ''] = (req.url || '').split('?')
+            const [cleanUrl] = (req.url || '').split('?')
             const soMatch = SERVICE_ORDERS.exec(cleanUrl || '')
             if (soMatch) {
               let body = ''
@@ -61,9 +61,7 @@ export default defineConfig(({ mode }) => {
             if (trackerMatch) {
               try {
                 const { default: handler } = await import('./api/Applications/[id].js')
-                const params = new URLSearchParams(queryString)
                 req.query = { id: trackerMatch[1] }
-                if (params.has('jo')) req.query.jo = params.get('jo')
                 await handler(req, res)
               } catch (err) {
                 console.error('[tracker dev]:', err)

@@ -1,11 +1,11 @@
 // Serverless Function: applicant tracker lookup.
-// Handles GET /api/Applications/:id?jo=<jobOrderId hint>
+// Handles GET /api/Applications/:id
 //
 // Returns the sanitized Application row reconciled with dispatch and billing.
 // The heavy lifting (and the reason this is not a plain proxy) lives in
-// api/_tracker.js: the job order is read from GET /api/JobOrders/{id} instead
-// of scanning the multi-megabyte status lists on every lookup.
-import { tracker, JOB_ORDER_ID } from '../_tracker.js'
+// api/_tracker.js: the job order comes from
+// GET /api/JobOrders/applicationid/{application row id}, one small read.
+import { tracker } from '../_tracker.js'
 
 function send(res, code, payload) {
   if (res.headersSent) return
@@ -32,11 +32,10 @@ export default async function handler(req, res) {
     return
   }
 
-  const { id, jo } = req.query || {}
-  const hint = jo !== undefined && JOB_ORDER_ID.test(String(jo)) ? String(jo) : null
+  const { id } = req.query || {}
 
   try {
-    const result = await tracker.lookupApplication(String(id ?? ''), { hint })
+    const result = await tracker.lookupApplication(String(id ?? ''))
     send(res, result.status, result.body)
   } catch (error) {
     console.error(`Tracker lookup error on ${req.method} /api/Applications/${id}:`, error)

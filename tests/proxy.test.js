@@ -222,6 +222,8 @@ describe('BillingDetails sanitization & routes (api/BillingDetails.js)', () => {
     assert.deepEqual(getAllowedMethods('/api/BillingDetails'), ['GET'])
     assert.deepEqual(getAllowedMethods('/api/BillingDetails/857'), ['GET'])
     assert.deepEqual(getAllowedMethods('/api/JobOrders/status/Activated'), ['GET'])
+    // Server-side only: returns full applicant rows keyed by an enumerable row number.
+    assert.equal(getAllowedMethods('/api/JobOrders/applicationid/10928'), null)
   })
 
   it('strips private payment balances, internal IP, staff identifiers, and contract attachments', async () => {

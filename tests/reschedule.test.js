@@ -71,7 +71,9 @@ describe('jobOrderSchedule helpers', () => {
     assert.match(validateRescheduleRequest({ newDate: '2026-09-15', reason: 'x'.repeat(301) }, NOW).error, /under/i)
   })
 
-  it('matches job orders on accountNo, applicationIdValue or id', () => {
+  it('matches job orders on applicationId (Applications row), accountNo, applicationIdValue or id', () => {
+    assert.equal(jobOrderMatchesApplication({ ...scheduledRow, applicationId: '15476' }, '15476'), true)
+    assert.equal(jobOrderMatchesApplication({ ...scheduledRow, applicationId: 15476 }, '15476'), true)
     assert.equal(jobOrderMatchesApplication(scheduledRow, '202609051153198108414'), true)
     assert.equal(jobOrderMatchesApplication(scheduledRow, '4094'), true)
     assert.equal(jobOrderMatchesApplication({ ...scheduledRow, applicationIdValue: 'SF-1' }, 'sf-1'), true)
@@ -148,6 +150,22 @@ describe('POST /api/JobOrders/:id/reschedule (rescheduleJobOrder)', () => {
     assert.equal(res.body.clientSignature, undefined)
   })
 
+  it('accepts ownership through the Applications row number the job order links to', async () => {
+    const { upstream, calls } = fakeUpstream({ ...scheduledRow, applicationId: '15476', accountNo: '202609123' })
+    const res = await rescheduleJobOrder(
+      { id: '4094', applicationId: '202609051153198108414', applicationRecordId: 15476, newDate: '2026-09-15', reason: 'Nobody home that day' },
+      { upstream, now: NOW }
+    )
+    assert.equal(res.status, 200)
+    assert.equal(calls.filter(c => c.method === 'PUT').length, 1)
+
+    const wrongRow = await rescheduleJobOrder(
+      { id: '4094', applicationId: '202609051153198108414', applicationRecordId: '99999', newDate: '2026-09-15', reason: 'Nobody home that day' },
+      { upstream, now: NOW }
+    )
+    assert.equal(wrongRow.status, 404)
+  })
+
   it('refuses when the application ID does not own the job order', async () => {
     const { upstream, calls } = fakeUpstream(scheduledRow)
     const res = await rescheduleJobOrder(
@@ -214,11 +232,13 @@ describe('Tracking screen wiring', () => {
     assert.match(storeSource, /scheduledDate:/)
   })
 
-  it('reads job orders by id and never scans the status lists from the browser', () => {
-    assert.match(enrichSource, /\/api\/JobOrders\/\$\{clean\}/)
-    assert.match(storeSource, /\?jo=/)
+  it('reads the job order by application row id and never scans the status lists', () => {
+    assert.match(enrichSource, /\/api\/JobOrders\/applicationid\/\$\{clean\}/)
+    assert.doesNotMatch(enrichSource, /JobOrders\/status\/(Scheduled|Completed|Activated)/)
+    assert.doesNotMatch(storeSource, /\?jo=/)
     assert.doesNotMatch(storeSource, /JobOrders\/status\//)
     assert.doesNotMatch(storeSource, /api\/BillingDetails/)
+    assert.match(statusSource, /applicationRecordId: foundApp\.value\.id/)
   })
 
   it('mirrors the reschedule and tracker functions in the Vite dev server', () => {

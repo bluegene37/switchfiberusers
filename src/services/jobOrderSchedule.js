@@ -9,6 +9,10 @@
 //   to `joRemarks` behind a fixed prefix so it can be read back later.
 // - PUT /api/JobOrders/{id} is a FULL replace: any field missing from the body
 //   is wiped. Never send a partial record.
+// - `applicationId` on a job order is the Applications row number it was
+//   raised for (verified 2026-09-09); GET /api/JobOrders/applicationid/{rowId}
+//   returns that single row. The public 21-digit code lives on the
+//   Application row as `applicationid`, not on the job order.
 
 export const APPLICANT_RESCHEDULE_PREFIX = 'Applicant reschedule'
 
@@ -87,12 +91,16 @@ export function validateRescheduleRequest(input, now = Date.now()) {
   return { ok: true, newDate, reason }
 }
 
-/** Same identifiers the tracker already matches job orders on. */
+/**
+ * Whether an identifier the applicant holds names this job order: the
+ * Applications row number (`applicationId`), the account number, the legacy
+ * applicationIdValue, or the job order's own id.
+ */
 export function jobOrderMatchesApplication(jobOrder, applicationId) {
   if (!jobOrder || typeof jobOrder !== 'object') return false
   const wanted = String(applicationId ?? '').trim().toUpperCase()
   if (!wanted) return false
-  return [jobOrder.accountNo, jobOrder.applicationIdValue, jobOrder.id]
+  return [jobOrder.applicationId, jobOrder.accountNo, jobOrder.applicationIdValue, jobOrder.id]
     .map(v => String(v ?? '').trim().toUpperCase())
     .some(v => v && v === wanted)
 }

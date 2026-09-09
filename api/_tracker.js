@@ -1,42 +1,60 @@
 // Application tracker lookup, shared by api/Applications/[id].js and the Vite
 // dev middleware.
 //
-// The fiber backend has no "job order by account number" endpoint. The old
-// tracker scanned every JobOrders/status list on each lookup, and then the
-// browser downloaded the same lists again to repeat the match. The Activated
-// list alone is ~11 MB of base64 photos, so one lookup could move 20+ MB.
+// Upstream facts (verified against the live API on 2026-09-09):
+// - GET /api/Applications/{applicationid} answers by the public 21-digit code
+//   (Applications.applicationid). It does NOT answer by the row number `id`
+//   (404 "Application not found").
+// - Every JobOrders row carries a numeric `applicationId` meant to be the
+//   Applications row it was raised for, and GET /api/JobOrders/applicationid/
+//   {applicationId} returns that single job order (~3 KB, ~65 ms) or 404 "Job
+//   order not found". It is the only job order read the tracker makes; the
+//   old JobOrders/status list scans (the Activated list alone is ~11 MB of
+//   base64 photos) are gone.
+// - CAUTION: on the live data the link is off. Matching 3,156 job orders to
+//   Application rows by applicant name, Applications.id - JobOrders.applicationId
+//   was 4 for 3,126 of them and 0 for none (job order 1 says applicationId
+//   10928 = Mahater Ibra, but Applications row 10928 is a different person;
+//   Ibra's row is 10932). Reading the job order for an Application's own `id`
+//   would therefore show another applicant's schedule. The job order is only
+//   applied when the applicant's phone or name matches (jobOrderBelongsTo).
 //
-// The lists are now used only to discover the job order *id*, cheapest source
-// first, and the record itself always comes fresh from
-// GET /api/JobOrders/{id} (~3 KB, ~50 ms):
-//   1. `hint`  - the job order id the browser remembered from a past lookup
-//   2. JobOrders/status/Scheduled (~40 KB) and /Completed (~20 KB)
-//   3. BillingDetails (~1 MB) - proves Activated; no job order needed
-//   4. JobOrders/status/Activated (~11 MB) - last resort. Only a tiny
-//      accountNo -> id index is kept, for 15 minutes: a stale index can only
-//      delay discovery, never produce a stale status, because the status is
-//      read from the per-id row.
+// A lookup is therefore two small reads: the Application row, then the job
+// order by the row's id. BillingDetails (~1 MB, cached 5 minutes) is read only
+// to promote a Completed job order to Activated once billing has the account.
 import { upstreamJson } from './_proxy.js'
 import { sanitizeApplicationRecord } from './Applications.js'
 import { sanitizeJobOrderRecord } from './JobOrders/status/[status].js'
-import {
-  jobOrderMatchesApplication,
-  readScheduledDate,
-  extractRescheduleReason
-} from '../src/services/jobOrderSchedule.js'
+import { readScheduledDate, extractRescheduleReason } from '../src/services/jobOrderSchedule.js'
 
-export const JOB_ORDER_ID = /^\d{1,12}$/
+/** Applications row number, also the JobOrders.applicationId link. */
+export const APPLICATION_ROW_ID = /^\d{1,12}$/
 // Same shape the proxy allowlist accepts for /api/Applications/:id
 export const TRACKER_ID = /^[a-zA-Z0-9_-]{1,64}$/
 
-const SMALL_LIST_TTL_MS = 30 * 1000
 const BILLING_TTL_MS = 5 * 60 * 1000
-const ACTIVATED_INDEX_TTL_MS = 15 * 60 * 1000
 const ROW_TIMEOUT_MS = 8000
-const SMALL_LIST_TIMEOUT_MS = 10000
-const BIG_LIST_TIMEOUT_MS = 25000
+const BILLING_TIMEOUT_MS = 10000
 
 const norm = (v) => String(v ?? '').trim().toUpperCase()
+const normName = (v) => String(v ?? '').toLowerCase().replace(/[^a-z0-9ñ]+/gi, ' ').trim()
+const phoneKey = (v) => String(v ?? '').replace(/\D/g, '').slice(-10)
+
+/**
+ * Whether a job order is really this applicant's. Guards against the
+ * mislinked applicationId described in the header: accept the row only when
+ * a phone number matches, or both first and last names match.
+ */
+export function jobOrderBelongsTo(app, row) {
+  if (!app || !row) return false
+  const appPhones = [app.mobileNumber, app.secondaryMobileNumber].map(phoneKey).filter(p => p.length >= 7)
+  const rowPhones = [row.contactNumber, row.secondContactNumber].map(phoneKey).filter(p => p.length >= 7)
+  if (appPhones.some(p => rowPhones.includes(p))) return true
+  const first = normName(app.firstName)
+  const last = normName(app.lastName)
+  if (!first || !last) return false
+  return first === normName(row.firstName) && last === normName(row.lastName)
+}
 const statusOf = (v) => String(v ?? '').trim().toLowerCase()
 const isActivated = (s) => s.includes('activat') || s.includes('active')
 const isCompleted = (s) => s.includes('complet')
@@ -44,35 +62,24 @@ const isScheduled = (s) => s.includes('schedul')
 const isInternalRemark = (r) => String(r ?? '').startsWith('Online Application')
 
 export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } = {}) {
-  const smallLists = {
-    Scheduled: { at: 0, rows: [] },
-    Completed: { at: 0, rows: [] }
-  }
   const billing = { at: 0, rows: [] }
-  const activated = { at: 0, index: new Map() }
 
-  async function jobOrderById(id) {
-    const clean = String(id ?? '').trim()
-    if (!JOB_ORDER_ID.test(clean)) return null
-    const res = await upstream(`/api/JobOrders/${clean}`, { timeoutMs: ROW_TIMEOUT_MS })
+  /** The job order raised for an Applications row number, or null. */
+  async function jobOrderByApplicationId(rowId) {
+    const clean = String(rowId ?? '').trim()
+    if (!APPLICATION_ROW_ID.test(clean)) return null
+    const res = await upstream(`/api/JobOrders/applicationid/${clean}`, { timeoutMs: ROW_TIMEOUT_MS })
     if (res.status !== 200 || !res.data || typeof res.data !== 'object' || Array.isArray(res.data)) return null
+    // The endpoint is keyed by applicationId; never trust a row that claims a
+    // different link, whatever the backend answered.
+    const linked = String(res.data.applicationId ?? '').trim()
+    if (linked && linked !== clean) return null
     return res.data
-  }
-
-  async function smallList(status) {
-    const slot = smallLists[status]
-    if (slot.rows.length > 0 && now() - slot.at < SMALL_LIST_TTL_MS) return slot.rows
-    const res = await upstream(`/api/JobOrders/status/${status}`, { timeoutMs: SMALL_LIST_TIMEOUT_MS })
-    if (res.status === 200 && Array.isArray(res.data)) {
-      slot.at = now()
-      slot.rows = res.data
-    }
-    return slot.rows
   }
 
   async function billingRows() {
     if (billing.rows.length > 0 && now() - billing.at < BILLING_TTL_MS) return billing.rows
-    const res = await upstream('/api/BillingDetails', { timeoutMs: SMALL_LIST_TIMEOUT_MS })
+    const res = await upstream('/api/BillingDetails', { timeoutMs: BILLING_TIMEOUT_MS })
     if (res.status === 200) {
       const list = Array.isArray(res.data) ? res.data : (res.data?.billingDetails || [])
       if (Array.isArray(list) && list.length > 0) {
@@ -81,57 +88,6 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
       }
     }
     return billing.rows
-  }
-
-  async function activatedIndex() {
-    if (activated.at > 0 && now() - activated.at < ACTIVATED_INDEX_TTL_MS) return activated.index
-    const res = await upstream('/api/JobOrders/status/Activated', { timeoutMs: BIG_LIST_TIMEOUT_MS })
-    if (res.status === 200 && Array.isArray(res.data)) {
-      const index = new Map()
-      for (const row of res.data) {
-        if (!row || row.id === undefined || row.id === null) continue
-        for (const key of [row.accountNo, row.applicationIdValue, row.id]) {
-          const k = norm(key)
-          if (k && !index.has(k)) index.set(k, String(row.id))
-        }
-      }
-      activated.at = now()
-      activated.index = index
-    }
-    return activated.index
-  }
-
-  /**
-   * Fresh job order row for an identifier. `sources` is the discovery order;
-   * a hint is always tried first. Resolves to { row, source } or null.
-   */
-  async function findJobOrder(identifier, { hint = null, sources = ['Scheduled', 'Completed'] } = {}) {
-    const wanted = String(identifier ?? '').trim()
-    if (!wanted) return null
-
-    if (hint && JOB_ORDER_ID.test(String(hint))) {
-      const row = await jobOrderById(hint)
-      if (row && jobOrderMatchesApplication(row, wanted)) return { row, source: 'hint' }
-    }
-
-    for (const source of sources) {
-      let id = null
-      let listRow = null
-      if (source === 'Activated') {
-        id = (await activatedIndex()).get(norm(wanted)) || null
-      } else {
-        listRow = (await smallList(source)).find(r => jobOrderMatchesApplication(r, wanted)) || null
-        id = listRow ? listRow.id : null
-      }
-      if (id === null || id === undefined) continue
-
-      const row = await jobOrderById(id)
-      if (row && jobOrderMatchesApplication(row, wanted)) return { row, source }
-      // Per-id read failed (timeout / transient): the list row is at most a
-      // cache TTL old and is the same record, so it is still a safe answer.
-      if (listRow) return { row: listRow, source: `${source}-list` }
-    }
-    return null
   }
 
   /** Copies stage evidence from a job order row onto the application. */
@@ -180,40 +136,35 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
     if (b.plan && !app.desiredPlan) app.desiredPlan = b.plan
   }
 
+  /** Completed -> Activated once billing carries the job order's account. */
+  async function promoteViaBilling(app, row, extraIdentifiers = []) {
+    if (!isCompleted(statusOf(app.status))) return
+    const b = matchBilling(await billingRows(), [row.accountNo, ...extraIdentifiers])
+    if (b) applyBilling(app, b)
+  }
+
   /**
    * Reconciles an Application row with dispatch (JobOrders) and billing.
    * The backend never advances Application.status past Inprogress/Schedule,
    * so the job order is the only source of truth for stages 2-4.
    */
-  async function enrichApplication(app, { hint = null } = {}) {
+  async function enrichApplication(app) {
     if (!app || typeof app !== 'object') return app
     const current = statusOf(app.status)
     if (isActivated(current)) return app
-
-    const appId = String(app.applicationid || app.applicationId || app.id || '').trim()
-    if (!appId) return app
+    if (!APPLICATION_ROW_ID.test(String(app.id ?? ''))) return app
 
     try {
-      const found = await findJobOrder(appId, { hint })
-      if (found) {
-        // A row that says Completed must not jump an application that still
-        // says Schedule (rule carried over from the list-based tracker).
-        const applied = applyJobOrder(app, found.row, { allowCompleted: !isScheduled(current) })
-        if (applied && isCompleted(statusOf(app.status))) {
-          const b = matchBilling(await billingRows(), [appId])
-          if (b) applyBilling(app, b)
-        }
+      const row = await jobOrderByApplicationId(app.id)
+      if (!row) return app
+      if (!jobOrderBelongsTo(app, row)) {
+        console.warn(`[Tracker] job order ${row.id} (applicationId ${row.applicationId}) does not match Application row ${app.id}; ignored`)
         return app
       }
-
-      const b = matchBilling(await billingRows(), [appId])
-      if (b) {
-        applyBilling(app, b)
-        return app
-      }
-
-      const viaActivated = await findJobOrder(appId, { sources: ['Activated'] })
-      if (viaActivated) applyJobOrder(app, viaActivated.row)
+      // A row that says Completed must not jump an application that still
+      // says Schedule (rule carried over from the list-based tracker).
+      const applied = applyJobOrder(app, row, { allowCompleted: !isScheduled(current) })
+      if (applied) await promoteViaBilling(app, row, [app.applicationid, app.applicationId])
     } catch (err) {
       console.warn('[Tracker] enrichment failed:', err?.message || err)
     }
@@ -222,14 +173,17 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
 
   function applicationFromJobOrder(row) {
     const safe = sanitizeJobOrderRecord(row) || {}
+    const rowId = String(safe.applicationId ?? '').trim()
     const app = {
-      id: safe.id,
-      applicationid: safe.accountNo || String(safe.id),
+      id: APPLICATION_ROW_ID.test(rowId) ? Number(rowId) : safe.id,
+      applicationid: rowId || safe.accountNo || String(safe.id),
       firstName: safe.firstName || '',
       lastName: safe.lastName || '',
       middleName: safe.middleInitial || '',
       mobileNumber: safe.contactNumber || safe.secondContactNumber || '',
-      emailAddress: safe.applicantEmailAddress || safe.emailAddress || '',
+      // JobOrders.emailAddress is the staff member who raised the order; only
+      // applicantEmailAddress belongs to the applicant.
+      emailAddress: safe.applicantEmailAddress || '',
       desiredPlan: safe.planId || '',
       city: safe.city || '',
       barangay: safe.barangay || '',
@@ -244,59 +198,28 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
     return app
   }
 
-  function applicationFromBilling(b) {
-    const fullName = String(b.fullName || '').trim()
-    return {
-      id: b.id,
-      applicationid: b.accountNo || String(b.id),
-      firstName: fullName ? fullName.split(' ')[0] : '',
-      lastName: fullName ? fullName.split(' ').slice(1).join(' ') : '',
-      mobileNumber: b.contactNumber || b.secondContactNumber || '',
-      emailAddress: b.emailAddress || '',
-      desiredPlan: b.plan || '',
-      city: b.city || '',
-      barangay: b.barangay || '',
-      date: b.dateInstalled || b.modifiedDate || '',
-      dateTime: b.modifiedDate || b.dateInstalled || '',
-      status: 'Activated',
-      billingId: b.id,
-      dateInstalled: b.dateInstalled || '',
-      routerModemSn: b.routerModemSn || ''
-    }
-  }
-
   /**
-   * Account numbers that predate online applications have no Application
-   * row. Build a tracker record straight from dispatch or billing instead.
+   * Applications created by staff have no public `applicationid`, so the row
+   * number is the only code those applicants can be given. Build a tracker
+   * record straight from the job order raised for that row.
    */
-  async function lookupByAccount(identifier, { hint = null } = {}) {
-    const found = await findJobOrder(identifier, { hint })
-    if (found) {
-      const app = applicationFromJobOrder(found.row)
-      if (isCompleted(statusOf(app.status))) {
-        const b = matchBilling(await billingRows(), [identifier])
-        if (b) applyBilling(app, b)
-      }
-      return app
-    }
-    const b = matchBilling(await billingRows(), [identifier])
-    if (b) return applicationFromBilling(b)
-
-    const viaActivated = await findJobOrder(identifier, { sources: ['Activated'] })
-    if (viaActivated) return applicationFromJobOrder(viaActivated.row)
-    return null
+  async function lookupByRowId(identifier) {
+    const row = await jobOrderByApplicationId(identifier)
+    if (!row) return null
+    const app = applicationFromJobOrder(row)
+    await promoteViaBilling(app, row)
+    return app
   }
 
   /**
-   * GET /api/Applications/{id}?jo={hint}  ->  { status, body }
+   * GET /api/Applications/{id}  ->  { status, body }
    * Never throws; upstream failures map to 502 with a generic message.
    */
-  async function lookupApplication(identifier, { hint = null } = {}) {
+  async function lookupApplication(identifier) {
     const id = String(identifier ?? '').trim()
     if (!TRACKER_ID.test(id)) {
       return { status: 404, body: { error: 'Not Found' } }
     }
-    const safeHint = hint && JOB_ORDER_ID.test(String(hint)) ? String(hint) : null
 
     const res = await upstream(`/api/Applications/${encodeURIComponent(id)}`, { timeoutMs: ROW_TIMEOUT_MS })
     if (res.status >= 500) {
@@ -313,16 +236,18 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
 
     if (hasRecord) {
       const app = sanitizeApplicationRecord(data)
-      await enrichApplication(app, { hint: safeHint })
+      await enrichApplication(app)
       return { status: 200, body: app }
     }
 
     if (res.status === 200 || res.status === 404 || res.status === 400) {
-      try {
-        const built = await lookupByAccount(id, { hint: safeHint })
-        if (built) return { status: 200, body: sanitizeApplicationRecord(built) }
-      } catch (err) {
-        console.warn('[Tracker] account fallback failed:', err?.message || err)
+      if (APPLICATION_ROW_ID.test(id)) {
+        try {
+          const built = await lookupByRowId(id)
+          if (built) return { status: 200, body: sanitizeApplicationRecord(built) }
+        } catch (err) {
+          console.warn('[Tracker] row id fallback failed:', err?.message || err)
+        }
       }
       return { status: 404, body: { error: 'Not Found', message: 'No application or account matched that ID.' } }
     }
@@ -330,7 +255,7 @@ export function createTrackerLookup({ upstream = upstreamJson, now = Date.now } 
     return { status: res.status, body: { error: 'Lookup failed', message: 'Please try again shortly.' } }
   }
 
-  return { lookupApplication, enrichApplication, findJobOrder, lookupByAccount }
+  return { lookupApplication, enrichApplication, lookupByRowId }
 }
 
 // One shared instance per function instance so warm invocations reuse caches.
