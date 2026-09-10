@@ -24,12 +24,15 @@
         <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-md mx-auto">
           Thank you! We have received your request for <strong class="text-[#ee2824] dark:text-[#ff6b67] font-mono font-bold">{{ submittedTicket.emailAddress }}</strong>. Our support team will contact you directly.
         </p>
+        <p v-if="remainingSeconds > 0" class="text-xs text-slate-400 dark:text-slate-500 font-medium pt-1">
+          Form will automatically reset in <span class="font-mono font-bold text-slate-700 dark:text-slate-200">{{ remainingSeconds }}s</span>
+        </p>
       </div>
 
       <div class="pt-2 flex justify-center">
         <button
           type="button"
-          @click="store.resetForm()"
+          @click="handleManualReset"
           class="btn-primary py-2.5 px-8 text-sm font-bold min-h-11 shadow-md shadow-[#ee2824]/20 flex items-center justify-center gap-2 rounded-xl"
         >
           <RotateCcw class="w-4 h-4" />
@@ -169,13 +172,13 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   CheckCircle2, RotateCcw, Loader2, AlertCircle, Send,
   Mail, MessageSquare, ShieldCheck, Check
 } from 'lucide-vue-next'
-import { useServiceOrderStore } from '../stores/serviceOrder.js'
+import { useServiceOrderStore, SUCCESS_AUTO_RESET_MS } from '../stores/serviceOrder.js'
 
 const store = useServiceOrderStore()
 const {
@@ -185,6 +188,64 @@ const {
   isApiDown,
   submittedTicket
 } = storeToRefs(store)
+
+const remainingSeconds = ref(0)
+let countdownInterval = null
+
+function updateCountdown() {
+  if (!submittedTicket.value) {
+    remainingSeconds.value = 0
+    clearInterval(countdownInterval)
+    countdownInterval = null
+    return
+  }
+  const expiresAt = submittedTicket.value.expiresAt || (new Date(submittedTicket.value.submittedAt).getTime() + SUCCESS_AUTO_RESET_MS)
+  const diffMs = expiresAt - Date.now()
+  if (diffMs <= 0) {
+    remainingSeconds.value = 0
+    clearInterval(countdownInterval)
+    countdownInterval = null
+    store.resetForm()
+  } else {
+    remainingSeconds.value = Math.max(1, Math.ceil(diffMs / 1000))
+  }
+}
+
+function startCountdown() {
+  clearInterval(countdownInterval)
+  updateCountdown()
+  if (remainingSeconds.value > 0) {
+    countdownInterval = setInterval(updateCountdown, 500)
+  }
+}
+
+function handleManualReset() {
+  clearInterval(countdownInterval)
+  countdownInterval = null
+  store.resetForm()
+}
+
+watch(submittedTicket, (newVal) => {
+  if (newVal) {
+    startCountdown()
+  } else {
+    clearInterval(countdownInterval)
+    countdownInterval = null
+    remainingSeconds.value = 0
+  }
+}, { immediate: true })
+
+onMounted(() => {
+  store.checkAutoReset()
+  if (submittedTicket.value) {
+    startCountdown()
+  }
+})
+
+onUnmounted(() => {
+  clearInterval(countdownInterval)
+  countdownInterval = null
+})
 
 const isValidEmail = computed(() => {
   const email = (formData.value?.emailAddress || '').trim()

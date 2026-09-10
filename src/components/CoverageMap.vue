@@ -22,8 +22,20 @@
         </div>
       </div>
 
-      <!-- Map Action Buttons: even 3-up row on mobile, inline on larger screens -->
-      <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:items-center sm:w-auto sm:justify-end">
+      <!-- Map Action Buttons: responsive grid on mobile, inline on larger screens -->
+      <div class="grid grid-cols-2 sm:flex sm:items-center sm:w-auto sm:justify-end gap-2 w-full">
+        <button
+          @click="syncNetwork"
+          type="button"
+          :disabled="coverageStore.napStatus === 'loading'"
+          class="btn-secondary py-2 px-2 sm:px-3 text-xs flex items-center justify-center gap-1.5 shrink-0 min-w-0"
+          title="Sync live NAP terminals from network"
+        >
+          <RotateCw class="w-3.5 h-3.5 shrink-0" :class="coverageStore.napStatus === 'loading' ? 'animate-spin text-[#ee2824]' : ''" />
+          <span class="sm:hidden truncate">Sync</span>
+          <span class="hidden sm:inline">Sync Network</span>
+        </button>
+
         <button
           @click="toggleNapPoints"
           type="button"
@@ -78,6 +90,18 @@
         <span class="px-4 py-2.5 rounded-xl bg-slate-900/90 text-white text-xs font-bold shadow-xl">
           Hold Ctrl (or ⌘) and scroll to zoom the map
         </span>
+      </div>
+
+      <!-- Notice when selected municipality has no active NAP points -->
+      <div
+        v-if="unservedNotice"
+        class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-amber-500/40 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-top-2 duration-300"
+      >
+        <div class="flex items-center justify-between font-bold text-amber-600 dark:text-amber-400">
+          <span>Expansion Planned Area</span>
+          <button @click="unservedNotice = ''" aria-label="Dismiss" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-0.5">&times;</button>
+        </div>
+        <p class="dark:text-slate-200 text-slate-700 leading-relaxed font-medium">{{ unservedNotice }}</p>
       </div>
 
       <!-- Geolocation failure notice -->
@@ -176,6 +200,7 @@ const isLocating = ref(false)
 const userLocationMessage = ref('')
 const locateError = ref('')
 const showTouchHint = ref(false)
+const unservedNotice = ref('')
 
 let map = null
 let markersLayer = null
@@ -342,6 +367,19 @@ function createPinIcon(type) {
 }
 
 // Backed by the store so the card list and any other view stay in sync
+function syncNetwork() {
+  coverageStore.refreshNapLocations()
+}
+
+let lastFocusSync = 0
+function handleWindowFocus() {
+  const now = Date.now()
+  if (now - lastFocusSync > 30000) {
+    lastFocusSync = now
+    coverageStore.fetchNapLocations(true)
+  }
+}
+
 function toggleNapPoints() {
   coverageStore.showNapPoints = !coverageStore.showNapPoints
 }
@@ -418,9 +456,12 @@ function renderCoverageItems() {
   markersLayer.clearLayers()
   circlesLayer.clearLayers()
 
-  const items = coverageStore.filteredCoverage
+  // Only render barangays that are physically verified within the LCP NAP data
+  const items = coverageStore.mapCoverageItems
 
   items.forEach(item => {
+    if (!coverageStore.isBarangayInNapData(item)) return
+
     const isHq = item.name.includes('HQ')
     const isAvailable = item.status === 'Available Now'
     const type = isHq ? 'hq' : (isAvailable ? 'active' : 'expansion')
@@ -434,6 +475,11 @@ function renderCoverageItems() {
 
     const registerHref = `/register?barangay=${encodeURIComponent(item.name)}&city=${encodeURIComponent(item.municipality)}`
 
+    const liveNapCount = coverageStore.getNapCountForBarangay(item)
+    const napCountLabel = liveNapCount > 0
+      ? `${liveNapCount} Live NAP Terminal${liveNapCount === 1 ? '' : 's'} Mapped`
+      : escapeHtml(item.activeNodes || 'Fiber Terminal Active')
+
     // Main Barangay Popup
     const popupContent = `
       <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 240px; padding: 4px;">
@@ -444,7 +490,7 @@ function renderCoverageItems() {
           Brgy. ${escapeHtml(item.name)}
         </div>
         <div style="font-size: 11px; font-weight: 700; color: #0284c7; margin-bottom: 8px;">
-          🏠 ${escapeHtml(item.connectedHomes || 'Fiber Coverage Active')} • ${escapeHtml(item.activeNodes || 'Fiber Terminal Active')}
+          🏠 ${escapeHtml(item.connectedHomes || 'Fiber Coverage Active')} • ${napCountLabel}
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #334155;">
           <span style="font-weight: 700;">Speed:</span>
@@ -495,7 +541,7 @@ function renderCoverageItems() {
           weight: 2
         }
       })
-      shape.bindTooltip(`Brgy. ${escapeHtml(item.name)} — mapped service area`, { sticky: true })
+      shape.bindTooltip(`Brgy. ${escapeHtml(item.name)} — ${napCountLabel}`, { sticky: true })
       circlesLayer.addLayer(shape)
     } else {
       const circle = L.circle([item.lat, item.lng], {
@@ -506,7 +552,7 @@ function renderCoverageItems() {
         weight: 1,
         dashArray: '4,4'
       })
-      circle.bindTooltip(`Brgy. ${escapeHtml(item.name)} — approximate area`, { sticky: true })
+      circle.bindTooltip(`Brgy. ${escapeHtml(item.name)} — ${napCountLabel}`, { sticky: true })
       circlesLayer.addLayer(circle)
     }
   })
@@ -531,6 +577,7 @@ function resetView() {
   coverageStore.focusedBarangayId = null
   userLocationMessage.value = ''
   locateError.value = ''
+  unservedNotice.value = ''
   map.closePopup()
   map.flyTo(RIZAL_DEFAULT_CENTER, RIZAL_DEFAULT_ZOOM, { duration: 1 })
 }
@@ -643,6 +690,15 @@ watch(() => coverageStore.selectedMunicipality, (newMun) => {
   } else {
     fitToVisibleMarkers()
   }
+
+  const hasNaps = coverageStore.mapCoverageItems.some(item =>
+    newMun === 'All' || item.municipality.toLowerCase() === newMun.toLowerCase()
+  )
+  if (!hasNaps && newMun !== 'All') {
+    unservedNotice.value = `No active fiber NAP terminals currently mapped in ${newMun}. Only barangays with verified LCP NAP data are shown on the map.`
+  } else {
+    unservedNotice.value = ''
+  }
 })
 
 // Watch search query to update markers, framing whatever matched
@@ -659,6 +715,7 @@ watch(() => coverageStore.showNapPoints, () => {
 
 // Redraw once the live NAP fetch resolves (or if the list ever refreshes)
 watch(() => coverageStore.napLocations, () => {
+  renderCoverageItems()
   renderNapPoints()
 })
 
@@ -685,6 +742,9 @@ watch(() => coverageStore.focusedBarangayId, (newId) => {
 
 onMounted(() => {
   coverageStore.fetchNapLocations()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('focus', handleWindowFocus)
+  }
   nextTick(() => {
     initMap()
     mapElementRef.value?.addEventListener('click', onPopupClick)
@@ -704,6 +764,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearTimeout(touchHintTimer)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('focus', handleWindowFocus)
+  }
   resizeObserver?.disconnect()
   resizeObserver = null
   mapElementRef.value?.removeEventListener('click', onPopupClick)

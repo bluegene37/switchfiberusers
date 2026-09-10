@@ -275,5 +275,21 @@ describe('Service Orders API & Data Handling', () => {
       assert.ok(content.includes("supportStatus: 'Inprogress'"), 'Payload must set supportStatus to Inprogress')
       assert.ok(content.includes("modifiedBy: ''"), 'Payload must leave modifiedBy empty')
     })
+
+    it('implements automatic time-based reset in serviceOrder store and ServiceConcernForm', async () => {
+      const storePath = path.resolve(__dirname, '../src/stores/serviceOrder.js')
+      const storeContent = fs.readFileSync(storePath, 'utf8')
+      const formPath = path.resolve(__dirname, '../src/components/ServiceConcernForm.vue')
+      const formContent = fs.readFileSync(formPath, 'utf8')
+
+      assert.ok(storeContent.includes('SUCCESS_AUTO_RESET_SECONDS'), 'Store must export SUCCESS_AUTO_RESET_SECONDS')
+      assert.ok(storeContent.includes('SUCCESS_AUTO_RESET_MS'), 'Store must export SUCCESS_AUTO_RESET_MS')
+      assert.ok(storeContent.includes('checkAutoReset'), 'Store must export checkAutoReset')
+      assert.ok(storeContent.includes('expiresAt'), 'Store must track ticket expiresAt')
+
+      assert.ok(formContent.includes('remainingSeconds'), 'Form must track remainingSeconds countdown')
+      assert.ok(formContent.includes('Form will automatically reset in'), 'Form must display countdown notice')
+      assert.ok(formContent.includes('store.checkAutoReset()'), 'Form must verify auto-reset on mount')
+    })
   })
 })

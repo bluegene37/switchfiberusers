@@ -13,6 +13,9 @@ export const CONCERN_CATEGORIES = [
 
 export const PHILIPPINE_MOBILE_REGEX = /^(09\d{9})$/
 
+export const SUCCESS_AUTO_RESET_SECONDS = 10
+export const SUCCESS_AUTO_RESET_MS = SUCCESS_AUTO_RESET_SECONDS * 1000
+
 export const useServiceOrderStore = defineStore('serviceOrder', () => {
   const isSubmitting = ref(false)
   const error = ref(null)
@@ -23,13 +26,32 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
     emailAddress: ''
   })
 
+  let autoResetTimer = null
+
+  function clearAutoResetTimer() {
+    if (autoResetTimer) {
+      clearTimeout(autoResetTimer)
+      autoResetTimer = null
+    }
+  }
+
   function resetForm() {
+    clearAutoResetTimer()
     formData.value = {
       emailAddress: ''
     }
     error.value = null
     isApiDown.value = false
     submittedTicket.value = null
+  }
+
+  function checkAutoReset() {
+    if (submittedTicket.value) {
+      const expiresAt = submittedTicket.value.expiresAt || (new Date(submittedTicket.value.submittedAt).getTime() + SUCCESS_AUTO_RESET_MS)
+      if (Date.now() >= expiresAt) {
+        resetForm()
+      }
+    }
   }
 
   function validate() {
@@ -112,8 +134,14 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
         id: generatedId,
         status: 'Inprogress',
         emailAddress: email,
-        submittedAt: nowIso
+        submittedAt: nowIso,
+        expiresAt: Date.now() + SUCCESS_AUTO_RESET_MS
       }
+
+      clearAutoResetTimer()
+      autoResetTimer = setTimeout(() => {
+        resetForm()
+      }, SUCCESS_AUTO_RESET_MS)
 
       return submittedTicket.value
     } catch (err) {
@@ -132,6 +160,7 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
     isApiDown,
     submittedTicket,
     resetForm,
+    checkAutoReset,
     validate,
     submitConcern
   }

@@ -35,9 +35,23 @@
           />
         </div>
 
-        <!-- Result Counter Badge -->
-        <div class="shrink-0 text-xs font-bold dark:text-slate-400 text-slate-600">
-          Showing <span class="text-[#ee2824] dark:text-[#ff6b67] font-mono font-extrabold text-sm">{{ coverageStore.filteredCoverage.length }}</span> locations
+        <!-- Result Counter Badge & Network Mode Toggle -->
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <button
+            @click="coverageStore.onlyNapCovered = !coverageStore.onlyNapCovered"
+            type="button"
+            class="px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 focus:outline-none"
+            :class="coverageStore.onlyNapCovered
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+              : 'dark:bg-slate-900 bg-white dark:text-slate-400 text-slate-600 dark:border-slate-800 border-slate-200'"
+            :title="coverageStore.onlyNapCovered ? 'Showing only active zones with live LCP NAP data' : 'Showing all zones including expansion placeholders'"
+          >
+            <span class="w-2 h-2 rounded-full" :class="coverageStore.onlyNapCovered ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
+            <span>{{ coverageStore.onlyNapCovered ? 'Live Network (Active NAPs)' : 'All Planned Areas' }}</span>
+          </button>
+          <div class="text-xs font-bold dark:text-slate-400 text-slate-600">
+            Showing <span class="text-[#ee2824] dark:text-[#ff6b67] font-mono font-extrabold text-sm">{{ coverageStore.filteredCoverage.length }}</span> locations
+          </div>
         </div>
 
       </div>
@@ -82,6 +96,7 @@
           <h3 class="text-xl font-bold font-heading dark:text-white text-slate-900 flex items-center justify-between">
             <span>Brgy. {{ item.name }}</span>
             <button
+              v-if="coverageStore.isBarangayInNapData(item)"
               @click="locateOnMap(item.id)"
               type="button"
               class="opacity-0 group-hover:opacity-100 min-h-11 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-[#ee2824] transition-all text-xs flex items-center justify-center gap-1 font-sans font-medium"
@@ -99,7 +114,9 @@
                 <Home class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                 <span>{{ item.connectedHomes }}</span>
               </span>
-              <span class="text-[10px] font-mono font-bold">{{ item.activeNodes }}</span>
+              <span class="text-[10px] font-mono font-bold">
+                {{ coverageStore.getNapCountForBarangay(item) > 0 ? `${coverageStore.getNapCountForBarangay(item)} Live NAPs` : (coverageStore.isBarangayInNapData(item) ? item.activeNodes : 'Expansion Planned') }}
+              </span>
             </div>
 
             <div class="flex justify-between border-b dark:border-slate-800/80 border-slate-100 pb-2">
@@ -129,6 +146,7 @@
 
         <div class="pt-3 flex gap-2">
           <button
+            v-if="coverageStore.isBarangayInNapData(item)"
             @click="locateOnMap(item.id)"
             type="button"
             class="btn-secondary text-xs py-2 px-3 min-w-11 flex items-center justify-center shrink-0"

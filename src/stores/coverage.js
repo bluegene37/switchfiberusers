@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { barangayBoundaries } from '../data/barangayBoundaries'
+import { samePlace } from '../data/calabarzonLocations'
 
 export const useCoverageStore = defineStore('coverage', () => {
   const searchQuery = ref('')
@@ -899,14 +901,316 @@ export const useCoverageStore = defineStore('coverage', () => {
     }
   ])
 
+  const onlyNapCovered = ref(true)
+
+  // Ray-casting point-in-polygon algorithm to test if [lng, lat] falls within GeoJSON polygon
+  function pointInPolygon(point, vs) {
+    const x = point[0]
+    const y = point[1]
+    let inside = false
+    for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+      const xi = vs[i][0]
+      const yi = vs[i][1]
+      const xj = vs[j][0]
+      const yj = vs[j][1]
+      const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+      if (intersect) inside = !inside
+    }
+    return inside
+  }
+
+  function getDistanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+
+  // Known backend numeric barangay identifiers for legacy Binangonan and Cardona database rows
+  const KNOWN_BARANGAY_CODES = {
+    '2': { municipality: 'Binangonan', name: 'Batingan (HQ)' },
+    '3': { municipality: 'Binangonan', name: 'Habagatan' },
+    '7': { municipality: 'Binangonan', name: 'Calumpang' },
+    '8': { municipality: 'Binangonan', name: 'Darangan' },
+    '19': { municipality: 'Binangonan', name: 'Layunan' },
+    '20': { municipality: 'Binangonan', name: 'Libid' },
+    '21': { municipality: 'Binangonan', name: 'Libis' },
+    '22': { municipality: 'Binangonan', name: 'Kabilang Tabi' },
+    '23': { municipality: 'Binangonan', name: 'Lunsad' },
+    '24': { municipality: 'Binangonan', name: 'Macamot' },
+    '25': { municipality: 'Binangonan', name: 'Mambog' },
+    '27': { municipality: 'Binangonan', name: 'Tatala' },
+    '28': { municipality: 'Binangonan', name: 'Tayuman' },
+    '29': { municipality: 'Binangonan', name: 'Kalinawan' },
+    '30': { municipality: 'Binangonan', name: 'Pantok' },
+    '31': { municipality: 'Binangonan', name: 'Pila-pila' },
+    '38': { municipality: 'Binangonan', name: 'Tagpos' },
+    '39': { municipality: 'Binangonan', name: 'Palangoy' },
+    '40': { municipality: 'Binangonan', name: 'Bilibiran' },
+    '43': { municipality: 'Angono', name: 'San Isidro' },
+    '48': { municipality: 'Cardona', name: 'Calahan' },
+    '62': { municipality: 'Binangonan', name: 'Mahabang Parang (Binangonan)' },
+    '63': { municipality: 'Cardona', name: 'Looc' },
+    '66': { municipality: 'Cardona', name: 'San Roque' },
+    '67': { municipality: 'Cardona', name: 'Real Poblacion' },
+    '68': { municipality: 'Cardona', name: 'Calahan' },
+    '74': { municipality: 'Cardona', name: 'Calahan' }
+  }
+
+  /**
+   * Resolves any NAP point (existing or newly added) to its corresponding
+   * Municipality and Barangay using a multi-tiered spatial and textual matching strategy.
+   */
+  function resolveNapBarangay(point) {
+    if (!point) return null
+    const bRaw = (point.barangay || '').trim()
+    const cityRaw = (point.city || '').trim()
+
+    // 1. Check known numeric code dictionary
+    if (bRaw && KNOWN_BARANGAY_CODES[bRaw]) {
+      const known = KNOWN_BARANGAY_CODES[bRaw]
+      return {
+        municipality: cityRaw && cityRaw !== 'All' ? cityRaw : known.municipality,
+        name: known.name
+      }
+    }
+
+    // 2. If bRaw is text (not purely numeric digits), check if it matches an item in coverageList
+    if (bRaw && !/^\d+$/.test(bRaw)) {
+      const matchedItem = coverageList.value.find(item =>
+        (!cityRaw || cityRaw === 'All' || samePlace(item.municipality, cityRaw)) &&
+        samePlace(item.name, bRaw)
+      )
+      if (matchedItem) {
+        return { municipality: matchedItem.municipality, name: matchedItem.name }
+      }
+      if (cityRaw && cityRaw !== 'All') {
+        return { municipality: cityRaw, name: bRaw }
+      }
+    }
+
+    // 3. GeoJSON polygon containment
+    for (const [key, boundary] of Object.entries(barangayBoundaries)) {
+      if (boundary && boundary.coordinates && boundary.coordinates[0]) {
+        if (pointInPolygon([point.lng, point.lat], boundary.coordinates[0])) {
+          const [mun, brgy] = key.split('::')
+          return { municipality: mun, name: brgy }
+        }
+      }
+    }
+
+    // 4. Spatial proximity within 1.0km of known barangay centers in the same municipality
+    const candidateItems = cityRaw && cityRaw !== 'All'
+      ? coverageList.value.filter(item => samePlace(item.municipality, cityRaw))
+      : coverageList.value
+
+    let closestItem = null
+    let minDistance = Infinity
+    for (const item of candidateItems) {
+      const d = getDistanceKm(point.lat, point.lng, item.lat, item.lng)
+      if (d < minDistance && d <= 1.0) {
+        minDistance = d
+        closestItem = item
+      }
+    }
+    if (closestItem) {
+      return { municipality: closestItem.municipality, name: closestItem.name }
+    }
+
+    // 5. Dynamic fallback: if point has city and textual barangay
+    if (bRaw) {
+      return { municipality: cityRaw || 'Rizal', name: bRaw }
+    }
+
+    // 6. Last resort: if city is known, group by street or LCP
+    if (cityRaw && cityRaw !== 'All') {
+      return {
+        municipality: cityRaw,
+        name: point.street ? point.street : (point.lcp || `Zone ${point.id}`)
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Returns the count of live LCP/NAP terminals mapped within a barangay.
+   */
+  function getNapCountForBarangay(item, napsList = napLocations.value) {
+    if (!item || !Array.isArray(napsList) || napsList.length === 0) return 0
+    if (typeof item.liveNapCount === 'number' && napsList === napLocations.value) {
+      return item.liveNapCount
+    }
+
+    let count = 0
+    for (const point of napsList) {
+      const res = resolveNapBarangay(point)
+      if (res && samePlace(res.municipality, item.municipality) && samePlace(res.name, item.name)) {
+        count++
+      }
+    }
+    return count
+  }
+
+  /**
+   * Validates whether a barangay has active LCP/NAP terminals mapped to it.
+   */
+  function isBarangayInNapData(item, napsList = napLocations.value) {
+    if (!item) return false
+    if (!Array.isArray(napsList) || napsList.length === 0) {
+      // Offline / initial fallback before NAP data loads: only show verified active zones
+      return item.status === 'Available Now' || samePlace(item.municipality, 'Cardona')
+    }
+    if (typeof item.liveNapCount === 'number' && napsList === napLocations.value) {
+      return item.liveNapCount > 0
+    }
+    return getNapCountForBarangay(item, napsList) > 0
+  }
+
+  /**
+   * Reactive dynamic coverage catalog.
+   * Promotes base barangays with newly added live NAPs to active status,
+   * updates coordinates to real physical terminal centroids, and auto-synthesizes
+   * new barangay items whenever newly provisioned terminals appear in the dataset.
+   */
+  const dynamicCoverageList = computed(() => {
+    const naps = napLocations.value
+    if (!Array.isArray(naps) || naps.length === 0) {
+      return coverageList.value
+    }
+
+    // Group NAPs by "Municipality::Barangay"
+    const napGroups = new Map()
+    for (const point of naps) {
+      const res = resolveNapBarangay(point)
+      if (!res) continue
+      const key = `${res.municipality}::${res.name}`
+      if (!napGroups.has(key)) {
+        napGroups.set(key, {
+          municipality: res.municipality,
+          name: res.name,
+          points: []
+        })
+      }
+      napGroups.get(key).points.push(point)
+    }
+
+    const result = []
+    const matchedKeys = new Set()
+
+    // 1. Process base items from curated coverageList
+    for (const item of coverageList.value) {
+      // Find matching group using samePlace
+      let matchedGroup = null
+      let matchedKey = null
+      for (const [key, group] of napGroups.entries()) {
+        if (samePlace(group.municipality, item.municipality) && samePlace(group.name, item.name)) {
+          matchedGroup = group
+          matchedKey = key
+          break
+        }
+      }
+
+      if (matchedGroup && matchedGroup.points.length > 0) {
+        matchedKeys.add(matchedKey)
+        const pts = matchedGroup.points
+        const avgLat = pts.reduce((sum, p) => sum + p.lat, 0) / pts.length
+        const avgLng = pts.reduce((sum, p) => sum + p.lng, 0) / pts.length
+        const napStreets = Array.from(new Set(pts.map(p => p.street).filter(Boolean)))
+        const allCovered = Array.from(new Set([...(item.coveredAreas || []), ...napStreets]))
+
+        result.push({
+          ...item,
+          lat: Number.isFinite(avgLat) ? Number(avgLat.toFixed(6)) : item.lat,
+          lng: Number.isFinite(avgLng) ? Number(avgLng.toFixed(6)) : item.lng,
+          status: 'Available Now',
+          slots: 'Ready for Dispatch',
+          connectedHomes: 'Fiber Coverage Active',
+          activeNodes: `${pts.length} live NAP terminal${pts.length === 1 ? '' : 's'} mapped`,
+          liveNapCount: pts.length,
+          coveredAreas: allCovered.slice(0, 15)
+        })
+      } else {
+        result.push({
+          ...item,
+          liveNapCount: 0
+        })
+      }
+    }
+
+    // 2. Synthesize new barangays for any newly added NAP groups not in base list
+    let dynamicIdCounter = 1000
+    for (const [key, group] of napGroups.entries()) {
+      if (matchedKeys.has(key)) continue
+      const pts = group.points
+      const avgLat = pts.reduce((sum, p) => sum + p.lat, 0) / pts.length
+      const avgLng = pts.reduce((sum, p) => sum + p.lng, 0) / pts.length
+      const napStreets = Array.from(new Set(pts.map(p => p.street).filter(Boolean)))
+
+      result.push({
+        id: dynamicIdCounter++,
+        name: group.name,
+        municipality: group.municipality,
+        lat: Number(avgLat.toFixed(6)),
+        lng: Number(avgLng.toFixed(6)),
+        status: 'Available Now',
+        speed: 'Up to 220 Mbps',
+        slots: 'Ready for Dispatch',
+        connectedHomes: 'Fiber Coverage Active',
+        activeNodes: `${pts.length} live NAP terminal${pts.length === 1 ? '' : 's'} mapped`,
+        liveNapCount: pts.length,
+        coveredAreas: napStreets.slice(0, 15),
+        isDynamic: true
+      })
+    }
+
+    return result
+  })
+
+  // Dynamically include any newly discovered municipalities with live NAP terminals
+  const allMunicipalities = computed(() => {
+    const list = [
+      'All',
+      'Binangonan',
+      'Angono',
+      'Taytay',
+      'Teresa',
+      'Cardona',
+      'Morong',
+      'Baras',
+      'Tanay',
+      'Antipolo'
+    ]
+    const set = new Set(list)
+    for (const item of dynamicCoverageList.value) {
+      if (item.municipality && item.municipality !== 'All' && isBarangayInNapData(item)) {
+        set.add(item.municipality)
+      }
+    }
+    return Array.from(set)
+  })
+
   const filteredCoverage = computed(() => {
-    return coverageList.value.filter(item => {
+    return dynamicCoverageList.value.filter(item => {
+      if (onlyNapCovered.value && !isBarangayInNapData(item)) {
+        return false
+      }
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                             item.municipality.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                             (item.coveredAreas && item.coveredAreas.some(area => area.toLowerCase().includes(searchQuery.value.toLowerCase())))
-      const matchesMunicipality = selectedMunicipality.value === 'All' || item.municipality === selectedMunicipality.value
+      const matchesMunicipality = selectedMunicipality.value === 'All' || samePlace(item.municipality, selectedMunicipality.value)
       return matchesSearch && matchesMunicipality
     })
+  })
+
+  // Guaranteed to only ever include barangays that have physical LCP NAP data
+  const mapCoverageItems = computed(() => {
+    return filteredCoverage.value.filter(item => isBarangayInNapData(item))
   })
 
   // The backend serves coordinates as a "lat, lng" string; some rows are blank
@@ -924,14 +1228,15 @@ export const useCoverageStore = defineStore('coverage', () => {
       nap: (row.nap || '').trim(),
       portTotal: row.portTotal ?? null,
       street: (row.street || '').trim(),
+      barangay: (row.barangay || '').trim(),
       city: (row.city || '').trim(),
       lat,
       lng
     }
   }
 
-  async function fetchNapLocations() {
-    if (napStatus.value === 'loading' || napStatus.value === 'ready') return
+  async function fetchNapLocations(force = false) {
+    if (!force && (napStatus.value === 'loading' || napStatus.value === 'ready')) return
     napStatus.value = 'loading'
     // Same-origin in production (Vercel function); VITE_API_BASE_URL supports
     // pointing a local build elsewhere, mirroring the registration store.
@@ -950,12 +1255,16 @@ export const useCoverageStore = defineStore('coverage', () => {
     }
   }
 
+  function refreshNapLocations() {
+    return fetchNapLocations(true)
+  }
+
   const filteredNapPoints = computed(() => {
     const q = searchQuery.value.trim().toLowerCase()
     return napLocations.value.filter(point => {
       const matchesMunicipality =
         selectedMunicipality.value === 'All' ||
-        point.city.toLowerCase() === selectedMunicipality.value.toLowerCase()
+        samePlace(point.city, selectedMunicipality.value)
       if (!matchesMunicipality) return false
       if (!q) return true
       return point.name.toLowerCase().includes(q) ||
@@ -967,10 +1276,12 @@ export const useCoverageStore = defineStore('coverage', () => {
   function checkAddressServiceability(query) {
     if (!query) return null
     const q = query.toLowerCase()
-    const found = coverageList.value.find(item => 
-      q.includes(item.name.toLowerCase()) || 
-      q.includes(item.municipality.toLowerCase()) ||
-      (item.coveredAreas && item.coveredAreas.some(area => q.includes(area.toLowerCase())))
+    const found = dynamicCoverageList.value.find(item => 
+      isBarangayInNapData(item) && (
+        q.includes(item.name.toLowerCase()) || 
+        q.includes(item.municipality.toLowerCase()) ||
+        (item.coveredAreas && item.coveredAreas.some(area => q.includes(area.toLowerCase())))
+      )
     )
     if (found) {
       return {
@@ -993,11 +1304,17 @@ export const useCoverageStore = defineStore('coverage', () => {
     napLocations,
     napStatus,
     fetchNapLocations,
+    refreshNapLocations,
     filteredNapPoints,
-    municipalities,
+    municipalities: allMunicipalities,
     municipalityCenters,
-    coverageList,
+    coverageList: dynamicCoverageList,
     filteredCoverage,
+    mapCoverageItems,
+    onlyNapCovered,
+    isBarangayInNapData,
+    getNapCountForBarangay,
+    resolveNapBarangay,
     checkAddressServiceability
   }
 })
