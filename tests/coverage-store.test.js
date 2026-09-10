@@ -157,5 +157,16 @@ describe('Domain Models & Store Utilities', () => {
       assert.equal(dynamicItem.lng, 121.2852)
       assert.deepEqual(dynamicItem.coveredAreas, ['Sampaloc Rd', 'Sampaloc Rd Ext'])
     })
+
+    it('includes Habagatan (Binangonan) and San Roque (Cardona) in curated coverageList', () => {
+      const coverageStoreSource = fs.readFileSync(path.resolve(process.cwd(), 'src/stores/coverage.js'), 'utf-8')
+      assert.ok(coverageStoreSource.includes("name: 'Habagatan'"), 'coverageList must include Habagatan')
+      assert.ok(coverageStoreSource.includes("name: 'San Roque'"), 'coverageList must include San Roque')
+      assert.ok(coverageStoreSource.includes("'22': { municipality: 'Binangonan', name: 'Lunsad' }"))
+      assert.ok(coverageStoreSource.includes("'31': { municipality: 'Binangonan', name: 'Pila Pila' }"))
+      assert.ok(coverageStoreSource.includes("'43': { municipality: 'Binangonan', name: 'Mambog' }"))
+      assert.ok(coverageStoreSource.includes("'48': { municipality: 'Cardona', name: 'Calahan' }"))
+      assert.ok(coverageStoreSource.includes("'67': { municipality: 'Cardona', name: 'Real (Poblacion)' }"))
+    })
   })
 })

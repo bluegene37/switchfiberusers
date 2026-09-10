@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { barangayBoundaries } from '../data/barangayBoundaries'
-import { samePlace } from '../data/calabarzonLocations'
+import { barangayBoundaries } from '../data/barangayBoundaries.js'
+import { samePlace } from '../data/calabarzonLocations.js'
 
 export const useCoverageStore = defineStore('coverage', () => {
   const searchQuery = ref('')
@@ -503,6 +503,20 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '5 NAP Terminals',
       coveredAreas: ['Kalinawan Proper', 'Lakeside Residential Village', 'Pila-Pila Access Rd']
     },
+    {
+      id: 53,
+      name: 'Habagatan',
+      municipality: 'Binangonan',
+      lat: 14.5020,
+      lng: 121.1765,
+      status: 'Available Now',
+      speed: 'Up to 220 Mbps',
+      slots: 'Ready for Dispatch',
+      connectedHomes: 'Fiber Coverage Active',
+      activeNodes: '56 live NAP terminals mapped',
+      officialMapImage: 'https://switchfiber.ph/wp-content/uploads/AREA-COVERAGES-11.png',
+      coveredAreas: ['Manila East Road', 'San Roque St.', 'San Vicente St.', 'Tojos St.', 'Sto. Niño', 'Lirio']
+    },
     
     // ==========================================
     // ANGONO EXPANSION (Launching this Year)
@@ -766,6 +780,19 @@ export const useCoverageStore = defineStore('coverage', () => {
       activeNodes: '3 NAP Terminals',
       coveredAreas: ['Cardona Municipal Hall', 'Real Town Proper']
     },
+    {
+      id: 54,
+      name: 'San Roque',
+      municipality: 'Cardona',
+      lat: 14.4855,
+      lng: 121.2345,
+      status: 'Expansion Active',
+      speed: 'Up to 220 Mbps',
+      slots: 'Ready for Dispatch',
+      connectedHomes: 'Fiber Coverage Active',
+      activeNodes: '3 live NAP terminals mapped',
+      coveredAreas: ['Alejandro St.', 'Perry St.', 'Sta. Ana St.']
+    },
 
     // ==========================================
     // MORONG EXPANSION
@@ -940,7 +967,7 @@ export const useCoverageStore = defineStore('coverage', () => {
     '19': { municipality: 'Binangonan', name: 'Layunan' },
     '20': { municipality: 'Binangonan', name: 'Libid' },
     '21': { municipality: 'Binangonan', name: 'Libis' },
-    '22': { municipality: 'Binangonan', name: 'Kabilang Tabi' },
+    '22': { municipality: 'Binangonan', name: 'Lunsad' },
     '23': { municipality: 'Binangonan', name: 'Lunsad' },
     '24': { municipality: 'Binangonan', name: 'Macamot' },
     '25': { municipality: 'Binangonan', name: 'Mambog' },
@@ -948,16 +975,16 @@ export const useCoverageStore = defineStore('coverage', () => {
     '28': { municipality: 'Binangonan', name: 'Tayuman' },
     '29': { municipality: 'Binangonan', name: 'Kalinawan' },
     '30': { municipality: 'Binangonan', name: 'Pantok' },
-    '31': { municipality: 'Binangonan', name: 'Pila-pila' },
+    '31': { municipality: 'Binangonan', name: 'Pila Pila' },
     '38': { municipality: 'Binangonan', name: 'Tagpos' },
     '39': { municipality: 'Binangonan', name: 'Palangoy' },
     '40': { municipality: 'Binangonan', name: 'Bilibiran' },
-    '43': { municipality: 'Angono', name: 'San Isidro' },
+    '43': { municipality: 'Binangonan', name: 'Mambog' },
     '48': { municipality: 'Cardona', name: 'Calahan' },
     '62': { municipality: 'Binangonan', name: 'Mahabang Parang (Binangonan)' },
     '63': { municipality: 'Cardona', name: 'Looc' },
     '66': { municipality: 'Cardona', name: 'San Roque' },
-    '67': { municipality: 'Cardona', name: 'Real Poblacion' },
+    '67': { municipality: 'Cardona', name: 'Real (Poblacion)' },
     '68': { municipality: 'Cardona', name: 'Calahan' },
     '74': { municipality: 'Cardona', name: 'Calahan' }
   }
@@ -975,7 +1002,7 @@ export const useCoverageStore = defineStore('coverage', () => {
     if (bRaw && KNOWN_BARANGAY_CODES[bRaw]) {
       const known = KNOWN_BARANGAY_CODES[bRaw]
       return {
-        municipality: cityRaw && cityRaw !== 'All' ? cityRaw : known.municipality,
+        municipality: known.municipality,
         name: known.name
       }
     }
@@ -1105,29 +1132,22 @@ export const useCoverageStore = defineStore('coverage', () => {
 
     // 1. Process base items from curated coverageList
     for (const item of coverageList.value) {
-      // Find matching group using samePlace
-      let matchedGroup = null
-      let matchedKey = null
+      // Find all matching groups using samePlace
+      const matchedGroups = []
       for (const [key, group] of napGroups.entries()) {
         if (samePlace(group.municipality, item.municipality) && samePlace(group.name, item.name)) {
-          matchedGroup = group
-          matchedKey = key
-          break
+          matchedGroups.push(group)
+          matchedKeys.add(key)
         }
       }
 
-      if (matchedGroup && matchedGroup.points.length > 0) {
-        matchedKeys.add(matchedKey)
-        const pts = matchedGroup.points
-        const avgLat = pts.reduce((sum, p) => sum + p.lat, 0) / pts.length
-        const avgLng = pts.reduce((sum, p) => sum + p.lng, 0) / pts.length
+      if (matchedGroups.length > 0) {
+        const pts = matchedGroups.flatMap(g => g.points)
         const napStreets = Array.from(new Set(pts.map(p => p.street).filter(Boolean)))
         const allCovered = Array.from(new Set([...(item.coveredAreas || []), ...napStreets]))
 
         result.push({
           ...item,
-          lat: Number.isFinite(avgLat) ? Number(avgLat.toFixed(6)) : item.lat,
-          lng: Number.isFinite(avgLng) ? Number(avgLng.toFixed(6)) : item.lng,
           status: 'Available Now',
           slots: 'Ready for Dispatch',
           connectedHomes: 'Fiber Coverage Active',
