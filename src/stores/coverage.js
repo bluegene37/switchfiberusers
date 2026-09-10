@@ -244,8 +244,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 9,
       name: 'Tatala',
       municipality: 'Binangonan',
-      lat: 14.4813,
-      lng: 121.2136,
+      lat: 14.48774,
+      lng: 121.20853,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -273,8 +273,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 10,
       name: 'Mambog',
       municipality: 'Binangonan',
-      lat: 14.4687,
-      lng: 121.2091,
+      lat: 14.48098,
+      lng: 121.21342,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -299,8 +299,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 11,
       name: 'Mahabang Parang',
       municipality: 'Binangonan',
-      lat: 14.4916,
-      lng: 121.1882,
+      lat: 14.46862,
+      lng: 121.20906,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -386,8 +386,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 14,
       name: 'Palangoy',
       municipality: 'Binangonan',
-      lat: 14.4877,
-      lng: 121.2085,
+      lat: 14.49651,
+      lng: 121.1793,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -438,8 +438,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 18,
       name: 'Tayuman',
       municipality: 'Binangonan',
-      lat: 14.5239,
-      lng: 121.1590,
+      lat: 14.51749,
+      lng: 121.16258,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -466,8 +466,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 50,
       name: 'Bilibiran',
       municipality: 'Binangonan',
-      lat: 14.5175,
-      lng: 121.1626,
+      lat: 14.49812,
+      lng: 121.17661,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -479,8 +479,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 20,
       name: 'Pag-asa',
       municipality: 'Binangonan',
-      lat: 14.52124,
-      lng: 121.1589,
+      lat: 14.52386,
+      lng: 121.15903,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -492,8 +492,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 21,
       name: 'Kalinawan',
       municipality: 'Binangonan',
-      lat: 14.4965,
-      lng: 121.1793,
+      lat: 14.42513,
+      lng: 121.21124,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'High Demand',
@@ -505,8 +505,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 53,
       name: 'Habagatan',
       municipality: 'Binangonan',
-      lat: 14.4981,
-      lng: 121.1766,
+      lat: 14.29838,
+      lng: 121.23521,
       status: 'Available Now',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -549,8 +549,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 24,
       name: 'San Pedro',
       municipality: 'Angono',
-      lat: 14.5240,
-      lng: 121.1510,
+      lat: 14.52247,
+      lng: 121.1521,
       status: 'Expansion Active',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -575,8 +575,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 26,
       name: 'Poblacion Itaas',
       municipality: 'Angono',
-      lat: 14.5250,
-      lng: 121.1550,
+      lat: 14.52398,
+      lng: 121.15147,
       status: 'Expansion Active',
       speed: 'Up to 220 Mbps',
       slots: 'Ready for Dispatch',
@@ -700,8 +700,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 35,
       name: 'Poblacion',
       municipality: 'Teresa',
-      lat: 14.5620,
-      lng: 121.2100,
+      lat: 14.5606,
+      lng: 121.20484,
       status: 'Expansion Active',
       speed: 'Up to 220 Mbps',
       slots: 'Inquire for Port',
@@ -799,8 +799,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 41,
       name: 'San Juan',
       municipality: 'Morong',
-      lat: 14.5130,
-      lng: 121.2390,
+      lat: 14.51504,
+      lng: 121.24631,
       status: 'Expansion Active',
       speed: 'Up to 220 Mbps',
       slots: 'Inquire for Port',
@@ -842,8 +842,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 44,
       name: 'San Jose',
       municipality: 'Baras',
-      lat: 14.61944,
-      lng: 121.28194,
+      lat: 14.5381,
+      lng: 121.2697,
       status: 'Expansion Active',
       speed: 'Up to 220 Mbps',
       slots: 'Inquire for Port',
@@ -872,8 +872,8 @@ export const useCoverageStore = defineStore('coverage', () => {
       id: 46,
       name: 'Katipunan-Bayan',
       municipality: 'Tanay',
-      lat: 14.4960,
-      lng: 121.2840,
+      lat: 14.50544,
+      lng: 121.28484,
       status: 'Expansion Active',
       speed: 'Up to 220 Mbps',
       slots: 'Inquire for Port',
@@ -944,6 +944,16 @@ export const useCoverageStore = defineStore('coverage', () => {
     return inside
   }
 
+  /**
+   * True when a [lng, lat] point lies inside a GeoJSON Polygon or MultiPolygon
+   * (outer ring only; barangay boundaries carry no holes).
+   */
+  function boundaryContains(boundary, lngLat) {
+    if (!boundary || !Array.isArray(boundary.coordinates)) return false
+    const polygons = boundary.type === 'MultiPolygon' ? boundary.coordinates : [boundary.coordinates]
+    return polygons.some(rings => Array.isArray(rings[0]) && pointInPolygon(lngLat, rings[0]))
+  }
+
   function getDistanceKm(lat1, lon1, lat2, lon2) {
     const R = 6371
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -957,9 +967,13 @@ export const useCoverageStore = defineStore('coverage', () => {
   }
 
   // Known backend numeric barangay identifiers for legacy Binangonan and Cardona database rows
+  // Backend barangay ids follow an alphabetical Binangonan list (Darangan is its own
+  // entry). Verified against official PSA boundaries and OSM place markers: the
+  // terminals for each code sit inside the polygon of the name given here.
+  // Codes 8 and 62 both fall inside official Barangay Kalawaan, where Darangan is a sitio.
   const KNOWN_BARANGAY_CODES = {
     '2': { municipality: 'Binangonan', name: 'Batingan (HQ)' },
-    '3': { municipality: 'Binangonan', name: 'Habagatan' },
+    '3': { municipality: 'Binangonan', name: 'Bilibiran' },
     '7': { municipality: 'Binangonan', name: 'Calumpang' },
     '8': { municipality: 'Binangonan', name: 'Darangan' },
     '19': { municipality: 'Binangonan', name: 'Layunan' },
@@ -968,18 +982,18 @@ export const useCoverageStore = defineStore('coverage', () => {
     '22': { municipality: 'Binangonan', name: 'Lunsad' },
     '23': { municipality: 'Binangonan', name: 'Lunsad' },
     '24': { municipality: 'Binangonan', name: 'Macamot' },
-    '25': { municipality: 'Binangonan', name: 'Mambog' },
-    '27': { municipality: 'Binangonan', name: 'Tatala' },
-    '28': { municipality: 'Binangonan', name: 'Tayuman' },
-    '29': { municipality: 'Binangonan', name: 'Kalinawan' },
+    '25': { municipality: 'Binangonan', name: 'Mahabang Parang (Binangonan)' },
+    '27': { municipality: 'Binangonan', name: 'Mambog' },
+    '28': { municipality: 'Binangonan', name: 'Pag-asa' },
+    '29': { municipality: 'Binangonan', name: 'Palangoy' },
     '30': { municipality: 'Binangonan', name: 'Pantok' },
     '31': { municipality: 'Binangonan', name: 'Pila Pila' },
     '38': { municipality: 'Binangonan', name: 'Tagpos' },
-    '39': { municipality: 'Binangonan', name: 'Palangoy' },
-    '40': { municipality: 'Binangonan', name: 'Bilibiran' },
+    '39': { municipality: 'Binangonan', name: 'Tatala' },
+    '40': { municipality: 'Binangonan', name: 'Tayuman' },
     '43': { municipality: 'Binangonan', name: 'Mambog' },
     '48': { municipality: 'Cardona', name: 'Calahan' },
-    '62': { municipality: 'Binangonan', name: 'Mahabang Parang (Binangonan)' },
+    '62': { municipality: 'Binangonan', name: 'Darangan' },
     '63': { municipality: 'Cardona', name: 'Looc' },
     '66': { municipality: 'Cardona', name: 'San Roque' },
     '67': { municipality: 'Cardona', name: 'Real (Poblacion)' },
@@ -1019,13 +1033,11 @@ export const useCoverageStore = defineStore('coverage', () => {
       }
     }
 
-    // 3. GeoJSON polygon containment
+    // 3. Official barangay boundary containment (Polygon or MultiPolygon)
     for (const [key, boundary] of Object.entries(barangayBoundaries)) {
-      if (boundary && boundary.coordinates && boundary.coordinates[0]) {
-        if (pointInPolygon([point.lng, point.lat], boundary.coordinates[0])) {
-          const [mun, brgy] = key.split('::')
-          return { municipality: mun, name: brgy }
-        }
+      if (boundaryContains(boundary, [point.lng, point.lat])) {
+        const [mun, brgy] = key.split('::')
+        return { municipality: mun, name: brgy }
       }
     }
 

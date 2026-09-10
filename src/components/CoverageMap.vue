@@ -612,7 +612,7 @@ function highlightBarangayBoundary(focusedId) {
   circlesLayer.eachLayer(layer => {
     const item = layer._barangayItem
     if (!item) return
-    const isFocused = Boolean(focusedId && item.id === focusedId)
+    const isFocused = Boolean(focusedId && layer._barangayIds && layer._barangayIds.has(focusedId))
     if (typeof layer.setStyle === 'function') {
       layer.setStyle(getBoundaryStyle(item, isFocused))
     }
@@ -630,6 +630,10 @@ function renderCoverageItems() {
 
   // Only render barangays that are physically verified within the LCP NAP data
   const items = coverageStore.mapCoverageItems
+
+  // Several coverage entries can share one official boundary (e.g. the two
+  // Darangan phases). Draw each boundary once and let any of their pins own it.
+  const shapesByBoundary = new Map()
 
   items.forEach(item => {
     if (!coverageStore.isBarangayInNapData(item)) return
@@ -705,31 +709,42 @@ function renderCoverageItems() {
     })
     markersLayer.addLayer(marker)
 
-    // Service area footprint: real mapped barangay boundary or dynamic network border
+    // Service area footprint: official barangay boundary or dynamic network border
     const boundary = getBarangayBoundary(item)
+    if (!boundary) return
 
-    if (boundary) {
-      const isFocused = Boolean(coverageStore.focusedBarangayId && item.id === coverageStore.focusedBarangayId)
-      const shape = L.geoJSON(boundary, {
-        style: getBoundaryStyle(item, isFocused)
-      })
-      shape._barangayId = item.id
-      shape._barangayItem = item
-
-      shape.bindTooltip(`Brgy. ${escapeHtml(item.name)} — ${napCountLabel}`, { sticky: true })
-
-      // Only highlight border on click, not on hover
-      shape.on('click', (e) => {
-        if (e) {
-          if (typeof e.stopPropagation === 'function') e.stopPropagation()
-          if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent)
-        }
-        coverageStore.focusedBarangayId = item.id
-        highlightBarangayBoundary(item.id)
-        marker.openPopup()
-      })
-      circlesLayer.addLayer(shape)
+    const shared = shapesByBoundary.get(boundary)
+    if (shared) {
+      shared._barangayIds.add(item.id)
+      return
     }
+
+    const isFocused = Boolean(coverageStore.focusedBarangayId && item.id === coverageStore.focusedBarangayId)
+    const shape = L.geoJSON(boundary, {
+      style: getBoundaryStyle(item, isFocused)
+    })
+    shape._barangayIds = new Set([item.id])
+    shape._barangayItem = item
+
+    // Shared boundaries are labelled with the base barangay name ("Darangan"
+    // rather than "Darangan (Phase 2 & 3)").
+    shape.bindTooltip(() => {
+      const label = shape._barangayIds.size > 1 ? item.name.replace(/\s*\([^)]*\)/g, '') : item.name
+      return `Brgy. ${escapeHtml(label)} — ${napCountLabel}`
+    }, { sticky: true })
+
+    // Only highlight border on click, not on hover
+    shape.on('click', (e) => {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation()
+        if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent)
+      }
+      coverageStore.focusedBarangayId = item.id
+      highlightBarangayBoundary(item.id)
+      marker.openPopup()
+    })
+    circlesLayer.addLayer(shape)
+    shapesByBoundary.set(boundary, shape)
   })
 }
 

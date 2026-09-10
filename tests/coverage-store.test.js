@@ -4,6 +4,37 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { referrersList } from '../src/stores/registration.js'
 
+function outerRings(boundary) {
+  if (!boundary || !Array.isArray(boundary.coordinates)) return []
+  return boundary.type === 'MultiPolygon'
+    ? boundary.coordinates.map(poly => poly[0])
+    : [boundary.coordinates[0]]
+}
+
+function boundingBox(boundary) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  for (const ring of outerRings(boundary)) {
+    for (const [x, y] of ring) {
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (y < minY) minY = y
+      if (y > maxY) maxY = y
+    }
+  }
+  return [minX, minY, maxX, maxY]
+}
+
+function pointInRing([x, y], ring) {
+  let inside = false
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]
+    const [xj, yj] = ring[j]
+    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+    if (intersect) inside = !inside
+  }
+  return inside
+}
+
 describe('Domain Models & Store Utilities', () => {
   describe('referrersList', () => {
     it('contains "None" as the first and default option', () => {
@@ -198,10 +229,86 @@ describe('Domain Models & Store Utilities', () => {
       requiredBarangays.forEach(key => {
         const boundary = barangayBoundaries[key]
         assert.ok(boundary, `missing boundary for ${key}`)
-        assert.equal(boundary.type, 'Polygon')
+        assert.ok(['Polygon', 'MultiPolygon'].includes(boundary.type), `unexpected geometry type for ${key}`)
         assert.ok(Array.isArray(boundary.coordinates), `coordinates must be an array for ${key}`)
-        assert.ok(boundary.coordinates[0].length >= 4, `ring must have at least 4 coordinates (closed) for ${key}`)
+        for (const ring of outerRings(boundary)) {
+          assert.ok(ring.length >= 4, `ring must have at least 4 coordinates (closed) for ${key}`)
+          assert.deepEqual(ring[0], ring[ring.length - 1], `ring must be closed for ${key}`)
+        }
       })
+    })
+
+    it('barangay boundaries do not overlap each other', async () => {
+      const { barangayBoundaries } = await import('../src/data/barangayBoundaries.js')
+      const entries = Object.entries(barangayBoundaries)
+      const boxes = Object.fromEntries(entries.map(([key, b]) => [key, boundingBox(b)]))
+      const contains = (b, p) => outerRings(b).some(r => pointInRing(p, r))
+      const step = 0.0005 // ~55 m grid
+      const overlaps = []
+      for (const [key, boundary] of entries) {
+        const [minX, minY, maxX, maxY] = boxes[key]
+        const interior = []
+        for (let x = minX; x <= maxX; x += step) {
+          for (let y = minY; y <= maxY; y += step) {
+            if (contains(boundary, [x, y])) interior.push([x, y])
+          }
+        }
+        if (!interior.length) continue
+        for (const [otherKey, other] of entries) {
+          if (otherKey === key) continue
+          const [a, b, c, d] = boxes[otherKey]
+          if (a > maxX || c < minX || b > maxY || d < minY) continue
+          // Neighbours share borders but never interior area; more than 2% of a
+          // polygon's interior samples landing inside another polygon is an overlap.
+          const shared = interior.filter(p => contains(other, p)).length
+          if (shared > interior.length * 0.02) overlaps.push(`${key} overlaps ${otherKey} (${shared}/${interior.length})`)
+        }
+      }
+      assert.deepEqual(overlaps, [], 'boundaries must tile without overlapping')
+    })
+
+    it('every barangay pin in the curated coverage list falls inside its own boundary', async () => {
+      const { barangayBoundaries } = await import('../src/data/barangayBoundaries.js')
+      const { samePlace } = await import('../src/data/calabarzonLocations.js')
+      const coverageStoreSource = fs.readFileSync(path.resolve(process.cwd(), 'src/stores/coverage.js'), 'utf-8')
+      const itemRe = /name:\s*'([^']+)',\s*municipality:\s*'([^']+)',\s*lat:\s*([\d.]+),\s*lng:\s*([\d.]+)/g
+      const misplaced = []
+      let m
+      while ((m = itemRe.exec(coverageStoreSource))) {
+        const [, name, municipality, lat, lng] = m
+        // Cardona's backend barangay codes could not be verified against the
+        // official boundaries, so its curated pins are left as recorded.
+        if (municipality === 'Cardona') continue
+        const entry = Object.entries(barangayBoundaries).find(([key]) => {
+          const [mun, brgy] = key.split('::')
+          return samePlace(mun, municipality) && samePlace(brgy, name)
+        })
+        if (!entry) continue
+        const inside = outerRings(entry[1]).some(r => pointInRing([Number(lng), Number(lat)], r))
+        if (!inside) misplaced.push(`${municipality}::${name}`)
+      }
+      assert.deepEqual(misplaced, [], 'curated pins must sit inside their official barangay boundary')
+    })
+
+    it('maps backend barangay codes to the barangay whose official boundary holds the terminals', () => {
+      const coverageStoreSource = fs.readFileSync(path.resolve(process.cwd(), 'src/stores/coverage.js'), 'utf-8')
+      const expected = {
+        '3': 'Bilibiran',
+        '25': 'Mahabang Parang (Binangonan)',
+        '27': 'Mambog',
+        '28': 'Pag-asa',
+        '29': 'Palangoy',
+        '39': 'Tatala',
+        '40': 'Tayuman',
+        '62': 'Darangan'
+      }
+      for (const [code, name] of Object.entries(expected)) {
+        assert.ok(
+          coverageStoreSource.includes(`'${code}': { municipality: 'Binangonan', name: '${name}' }`),
+          `code ${code} must map to ${name}`
+        )
+      }
+      assert.ok(coverageStoreSource.includes('function boundaryContains'), 'coverage.js must handle MultiPolygon boundaries')
     })
 
     it('wires interactive boundary borders and legend in CoverageMap.vue', () => {
