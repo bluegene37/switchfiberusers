@@ -168,5 +168,53 @@ describe('Domain Models & Store Utilities', () => {
       assert.ok(coverageStoreSource.includes("'48': { municipality: 'Cardona', name: 'Calahan' }"))
       assert.ok(coverageStoreSource.includes("'67': { municipality: 'Cardona', name: 'Real (Poblacion)' }"))
     })
+
+    it('provides valid GeoJSON polygon boundaries for all active barangays in barangayBoundaries.js', async () => {
+      const { barangayBoundaries } = await import('../src/data/barangayBoundaries.js')
+      assert.ok(Object.keys(barangayBoundaries).length >= 24, 'must have boundaries for all active barangays')
+
+      const requiredBarangays = [
+        'Binangonan::Batingan (HQ)',
+        'Binangonan::Calumpang',
+        'Binangonan::Darangan',
+        'Binangonan::Palangoy',
+        'Binangonan::Lunsad',
+        'Binangonan::Pila Pila',
+        'Binangonan::Mambog',
+        'Binangonan::Macamot',
+        'Binangonan::Pantok',
+        'Binangonan::Tayuman',
+        'Binangonan::Libid',
+        'Binangonan::Tatala',
+        'Binangonan::Habagatan',
+        'Binangonan::Layunan',
+        'Binangonan::Libis',
+        'Cardona::Looc',
+        'Cardona::Calahan',
+        'Cardona::Real (Poblacion)',
+        'Cardona::San Roque'
+      ]
+
+      requiredBarangays.forEach(key => {
+        const boundary = barangayBoundaries[key]
+        assert.ok(boundary, `missing boundary for ${key}`)
+        assert.equal(boundary.type, 'Polygon')
+        assert.ok(Array.isArray(boundary.coordinates), `coordinates must be an array for ${key}`)
+        assert.ok(boundary.coordinates[0].length >= 4, `ring must have at least 4 coordinates (closed) for ${key}`)
+      })
+    })
+
+    it('wires interactive boundary borders and legend in CoverageMap.vue', () => {
+      const mapSource = fs.readFileSync(path.resolve(process.cwd(), 'src/components/CoverageMap.vue'), 'utf-8')
+      assert.ok(mapSource.includes('getBarangayBoundary(item)'), 'CoverageMap must call getBarangayBoundary')
+      assert.ok(mapSource.includes('computeConvexHull'), 'CoverageMap must support dynamic hull computation')
+      assert.ok(mapSource.includes('Barangay Boundary / Border'), 'CoverageMap legend must include Barangay Boundary / Border')
+      assert.ok(mapSource.includes('highlightBarangayBoundary'), 'CoverageMap must define highlightBarangayBoundary')
+      assert.ok(mapSource.includes('getBoundaryStyle'), 'CoverageMap must define getBoundaryStyle')
+      // Border highlighting must occur on click, not on mouseover
+      assert.ok(!mapSource.includes("shape.on('mouseover'"), 'CoverageMap must not alter border highlight on mouseover')
+      assert.ok(mapSource.includes("shape.on('click'"), 'CoverageMap must wire border highlight on click')
+    })
   })
 })
+

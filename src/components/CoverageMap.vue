@@ -156,8 +156,8 @@
           <span class="font-bold dark:text-slate-200 text-slate-800">Expansion Active</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="w-4 h-3 rounded-sm border-2 border-dashed border-slate-400 inline-block"></span>
-          <span class="font-bold dark:text-slate-200 text-slate-800">Approximate area</span>
+          <span class="w-4 h-3 rounded-sm border-2 border-emerald-500 bg-emerald-500/20 inline-block shadow-sm"></span>
+          <span class="font-bold dark:text-slate-200 text-slate-800">Barangay Boundary / Border</span>
         </div>
       </div>
 
@@ -174,7 +174,7 @@
           </template>
         </p>
         <p class="text-[10px] dark:text-slate-500 text-slate-400">
-          Solid shapes follow mapped barangay boundaries; dashed shapes are approximate. Please confirm exact serviceability with our team.
+          Colored borders represent mapped barangay boundaries and active fiber infrastructure footprints.
         </p>
       </div>
     </div>
@@ -191,6 +191,7 @@ import { MapPin, Navigation, RotateCw, Maximize2, CheckCircle2, Home } from 'luc
 import { useCoverageStore } from '../stores/coverage'
 import { useThemeStore } from '../stores/theme'
 import { barangayBoundaries } from '../data/barangayBoundaries'
+import { samePlace } from '../data/calabarzonLocations'
 
 const coverageStore = useCoverageStore()
 const themeStore = useThemeStore()
@@ -261,6 +262,12 @@ function initMap() {
   napRenderer = L.canvas({ padding: 0.5 })
 
   setupGestureHandling()
+
+  map.on('click', () => {
+    coverageStore.focusedBarangayId = null
+    highlightBarangayBoundary(null)
+  })
+
   renderCoverageItems()
   renderNapPoints()
 }
@@ -450,6 +457,171 @@ function renderNapPoints() {
   applyNapPinVisibility()
 }
 
+function crossProduct(o, a, b) {
+  return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+}
+
+function computeConvexHull(points) {
+  if (!points || points.length <= 2) return points || []
+  const pts = points.slice().sort((a, b) => a[0] === b[0] ? a[1] - b[1] : a[0] - b[0])
+  const lower = []
+  for (const p of pts) {
+    while (lower.length >= 2 && crossProduct(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) {
+      lower.pop()
+    }
+    lower.push(p)
+  }
+  const upper = []
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i]
+    while (upper.length >= 2 && crossProduct(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) {
+      upper.pop()
+    }
+    upper.push(p)
+  }
+  lower.pop()
+  upper.pop()
+  return lower.concat(upper)
+}
+
+function generateCircleRing(lat, lng, radiusMeters = 350) {
+  const latDeg = radiusMeters / 111139
+  const lngDeg = radiusMeters / (111139 * Math.cos(lat * Math.PI / 180))
+  const ring = []
+  const steps = 16
+  for (let i = 0; i < steps; i++) {
+    const angle = (i / steps) * 2 * Math.PI
+    ring.push([
+      Number((lng + lngDeg * Math.cos(angle)).toFixed(5)),
+      Number((lat + latDeg * Math.sin(angle)).toFixed(5))
+    ])
+  }
+  ring.push(ring[0])
+  return ring
+}
+
+function bufferPolygonRing(hull, bufferMeters = 140) {
+  if (!hull || hull.length === 0) return []
+  const latDeg = bufferMeters / 111139
+  const lngDeg = bufferMeters / (111139 * Math.cos(14.5 * Math.PI / 180))
+
+  if (hull.length === 1) {
+    return generateCircleRing(hull[0][1], hull[0][0], bufferMeters)
+  }
+
+  if (hull.length === 2) {
+    const [p1, p2] = hull
+    const dx = p2[0] - p1[0]
+    const dy = p2[1] - p1[1]
+    const len = Math.sqrt(dx * dx + dy * dy) || 0.0001
+    const nx = (-dy / len) * lngDeg
+    const ny = (dx / len) * latDeg
+    const ex = (dx / len) * lngDeg
+    const ey = (dy / len) * latDeg
+    return [
+      [Number((p1[0] - ex + nx).toFixed(5)), Number((p1[1] - ey + ny).toFixed(5))],
+      [Number((p2[0] + ex + nx).toFixed(5)), Number((p2[1] + ey + ny).toFixed(5))],
+      [Number((p2[0] + ex - nx).toFixed(5)), Number((p2[1] + ey - ny).toFixed(5))],
+      [Number((p1[0] - ex - nx).toFixed(5)), Number((p1[1] - ey - ny).toFixed(5))],
+      [Number((p1[0] - ex + nx).toFixed(5)), Number((p1[1] - ey + ny).toFixed(5))]
+    ]
+  }
+
+  const cx = hull.reduce((s, p) => s + p[0], 0) / hull.length
+  const cy = hull.reduce((s, p) => s + p[1], 0) / hull.length
+
+  const buffered = hull.map(p => {
+    const dx = p[0] - cx
+    const dy = p[1] - cy
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist === 0) return [p[0] + lngDeg, p[1] + latDeg]
+    const scale = (dist + Math.max(lngDeg, latDeg)) / dist
+    return [
+      Number((cx + dx * scale).toFixed(5)),
+      Number((cy + dy * scale).toFixed(5))
+    ]
+  })
+  buffered.push(buffered[0])
+  return buffered
+}
+
+function getBarangayBoundary(item) {
+  if (!item) return null
+  const directKey = `${item.municipality}::${item.name}`
+  if (barangayBoundaries[directKey]) return barangayBoundaries[directKey]
+
+  // Fallback: match using canonical place comparison
+  for (const [key, bData] of Object.entries(barangayBoundaries)) {
+    const [mun, brgy] = key.split('::')
+    if (samePlace(mun, item.municipality) && samePlace(brgy, item.name)) {
+      return bData
+    }
+  }
+
+  // Fallback: if newly added live NAPs exist for this barangay, compute boundary hull on the fly
+  const naps = coverageStore.napLocations || []
+  const itemNaps = naps.filter(p => {
+    const res = coverageStore.resolveNapBarangay(p)
+    return res && samePlace(res.municipality, item.municipality) && samePlace(res.name, item.name)
+  })
+
+  if (itemNaps.length >= 3) {
+    const pts = itemNaps.map(p => [p.lng, p.lat])
+    const hull = computeConvexHull(pts)
+    const ring = bufferPolygonRing(hull, 140)
+    return { type: 'Polygon', coordinates: [ring] }
+  } else if (itemNaps.length > 0) {
+    const pts = itemNaps.map(p => [p.lng, p.lat])
+    const ring = bufferPolygonRing(pts, 140)
+    return { type: 'Polygon', coordinates: [ring] }
+  }
+
+  // Smooth circular polygon for expansion areas
+  return {
+    type: 'Polygon',
+    coordinates: [generateCircleRing(item.lat, item.lng, 350)]
+  }
+}
+
+function getBoundaryStyle(item, isHighlighted = false) {
+  const isHq = item.name && item.name.includes('HQ')
+  const isAvailable = item.status === 'Available Now'
+  const shapeColor = isHq ? '#ee2824' : (isAvailable ? '#10b981' : '#f59e0b')
+
+  if (isHighlighted) {
+    return {
+      color: shapeColor,
+      fillColor: shapeColor,
+      fillOpacity: 0.28,
+      weight: 3.5,
+      opacity: 1
+    }
+  }
+
+  return {
+    color: shapeColor,
+    fillColor: shapeColor,
+    fillOpacity: 0.08,
+    weight: 1.5,
+    opacity: 0.35
+  }
+}
+
+function highlightBarangayBoundary(focusedId) {
+  if (!circlesLayer) return
+  circlesLayer.eachLayer(layer => {
+    const item = layer._barangayItem
+    if (!item) return
+    const isFocused = Boolean(focusedId && item.id === focusedId)
+    if (typeof layer.setStyle === 'function') {
+      layer.setStyle(getBoundaryStyle(item, isFocused))
+    }
+    if (isFocused && typeof layer.bringToFront === 'function') {
+      layer.bringToFront()
+    }
+  })
+}
+
 function renderCoverageItems() {
   if (!map || !markersLayer || !circlesLayer) return
 
@@ -523,37 +695,40 @@ function renderCoverageItems() {
     `
 
     marker.bindPopup(popupContent)
+    marker.on('click', (e) => {
+      if (e) {
+        if (typeof e.stopPropagation === 'function') e.stopPropagation()
+        if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent)
+      }
+      coverageStore.focusedBarangayId = item.id
+      highlightBarangayBoundary(item.id)
+    })
     markersLayer.addLayer(marker)
 
-    // Service area footprint: use the real barangay boundary when OpenStreetMap
-    // has one, otherwise fall back to an approximate radius around the centre.
-    const shapeColor = isHq ? '#ee2824' : (isAvailable ? '#10b981' : '#f59e0b')
-    const boundary = barangayBoundaries[`${item.municipality}::${item.name}`]
+    // Service area footprint: real mapped barangay boundary or dynamic network border
+    const boundary = getBarangayBoundary(item)
 
     if (boundary) {
-      // Solid outline = real mapped boundary. Status is conveyed by colour, so
-      // the dash pattern is reserved for "this footprint is only approximate".
+      const isFocused = Boolean(coverageStore.focusedBarangayId && item.id === coverageStore.focusedBarangayId)
       const shape = L.geoJSON(boundary, {
-        style: {
-          color: shapeColor,
-          fillColor: shapeColor,
-          fillOpacity: 0.14,
-          weight: 2
-        }
+        style: getBoundaryStyle(item, isFocused)
       })
+      shape._barangayId = item.id
+      shape._barangayItem = item
+
       shape.bindTooltip(`Brgy. ${escapeHtml(item.name)} — ${napCountLabel}`, { sticky: true })
-      circlesLayer.addLayer(shape)
-    } else {
-      const circle = L.circle([item.lat, item.lng], {
-        radius: isHq ? 450 : 300,
-        color: shapeColor,
-        fillColor: shapeColor,
-        fillOpacity: 0.10,
-        weight: 1,
-        dashArray: '4,4'
+
+      // Only highlight border on click, not on hover
+      shape.on('click', (e) => {
+        if (e) {
+          if (typeof e.stopPropagation === 'function') e.stopPropagation()
+          if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent)
+        }
+        coverageStore.focusedBarangayId = item.id
+        highlightBarangayBoundary(item.id)
+        marker.openPopup()
       })
-      circle.bindTooltip(`Brgy. ${escapeHtml(item.name)} — ${napCountLabel}`, { sticky: true })
-      circlesLayer.addLayer(circle)
+      circlesLayer.addLayer(shape)
     }
   })
 }
@@ -575,6 +750,7 @@ function resetView() {
   coverageStore.selectedMunicipality = 'All'
   coverageStore.searchQuery = ''
   coverageStore.focusedBarangayId = null
+  highlightBarangayBoundary(null)
   userLocationMessage.value = ''
   locateError.value = ''
   unservedNotice.value = ''
@@ -726,6 +902,7 @@ watch(() => themeStore.isDark, () => {
 
 // Watch focused item from cards
 watch(() => coverageStore.focusedBarangayId, (newId) => {
+  highlightBarangayBoundary(newId)
   if (!map || !newId) return
   const item = coverageStore.coverageList.find(b => b.id === newId)
   if (item) {
