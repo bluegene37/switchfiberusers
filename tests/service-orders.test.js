@@ -84,6 +84,37 @@ describe('Service Orders API & Data Handling', () => {
       assert.match(badEmail.error, /valid email address/i)
     })
 
+    it('rejects email addresses containing only numbers (e.g. account numbers or phone numbers)', () => {
+      const pureNumbers = validateServiceOrderPayload({
+        emailAddress: '202311373'
+      })
+      assert.equal(pureNumbers.ok, false)
+      assert.match(pureNumbers.error, /not only numbers/i)
+
+      const fullWithNumbers = validateServiceOrderPayload({
+        fullName: 'Juan Dela Cruz',
+        contactNumber: '09151234567',
+        address: '123 Batingan St',
+        concern: 'Red light on modem',
+        emailAddress: '09154077565'
+      })
+      assert.equal(fullWithNumbers.ok, false)
+      assert.match(fullWithNumbers.error, /not only numbers/i)
+    })
+
+    it('accepts direct email-only intake payloads without demanding fullName or accountNumber', () => {
+      const emailIntake = validateServiceOrderPayload({
+        emailAddress: 'subscriber.contact@gmail.com'
+      })
+      assert.equal(emailIntake.ok, true)
+
+      const defaultSubscriberIntake = validateServiceOrderPayload({
+        fullName: 'Subscriber',
+        emailAddress: 'subscriber.contact@gmail.com'
+      })
+      assert.equal(defaultSubscriberIntake.ok, true)
+    })
+
     it('accepts a valid payload with complete details', () => {
       const valid = validateServiceOrderPayload({
         accountNumber: '202311373',
@@ -186,18 +217,14 @@ describe('Service Orders API & Data Handling', () => {
       assert.ok(content.includes('showServiceOrderForm'), 'ContactView must guard concern form with showServiceOrderForm')
     })
 
-    it('includes customer support ticket form fields in ServiceConcernForm.vue', () => {
+    it('renders dedicated direct email intake form in ServiceConcernForm.vue', () => {
       const formPath = path.resolve(__dirname, '../src/components/ServiceConcernForm.vue')
       const content = fs.readFileSync(formPath, 'utf8')
 
-      assert.ok(content.includes('sf-account-lookup'), 'Form must include Account Number lookup field')
-      assert.ok(content.includes('sf-fullname'), 'Form must include Full Name input')
-      assert.ok(content.includes('sf-contact'), 'Form must include Contact Number input')
-      assert.ok(content.includes('sf-address'), 'Form must include Address input')
-      assert.ok(content.includes('sf-category'), 'Form must include Category selector')
-      assert.ok(content.includes('sf-details'), 'Form must include Details textarea')
-      assert.ok(content.includes('In Progress'), 'Form must explicitly mention In Progress queue status')
+      assert.ok(content.includes('sf-email'), 'Form must include dedicated sf-email input')
+      assert.ok(content.includes('Submit a Support Request'), 'Form must include title')
       assert.ok(content.includes('submittedTicket'), 'Form must render ticket receipt state upon success')
+      assert.ok(content.includes('Sent Successfully!'), 'Form must display Sent Successfully on completion')
     })
 
     it('mirrors /api/ServiceOrders in vite.config.js dev server middleware', () => {
@@ -206,6 +233,26 @@ describe('Service Orders API & Data Handling', () => {
 
       assert.ok(content.includes('SERVICE_ORDERS'), 'vite.config.js must define SERVICE_ORDERS route matcher')
       assert.ok(content.includes('api/ServiceOrders.js'), 'vite.config.js must route to api/ServiceOrders.js in dev')
+    })
+
+    it('features dedicated Service Order & Customer Support area with subscriber email space', () => {
+      const formPath = path.resolve(__dirname, '../src/components/ServiceConcernForm.vue')
+      const content = fs.readFileSync(formPath, 'utf8')
+
+      assert.ok(content.includes('Service Order & Customer Support'), 'Form badge must display Service Order & Customer Support')
+      assert.ok(content.includes('sf-email'), 'Form must contain dedicated sf-email input')
+      assert.ok(content.includes('Subscriber Email Address'), 'Form must label dedicated subscriber email space')
+      assert.ok(content.includes('pattern="[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}"'), 'Form must declare email pattern attribute')
+      assert.ok(content.includes('jdelacruz@gmail.com'), 'Form must provide realistic email placeholder')
+    })
+
+    it('unifies email error messaging and isolates server errors so duplicate messages never render', () => {
+      const formPath = path.resolve(__dirname, '../src/components/ServiceConcernForm.vue')
+      const content = fs.readFileSync(formPath, 'utf8')
+
+      assert.ok(content.includes('displayEmailError'), 'Form must compute a single displayEmailError')
+      assert.ok(content.includes('serverError'), 'Form must compute serverError separate from validation errors')
+      assert.ok(!content.includes("Email address must include an '@' symbol"), 'Form must avoid duplicate fragmented @ error message')
     })
   })
 })

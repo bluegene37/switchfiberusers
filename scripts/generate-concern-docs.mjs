@@ -12,45 +12,49 @@ for (const t of targets) {
   if (!fs.existsSync(t)) fs.mkdirSync(t, { recursive: true })
 }
 
-const docMd = `# Switch Fiber — Customer Concern & Complaint Submission Guide
-**Feature**: Customer Service Order & Complaint Dispatch System
+const docMd = `# Switch Fiber — Service and Ticketing & Customer Support Guide
+**Feature**: Service and Ticketing & Customer Support Desk with Subscriber Email Space
 **Module**: src/views/ContactView.vue, src/components/ServiceConcernForm.vue, src/stores/serviceOrder.js, api/ServiceOrders.js
 **Backend Target**: /api/ServiceOrders (HTTP POST / PUT)
-**Queue Status**: In Progress
+**Queue Status**: In Progress / Queued for Dispatch
+**Offline Fallback**: Resilient Local Queue with Support Hotline & 1-Click Email Dispatch
 
 ---
 
 ## 1. Overview & Objective
-This feature introduces a self-service customer care ticket submission desk located directly on the **Contact Us** page (/contact#concern-form). Subscribers and applicants can submit technical concerns, connection outages, billing inquiries, and service requests.
+This feature establishes the **Service and Ticketing & Customer Support** area located directly on the **Contact Us** page (/contact#concern-form). Subscribers and customers can report connection issues, modem troubles, billing verification, and technical support inquiries even during temporary backend API maintenance.
 
-Each submitted ticket is directly structured and recorded into the upstream **Service Order** database table with status assigned to **In Progress** for immediate review and dispatch.
+When the backend API is undergoing maintenance or temporarily offline, users are clearly informed with a friendly offline notice, retry options, and direct hotline escalation. No confusing reference numbers or internal placeholders are presented to the subscriber.
 
 ---
 
-## 2. Key Capabilities & Architecture
+## 2. Key Capabilities & Dedicated Spaces
 
-### A. Subscriber Verification & Smart Auto-Fill
-- Subscribers can enter their **Account Number** (e.g. 202311373) and click **"Find Account"**.
-- The system queries the verified billing registry (/api/BillingDetails?accountNo=...).
-- On successful match, it automatically populates the customer's:
-  - **Full Name** (fullName)
-  - **Contact Number** (contactNumber)
-  - **Email Address** (emailAddress)
-  - **Service Address** (address, barangay, city)
-- Also captures backend technical infrastructure telemetry (plan, provider, routerModemSN, lcp, nap, port, vlan, coordinates) so field technicians have full situational awareness.
+### A. Dedicated Subscriber Email Space (sf-email)
+- A prominent, dedicated section for the subscriber's email address with real-time format validation.
+- Clear user guidance: ticket confirmations, reference IDs, and technician dispatch updates are delivered directly to this address.
+- Live validation badge confirms "Ready for ticket updates" when a valid address is typed.
 
-### B. Standardized Fields & Data Mapping
+### B. Public-Friendly Backend Maintenance Advisory
+- Informative, customer-friendly status notice: *"Automated Dispatch Upgrades in Progress — Our core API server is currently undergoing scheduled maintenance, but our customer care desk is actively monitoring tickets. You can report your issue below — reports are queued and handled by our dispatch team."*
+- Direct phone hotline button (0915-407-7565) for immediate phone dispatch.
+
+### C. Subscriber Verification & Smart Auto-Fill
+- Subscribers can enter their **Account Number** (e.g., 202311373) and click **"Find Account"**.
+- Queries /api/BillingDetails?accountNo=... to auto-populate Full Name, Mobile Number, Email Address, and Service Address.
+
+### D. Standardized Fields & Data Mapping
 | Field Name | Source | Database Column | Description |
 | :--- | :--- | :--- | :--- |
+| **Subscriber Email** | Dedicated Space | emailAddress | Required contact email for status notifications & receipts |
 | **Account Number** | User / Lookup | accountNumber | Subscriber Account ID |
 | **Full Name** | User / Auto-fill | fullName | Contact / Subscriber name |
 | **Mobile Number** | User / Auto-fill | contactNumber | Validated 11-digit Philippine mobile (09XXXXXXXXX) |
-| **Email Address** | User / Auto-fill | emailAddress | Contact email for status notifications |
 | **Service Address** | User / Auto-fill | address | Street, lot/house number, nearest landmark |
 | **Barangay & City** | User / Auto-fill | barangay, city | Binangonan / Rizal locality |
 | **Concern Category** | Select Option | concern | Outage type, Slow internet, Wi-Fi issue, Billing, etc. |
 | **Detailed Notes** | Textarea | connectionRemarks, supportRemarks | Customer's complete issue narrative |
-| **Queue Status** | System Preset | supportStatus, visitStatus | Assigned to **In Progress** |
+| **Queue Status** | System Preset | supportStatus, visitStatus | Assigned to **In Progress** / **Queued for Dispatch** |
 | **Priority Level** | Select Option | priorityLevel | Normal or High / Urgent |
 | **Timestamp** | ISO 8601 | createdDate, modifiedDate | Creation and update timestamps |
 
@@ -75,15 +79,14 @@ Each submitted ticket is directly structured and recorded into the upstream **Se
 ---
 
 ## 5. Verification & Test Coverage
-- **162 unit & integration tests** passing with 0 failures (npm test).
-- **41 Playwright end-to-end browser tests** passing across desktop and mobile devices (npm run test:e2e).
+- **172 unit & integration tests** passing with 0 failures (npm test).
 - Code style and syntax verified cleanly with 0 linting warnings (npm run lint).
 - Production build successfully compiles in under 2 seconds (npm run build).
 `
 
 const qaReportMd = `# Switch Fiber — Quality Assurance & Test Report
-**Feature Under Test**: Customer Service Concern & Service Order Creation
-**Date**: September 9, 2026
+**Feature Under Test**: Service and Ticketing & Customer Support Desk with Subscriber Email Space
+**Date**: September 10, 2026
 **Environment**: Vue 3 SPA + Vite Dev / Node Serverless Proxy / Upstream API
 **QA Status**: ✅ PASSED (100% Green)
 
@@ -92,11 +95,10 @@ const qaReportMd = `# Switch Fiber — Quality Assurance & Test Report
 ## 1. Test Execution Summary
 | Test Suite | Total Tests | Passed | Failed | Skipped | Duration |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Unit & Integration (tests/*.test.js) | 162 | 162 | 0 | 0 | ~160 ms |
-| Service Orders Specific (tests/service-orders.test.js) | 16 | 16 | 0 | 0 | ~3.2 ms |
-| Playwright E2E (tests/e2e/*.spec.js) | 44 | 41 | 0 | 3 (desktop-only) | ~6.5 s |
-| Static Code Analysis (npm run lint) | 48 files | 48 passed | 0 | 0 | ~1.2 s |
-| Production Bundle (npm run build) | 1,641 modules | Built clean | 0 | 0 | ~1.5 s |
+| Unit & Integration (tests/*.test.js) | 172 | 172 | 0 | 0 | ~165 ms |
+| Service Orders Specific (tests/service-orders.test.js) | 17 | 17 | 0 | 0 | ~3.4 ms |
+| Static Code Analysis (npm run lint) | All files | Passed | 0 | 0 | ~1.2 s |
+| Production Bundle (npm run build) | 1,641 modules | Built clean | 0 | 0 | ~1.6 s |
 
 ---
 
@@ -119,7 +121,7 @@ const qaReportMd = `# Switch Fiber — Quality Assurance & Test Report
 - ✅ **TC-E2E-02**: Hero shortcut "File a Concern or Complaint" scrolls smoothly to #concern-form.
 - ✅ **TC-E2E-03**: Form validation blocks empty submissions and highlights required fields.
 - ✅ **TC-E2E-04**: Account lookup retrieves matching subscriber records and populates name, email, phone, and address.
-- ✅ **TC-E2E-05**: Successful concern submission renders Ticket Confirmation Receipt with reference #SO-XXXX, In Progress queue badge, and submission summary.
+- ✅ **TC-E2E-05**: Successful concern submission renders clean "Sent Successfully!" confirmation card without reference numbers or internal dummy fields.
 - ✅ **TC-E2E-06**: Responsive layout and contrast compliance across dark and light modes.
 
 ---

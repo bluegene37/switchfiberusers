@@ -1,427 +1,250 @@
 <template>
-  <div class="glass-card rounded-3xl border dark:border-slate-800 border-slate-200 overflow-hidden shadow-xl">
-    <!-- Header banner -->
-    <div class="p-6 sm:p-8 bg-gradient-to-r from-red-600/15 via-red-500/10 to-transparent border-b dark:border-slate-800 border-slate-200">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ee2824]/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/20 mb-2">
-            <LifeBuoy class="w-3.5 h-3.5" />
-            <span>Support & Technical Care</span>
-          </span>
-          <h2 class="text-2xl sm:text-3xl font-extrabold font-heading dark:text-white text-slate-900 tracking-tight">
-            Submit a Concern or Complaint
-          </h2>
-          <p class="text-xs sm:text-sm dark:text-slate-300 text-slate-600 mt-1 max-w-2xl">
-            Experiencing connection issues, billing questions, or equipment trouble? Submit your ticket directly to our technical dispatch queue.
-          </p>
-        </div>
-
-        <div class="shrink-0 flex items-center gap-2 bg-white/70 dark:bg-slate-900/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border dark:border-slate-800 border-slate-200 text-xs font-semibold">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="dark:text-slate-200 text-slate-700">Dispatch Queue: <strong class="text-emerald-600 dark:text-emerald-400">Active</strong></span>
-        </div>
+  <div class="rounded-3xl border dark:border-slate-800 border-slate-200 overflow-hidden shadow-xl max-w-xl mx-auto bg-white dark:bg-slate-900 transition-all">
+    
+    <!-- Top Header: Red Squircle Message Icon + Support Desk -->
+    <div class="p-6 sm:p-8 pb-4 flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-2xl bg-[#ee2824] text-white flex items-center justify-center shadow-md shadow-[#ee2824]/20 shrink-0">
+        <MessageSquare class="w-6 h-6 fill-white/10 stroke-[2.2]" />
       </div>
+      <h2 class="text-2xl sm:text-3xl font-black font-heading dark:text-white text-slate-900 tracking-tight">
+        Support Desk
+      </h2>
     </div>
 
-    <!-- Success / Ticket Receipt State -->
-    <div v-if="submittedTicket" class="p-6 sm:p-10 space-y-6 text-center animate-in fade-in duration-300">
+    <!-- Success State: Sent Successfully -->
+    <div v-if="submittedTicket" class="p-8 sm:p-12 space-y-6 text-center animate-in fade-in duration-300">
       <div class="w-16 h-16 rounded-3xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-        <CheckCircle2 class="w-9 h-9" />
+        <CheckCircle2 class="w-10 h-10" />
       </div>
 
-      <div class="space-y-2 max-w-md mx-auto">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-          <Clock class="w-3.5 h-3.5 animate-spin" />
-          <span>Ticket Status: {{ submittedTicket.status }}</span>
-        </span>
-        <h3 class="text-2xl font-black font-heading dark:text-white text-slate-900">
-          Concern Submitted Successfully!
+      <div class="space-y-2">
+        <h3 class="text-2xl sm:text-3xl font-black font-heading dark:text-white text-slate-900">
+          Sent Successfully!
         </h3>
-        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          Your service order has been logged into our support system and queued for immediate review.
+        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-md mx-auto">
+          Thank you! We have received your request for <strong class="text-[#ee2824] dark:text-[#ff6b67] font-mono font-bold">{{ submittedTicket.emailAddress }}</strong>. Our support team will contact you directly.
         </p>
       </div>
 
-      <!-- Ticket Receipt Card -->
-      <div class="max-w-xl mx-auto rounded-2xl border dark:border-slate-800 border-slate-200 bg-slate-50 dark:bg-slate-900/90 p-5 sm:p-6 text-left space-y-4 shadow-sm">
-        <div class="flex items-center justify-between pb-3 border-b dark:border-slate-800 border-slate-200">
-          <div>
-            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Reference Number</span>
-            <p class="text-xl font-black font-mono text-[#ee2824] dark:text-[#ff6b67]">#{{ submittedTicket.referenceNo }}</p>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Queue Stage</span>
-            <p class="text-xs font-bold text-amber-600 dark:text-amber-400">In Progress</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div>
-            <span class="text-slate-400">Subscriber Name:</span>
-            <p class="font-bold dark:text-white text-slate-900">{{ submittedTicket.fullName }}</p>
-          </div>
-          <div>
-            <span class="text-slate-400">Account Number:</span>
-            <p class="font-bold font-mono dark:text-white text-slate-900">{{ submittedTicket.accountNumber || 'Not Specified' }}</p>
-          </div>
-          <div>
-            <span class="text-slate-400">Contact Number:</span>
-            <p class="font-bold font-mono dark:text-white text-slate-900">{{ submittedTicket.contactNumber }}</p>
-          </div>
-          <div>
-            <span class="text-slate-400">Email Address:</span>
-            <p class="font-bold dark:text-white text-slate-900 truncate">{{ submittedTicket.emailAddress || 'None provided' }}</p>
-          </div>
-          <div class="sm:col-span-2">
-            <span class="text-slate-400">Service Address:</span>
-            <p class="font-semibold dark:text-slate-200 text-slate-800">{{ submittedTicket.address }}</p>
-          </div>
-          <div class="sm:col-span-2 pt-2 border-t dark:border-slate-800/80 border-slate-200">
-            <span class="text-slate-400">Concern Category:</span>
-            <p class="font-bold text-[#ee2824] dark:text-[#ff6b67]">{{ submittedTicket.concern }}</p>
-            <p class="mt-1 text-slate-600 dark:text-slate-300 italic bg-white/50 dark:bg-slate-950/50 p-2.5 rounded-xl text-[11px] leading-relaxed">
-              "{{ submittedTicket.concernDetails }}"
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+      <div class="pt-2 flex justify-center">
         <button
           type="button"
           @click="store.resetForm()"
-          class="btn-primary py-3 px-6 text-xs font-bold min-h-11 shadow-md shadow-[#ee2824]/20 flex items-center gap-2"
+          class="btn-primary py-2.5 px-8 text-sm font-bold min-h-11 shadow-md shadow-[#ee2824]/20 flex items-center justify-center gap-2 rounded-xl"
         >
           <RotateCcw class="w-4 h-4" />
           <span>Submit Another Concern</span>
         </button>
-
-        <a
-          href="tel:09154077565"
-          class="btn-secondary py-3 px-6 text-xs font-bold min-h-11 flex items-center gap-2"
-        >
-          <PhoneCall class="w-4 h-4 text-[#ee2824]" />
-          <span>Call Dispatch Hotline (0915-407-7565)</span>
-        </a>
       </div>
     </div>
 
     <!-- Active Submission Form -->
-    <form v-else @submit.prevent="handleSubmit" class="p-6 sm:p-8 space-y-6" novalidate>
-      
-      <!-- Account Number Lookup Banner (Optional helper for subscribers) -->
-      <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border dark:border-slate-800 border-slate-200 space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <label for="sf-account-lookup" class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Search class="w-3.5 h-3.5 text-[#ee2824]" />
-              <span>Already a Switch Fiber Subscriber? (Auto-Fill)</span>
-            </label>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              Enter your Account Number from your bill or SMS to auto-populate your registered information.
-            </p>
-          </div>
+    <form v-else @submit.prevent="handleSubmit" class="p-6 sm:p-8 pt-2 space-y-6" novalidate>
+
+      <!-- Support Request Intro (Text and Badge matching UI mockup) -->
+      <div class="space-y-2.5">
+        <!-- Badge: Service Order & Customer Support -->
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-[#ee2824] dark:text-[#ff6b67] border border-[#ee2824]/20">
+            <ShieldCheck class="w-3.5 h-3.5 text-[#ee2824]" />
+            <span>Service Order & Customer Support</span>
+          </span>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <div class="relative flex-1">
-            <input
-              id="sf-account-lookup"
-              v-model="formData.accountNumber"
-              type="text"
-              inputmode="numeric"
-              placeholder="e.g. 202311373"
-              autocomplete="off"
-              @keydown.enter.prevent="handleLookup"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm font-mono dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
-          </div>
-          <button
-            type="button"
-            @click="handleLookup"
-            :disabled="isLookingUp || !formData.accountNumber.trim()"
-            class="btn-secondary py-2.5 px-4 text-xs font-bold min-h-11 flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
-          >
-            <Loader2 v-if="isLookingUp" class="w-4 h-4 animate-spin text-[#ee2824]" />
-            <Search v-else class="w-4 h-4 text-[#ee2824]" />
-            <span>{{ isLookingUp ? 'Searching...' : 'Find Account' }}</span>
-          </button>
-        </div>
+        <!-- Heading: Submit a Support Request -->
+        <h3 class="text-2xl sm:text-3xl font-extrabold font-heading text-slate-900 dark:text-white tracking-tight">
+          Submit a Support Request
+        </h3>
 
-        <!-- Lookup Status Feedback -->
-        <div
-          v-if="lookupMessage"
+        <!-- Description from Designer -->
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
+          Need assistance with your internet connection or subscription? Provide your email address below, and our support team will contact you directly.
+        </p>
+      </div>
+
+      <!-- Dedicated Space for Subscriber Email Input matching Designer Mockup -->
+      <div class="space-y-2">
+        <label for="sf-email" class="sr-only">Subscriber Email Address</label>
+        
+        <div 
+          class="relative rounded-2xl border-2 transition-all duration-200 bg-white dark:bg-slate-800 shadow-sm flex items-center p-1 sm:p-1.5"
           :class="[
-            'p-3 rounded-xl text-xs flex items-center gap-2 animate-in fade-in duration-200',
-            lookupStatus === 'success'
-              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-              : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+            displayEmailError 
+              ? 'border-red-500 ring-2 ring-red-500/20' 
+              : isValidEmail 
+                ? 'border-emerald-500 ring-2 ring-emerald-500/20' 
+                : 'border-red-100 dark:border-slate-700 hover:border-[#ee2824]/40 focus-within:border-[#ee2824] focus-within:ring-2 focus-within:ring-[#ee2824]/20'
           ]"
-          role="status"
         >
-          <CheckCircle2 v-if="lookupStatus === 'success'" class="w-4 h-4 shrink-0" />
-          <AlertCircle v-else class="w-4 h-4 shrink-0" />
-          <span>{{ lookupMessage }}</span>
-        </div>
-      </div>
-
-      <!-- Subscriber Contact & Identity Grid -->
-      <div class="space-y-4">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <User class="w-4 h-4 text-[#ee2824]" />
-          <span>Subscriber & Contact Details</span>
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
-          <!-- Full Name -->
-          <div>
-            <label for="sf-fullname" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Full Name <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="sf-fullname"
-              v-model="formData.fullName"
-              type="text"
-              required
-              autocomplete="name"
-              placeholder="e.g. Juan Dela Cruz"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
+          <div class="pl-3.5 pr-2 text-slate-400 flex items-center pointer-events-none">
+            <Mail class="w-5 h-5 text-slate-400" />
           </div>
 
-          <!-- Contact Number -->
-          <div>
-            <label for="sf-contact" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Mobile / Phone Number <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="sf-contact"
-              v-model="formData.contactNumber"
-              type="tel"
-              required
-              inputmode="tel"
-              autocomplete="tel"
-              placeholder="0915 123 4567"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm font-mono dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
-            <p v-if="phoneError" class="text-[11px] text-red-500 mt-1">
-              Must be 11 digits starting with 09.
-            </p>
-          </div>
+          <input
+            id="sf-email"
+            v-model="formData.emailAddress"
+            type="email"
+            required
+            autocomplete="email"
+            pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+            placeholder="jdelacruz@gmail.com"
+            class="w-full py-2.5 px-2 bg-transparent text-sm sm:text-base dark:text-white text-slate-900 placeholder:text-slate-400 border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 font-medium"
+          />
 
-          <!-- Email Address -->
-          <div>
-            <label for="sf-email" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Email Address
-            </label>
-            <input
-              id="sf-email"
-              v-model="formData.emailAddress"
-              type="email"
-              autocomplete="email"
-              placeholder="name@example.com"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
-          </div>
-
-          <!-- Priority Level -->
-          <div>
-            <label for="sf-priority" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Priority Level
-            </label>
-            <select
-              id="sf-priority"
-              v-model="formData.priorityLevel"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
+          <!-- Right Checkmark Icon (matches designer's red/green check circle) -->
+          <div class="pr-3 pl-2 shrink-0 flex items-center">
+            <div 
+              v-if="isValidEmail" 
+              class="w-6 h-6 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-500 animate-in zoom-in-50 duration-200"
             >
-              <option value="Normal">Normal — Standard Queue</option>
-              <option value="High">High — Total Outage / Urgent</option>
-            </select>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Installation Address Grid -->
-      <div class="space-y-4">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <MapPin class="w-4 h-4 text-[#ee2824]" />
-          <span>Service Address</span>
-        </h3>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
-          <!-- Street Address & Landmark -->
-          <div class="sm:col-span-3">
-            <label for="sf-address" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Street, House / Lot No., & Nearest Landmark <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="sf-address"
-              v-model="formData.address"
-              type="text"
-              required
-              autocomplete="street-address"
-              placeholder="e.g. 123 Sampaloc St., Sta. Ursula Subd., near gate"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
-          </div>
-
-          <!-- Barangay -->
-          <div>
-            <label for="sf-barangay" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Barangay
-            </label>
-            <input
-              id="sf-barangay"
-              v-model="formData.barangay"
-              type="text"
-              list="sf-barangay-list"
-              placeholder="e.g. Batingan"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
-            <datalist id="sf-barangay-list">
-              <option v-for="b in binangonanBarangays" :key="b" :value="b" />
-            </datalist>
-          </div>
-
-          <!-- City / Municipality -->
-          <div>
-            <label for="sf-city" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Municipality / City
-            </label>
-            <input
-              id="sf-city"
-              v-model="formData.city"
-              type="text"
-              placeholder="Binangonan"
-              class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
-            />
-          </div>
-
-          <!-- Province (Read-only badge for context) -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Province
-            </label>
-            <div class="px-4 py-2.5 rounded-xl border dark:border-slate-800 border-slate-200 bg-slate-100 dark:bg-slate-900 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 min-h-11 flex items-center">
-              Rizal
+              <Check class="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <div 
+              v-else-if="formData.emailAddress" 
+              class="w-6 h-6 rounded-full border-2 border-[#ee2824]/60 flex items-center justify-center text-[#ee2824]"
+            >
+              <CheckCircle2 class="w-4 h-4 text-[#ee2824]" />
             </div>
           </div>
-
         </div>
+
+        <!-- Subtext directly below input (from Designer) -->
+        <p class="text-xs text-slate-500 dark:text-slate-400 px-1">
+          Our support team will contact you directly through this email address.
+        </p>
+
+        <!-- Single Error Feedback under input -->
+        <div v-if="displayEmailError" class="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs font-medium text-red-600 dark:text-red-400 flex items-start gap-2 animate-in fade-in duration-200">
+          <AlertCircle class="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{{ displayEmailError }}</span>
+        </div>
+
       </div>
 
-      <!-- Concern Category & Details -->
-      <div class="space-y-4">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <AlertTriangle class="w-4 h-4 text-[#ee2824]" />
-          <span>Concern & Complaint Description</span>
-        </h3>
-
-        <!-- Concern Category Selector -->
-        <div>
-          <label for="sf-category" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            Category of Concern <span class="text-red-500">*</span>
-          </label>
-          <select
-            id="sf-category"
-            v-model="formData.concernCategory"
-            required
-            class="w-full px-4 py-2.5 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] min-h-11"
+      <!-- Public-friendly Offline Alert (Shown only when API is down) -->
+      <div v-if="isApiDown" class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-2 animate-in fade-in duration-200">
+        <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+          Support Desk Temporarily Offline
+        </h4>
+        <p class="text-xs text-slate-600 dark:text-slate-300">
+          Our support request service is currently undergoing scheduled maintenance. Please retry below or call 0915-407-7565.
+        </p>
+        <div class="flex items-center justify-center gap-2 pt-1">
+          <button
+            type="button"
+            @click="handleSubmit"
+            :disabled="isSubmitting"
+            class="btn-primary py-2 px-4 text-xs font-bold"
           >
-            <option v-for="cat in CONCERN_CATEGORIES" :key="cat" :value="cat">
-              {{ cat }}
-            </option>
-          </select>
-        </div>
-
-        <!-- Concern Details Textarea -->
-        <div>
-          <label for="sf-details" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            Details & Description <span class="text-red-500">*</span>
-          </label>
-          <textarea
-            id="sf-details"
-            v-model="formData.concernDetails"
-            rows="4"
-            required
-            placeholder="Please describe what you are experiencing (e.g. modem shows red LOS light, disconnection since 2 PM, payment not yet reflected, etc.)"
-            class="w-full px-4 py-3 rounded-xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs sm:text-sm dark:text-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#ee2824] leading-relaxed"
-          ></textarea>
+            {{ isSubmitting ? 'Retrying...' : 'Retry Submission' }}
+          </button>
+          <a href="tel:09154077565" class="btn-secondary py-2 px-4 text-xs font-bold">
+            0915-407-7565
+          </a>
         </div>
       </div>
 
-      <!-- Error Message Banner -->
-      <div
-        v-if="error"
-        class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs flex items-center gap-2"
-        role="alert"
-      >
+      <!-- Server error message banner (shown only for backend/API errors, never duplicate email validation) -->
+      <div v-else-if="serverError" class="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
         <AlertCircle class="w-4 h-4 shrink-0" />
-        <span>{{ error }}</span>
+        <span>{{ serverError }}</span>
       </div>
 
-      <!-- Submit CTA Button -->
-      <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t dark:border-slate-800 border-slate-200">
-        <div class="text-[11px] text-slate-500 dark:text-slate-400">
-          Status will be assigned to <strong class="text-amber-600 dark:text-amber-400">In Progress</strong> upon submission.
-        </div>
-
+      <!-- Centered Red Submit CTA Button (Matching Designer Mockup) -->
+      <div class="pt-2 flex justify-center">
         <button
           type="submit"
           :disabled="isSubmitting"
-          class="w-full sm:w-auto btn-primary py-3.5 px-8 text-xs sm:text-sm font-bold min-h-11 shadow-lg shadow-[#ee2824]/20 flex items-center justify-center gap-2 disabled:opacity-50"
+          class="btn-primary py-3 px-12 text-sm sm:text-base font-bold min-h-12 shadow-md shadow-[#ee2824]/25 flex items-center justify-center gap-2 rounded-2xl cursor-pointer disabled:opacity-50"
         >
-          <Loader2 v-if="isSubmitting" class="w-4 h-4 animate-spin" />
+          <Loader2 v-if="isSubmitting" class="w-5 h-5 animate-spin" />
           <Send v-else class="w-4 h-4" />
-          <span>{{ isSubmitting ? 'Submitting Service Ticket...' : 'Submit Concern Ticket' }}</span>
+          <span>{{ isSubmitting ? 'Submitting...' : 'Submit' }}</span>
         </button>
       </div>
 
     </form>
+
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
-  LifeBuoy, CheckCircle2, Clock, RotateCcw, PhoneCall,
-  Search, Loader2, AlertCircle, User, MapPin, AlertTriangle, Send
+  CheckCircle2, RotateCcw, Loader2, AlertCircle, Send,
+  Mail, MessageSquare, ShieldCheck, Check
 } from 'lucide-vue-next'
-import { useServiceOrderStore, CONCERN_CATEGORIES, PHILIPPINE_MOBILE_REGEX } from '../stores/serviceOrder.js'
-import { coverageBarangaysByCity } from '../data/calabarzonLocations.js'
+import { useServiceOrderStore } from '../stores/serviceOrder.js'
 
 const store = useServiceOrderStore()
 const {
   formData,
   isSubmitting,
-  isLookingUp,
-  lookupMessage,
-  lookupStatus,
   error,
+  isApiDown,
   submittedTicket
 } = storeToRefs(store)
 
-const binangonanBarangays = coverageBarangaysByCity?.Binangonan || [
-  'Batingan', 'Bilibiran', 'Calumpang', 'Darangan', 'Layunan', 'Libid',
-  'Libis', 'Lunsad', 'Macamot', 'Mahabang Parang', 'Mambog',
-  'Palangoy', 'Pag-asa', 'Pantok', 'Pila-pila', 'Tagpos', 'Tatala', 'Tayuman'
-]
-
-const phoneError = computed(() => {
-  const p = (formData.value?.contactNumber || '').replace(/\s+/g, '').trim()
-  return p.length > 0 && !PHILIPPINE_MOBILE_REGEX.test(p)
+const isValidEmail = computed(() => {
+  const email = (formData.value?.emailAddress || '').trim()
+  if (!email) return false
+  if (/^\d+$/.test(email)) return false
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
 })
 
-async function handleLookup() {
-  await store.lookupAccount()
-}
+const emailError = computed(() => {
+  const email = (formData.value?.emailAddress || '').trim()
+  if (!email) return ''
+  if (/^\d+$/.test(email)) {
+    return 'This looks like an account or phone number. Please enter a valid email address (e.g. subscriber@gmail.com) so we can reach you.'
+  }
+  if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    return 'Please enter a valid email address (e.g. subscriber@gmail.com).'
+  }
+  return ''
+})
+
+const serverError = computed(() => {
+  if (!error.value) return ''
+  if (
+    error.value.includes('email address') ||
+    error.value.includes('account or phone number')
+  ) {
+    return ''
+  }
+  return error.value
+})
+
+const displayEmailError = computed(() => {
+  if (emailError.value) return emailError.value
+  if (
+    error.value &&
+    (error.value.includes('email address') || error.value.includes('account or phone number'))
+  ) {
+    return error.value
+  }
+  return ''
+})
+
+watch(() => formData.value?.emailAddress, () => {
+  if (error.value) {
+    error.value = null
+  }
+})
 
 async function handleSubmit() {
   await store.submitConcern()
 }
 </script>
+
+<style scoped>
+#sf-email,
+#sf-email:focus,
+#sf-email:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+</style>

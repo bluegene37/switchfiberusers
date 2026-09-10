@@ -44,6 +44,18 @@ export function validateServiceOrderPayload(body) {
   const concern = String(body.concern || '').trim()
   const emailAddress = String(body.emailAddress || '').trim()
 
+  // Support direct email-intake payloads (backend team simplified mode)
+  const isEmailOnlyIntake = Boolean(emailAddress && (!fullName || fullName === 'Subscriber') && !accountNumber)
+  if (isEmailOnlyIntake) {
+    if (/^\d+$/.test(emailAddress)) {
+      return { ok: false, error: 'Please provide a valid email address, not only numbers.' }
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddress)) {
+      return { ok: false, error: 'Please provide a valid email address.' }
+    }
+    return { ok: true }
+  }
+
   if (!fullName && !accountNumber) {
     return { ok: false, error: 'Full name or Account Number is required.' }
   }
@@ -65,8 +77,13 @@ export function validateServiceOrderPayload(body) {
     return { ok: false, error: 'Please describe your concern or complaint.' }
   }
 
-  if (emailAddress && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress)) {
-    return { ok: false, error: 'Please provide a valid email address.' }
+  if (emailAddress) {
+    if (/^\d+$/.test(emailAddress)) {
+      return { ok: false, error: 'Please provide a valid email address, not only numbers.' }
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddress)) {
+      return { ok: false, error: 'Please provide a valid email address.' }
+    }
   }
 
   return { ok: true }
@@ -97,12 +114,16 @@ export default async function handler(req, res) {
 
     const nowIso = new Date().toISOString()
     const enrichedPayload = {
+      fullName: body.fullName || 'Subscriber',
+      contactNumber: body.contactNumber || '09154077565',
+      address: body.address || 'Service Address to be verified with Subscriber',
+      concern: body.concern || 'Service Issue & Support Request',
       ...body,
       supportStatus: 'In Progress',
       visitStatus: 'In Progress',
       createdDate: body.createdDate || nowIso,
       modifiedDate: nowIso,
-      modifiedBy: 'Online Portal'
+      modifiedBy: 'Online Portal (Direct Email Intake)'
     }
 
     req.body = enrichedPayload
