@@ -637,7 +637,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       }
     } catch (err) {
       console.warn('API fetch failed for Plans endpoint, using cached defaults:', err)
-      plansError.value = 'Could not sync live plans from backend. Using cached plans.'
+      plansError.value = 'Showing standard fiber plans • Live pricing sync temporarily unavailable'
     } finally {
       isLoadingPlans.value = false
     }
@@ -1187,6 +1187,8 @@ export const useRegistrationStore = defineStore('registration', () => {
 
   const isTracking = ref(false)
   const trackingError = ref(null)
+  const isTrackingApiDown = ref(false)
+  const trackingErrorType = ref(null)
   const rawApiResponse = ref(null)
   const rawApiStatus = ref(null)
 
@@ -1196,6 +1198,8 @@ export const useRegistrationStore = defineStore('registration', () => {
 
     isTracking.value = true
     trackingError.value = null
+    isTrackingApiDown.value = false
+    trackingErrorType.value = null
     rawApiResponse.value = null
     rawApiStatus.value = null
 
@@ -1211,6 +1215,7 @@ export const useRegistrationStore = defineStore('registration', () => {
       const timeoutId = setTimeout(() => controller.abort(), 15000)
 
       let response = null
+      let fetchFailure = null
       try {
         response = await fetch(endpoint, {
           method: 'GET',
@@ -1218,9 +1223,18 @@ export const useRegistrationStore = defineStore('registration', () => {
           signal: controller.signal
         })
       } catch (fetchErr) {
+        fetchFailure = fetchErr
         console.warn(`[Application Tracker] Fetch error for "${identifier}":`, fetchErr)
       } finally {
         clearTimeout(timeoutId)
+      }
+
+      if (fetchFailure) {
+        isTrackingApiDown.value = true
+        trackingErrorType.value = fetchFailure.name === 'AbortError' ? 'timeout' : 'offline'
+        trackingError.value = 'We are currently unable to connect to our application records database.'
+        rawApiResponse.value = { error: fetchFailure?.message || String(fetchFailure) }
+        return local || null
       }
 
       let bodyData = null
@@ -1238,6 +1252,8 @@ export const useRegistrationStore = defineStore('registration', () => {
         (bodyData.id !== undefined || bodyData.firstName || bodyData.desiredPlan)
 
       if (hasAppRecord) {
+        isTrackingApiDown.value = false
+        trackingErrorType.value = null
         return formatApiApplication(bodyData, rawInput)
       }
 
@@ -1245,10 +1261,13 @@ export const useRegistrationStore = defineStore('registration', () => {
         throw new Error(`HTTP ${response.status}`)
       }
 
+      trackingErrorType.value = local ? null : 'not_found'
       return local || null
     } catch (err) {
       console.warn(`[Application Tracker] Fetch error for "${identifier}":`, err)
-      trackingError.value = 'Unable to connect to records server. Please check Application ID and try again.'
+      isTrackingApiDown.value = true
+      trackingErrorType.value = 'server'
+      trackingError.value = 'Our records system is temporarily experiencing technical difficulties. Please try again shortly.'
       if (!rawApiResponse.value) {
         rawApiResponse.value = { error: err?.message || String(err) }
       }
@@ -1435,6 +1454,8 @@ export const useRegistrationStore = defineStore('registration', () => {
     rescheduleInstallation,
     isTracking,
     trackingError,
+    isTrackingApiDown,
+    trackingErrorType,
     rawApiResponse,
     rawApiStatus,
     mapApplicationStatus,

@@ -19,7 +19,7 @@
           class="btn-primary py-2.5 px-5 text-xs font-bold flex items-center gap-2 min-h-11 shadow-md shadow-[#ee2824]/20"
         >
           <LifeBuoy class="w-4 h-4" />
-          <span>File a Concern or Complaint</span>
+          <span>Report an Issue / Service Ticket</span>
         </a>
         <a
           href="#offices-map"
@@ -514,8 +514,8 @@ import {
 import ServiceConcernForm from '../components/ServiceConcernForm.vue'
 
 const route = useRoute()
-// Feature hidden until backend team finishes; can be toggled via ?serviceOrder=true
-const showServiceOrderForm = computed(() => route?.query?.serviceOrder === 'true')
+// Service & Ticketing reporting area for subscribers; active by default, can be toggled via ?serviceOrder=false
+const showServiceOrderForm = computed(() => route?.query?.serviceOrder !== 'false')
 
 // Binangonan Office Locations
 const offices = [

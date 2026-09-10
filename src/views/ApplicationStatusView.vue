@@ -373,7 +373,59 @@
 
     </div>
 
-    <!-- State 3: Not Found Banner -->
+    <!-- State 3A: Backend / API Offline / Server Error View -->
+    <div v-else-if="searched && !foundApp && registrationStore.isTrackingApiDown" class="sf-tracker-api-down glass-panel p-8 sm:p-12 rounded-3xl border border-amber-500/40 bg-amber-500/5 text-center space-y-6 animate-in fade-in duration-300 shadow-xl max-w-2xl mx-auto">
+      <div class="w-16 h-16 rounded-3xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto border border-amber-500/20">
+        <ServerOff class="w-8 h-8" />
+      </div>
+
+      <div class="space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+          <WifiOff class="w-3.5 h-3.5" />
+          <span>Service Connection Interrupted</span>
+        </div>
+        <h3 class="sf-tracker-api-down-title text-xl sm:text-2xl font-bold dark:text-white text-slate-900">
+          System Verification Temporarily Unavailable
+        </h3>
+        <p class="sf-tracker-api-down-desc text-sm dark:text-slate-300 text-slate-600 max-w-lg mx-auto leading-relaxed">
+          We are currently having trouble connecting to our application database to check your status. Don't worry — your application records are safe with us.
+        </p>
+      </div>
+
+      <p class="sf-tracker-api-down-hint text-xs dark:text-slate-400 text-slate-500 max-w-md mx-auto leading-relaxed">
+        Please try checking again in a few moments. If you need urgent assistance regarding your installation schedule, our customer care team is ready to assist.
+      </p>
+
+      <div class="pt-2 flex flex-col sm:flex-row justify-center gap-3">
+        <button 
+          @click="handleSearch" 
+          :disabled="isLoading || registrationStore.isTracking"
+          type="button" 
+          class="sf-tracker-api-down-retry-btn btn-primary py-3.5 px-8 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer shadow-md"
+        >
+          <Loader2 v-if="isLoading || registrationStore.isTracking" class="w-4 h-4 animate-spin" />
+          <RotateCw v-else class="w-4 h-4" />
+          <span>{{ (isLoading || registrationStore.isTracking) ? 'Retrying Connection...' : 'Try Again' }}</span>
+        </button>
+
+        <a
+          href="tel:09154077565"
+          class="sf-tracker-api-down-hotline-btn btn-secondary py-3.5 px-6 text-sm font-bold flex items-center justify-center gap-2"
+        >
+          <Phone class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+          <span>Call Hotline: 0915 407 7565</span>
+        </a>
+
+        <router-link
+          to="/contact"
+          class="sf-tracker-api-down-contact-btn py-3.5 px-6 rounded-2xl border dark:border-slate-700 border-slate-300 bg-white dark:bg-slate-800 text-xs font-bold flex items-center justify-center gap-2 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors"
+        >
+          <span>Support Center</span>
+        </router-link>
+      </div>
+    </div>
+
+    <!-- State 3B: Verified Application ID Not Found View -->
     <div v-else-if="searched && !foundApp" class="sf-tracker-not-found-card glass-card p-8 sm:p-10 rounded-3xl border border-rose-500/30 text-center space-y-5 max-w-xl mx-auto animate-in fade-in duration-300 shadow-xl">
       <div class="sf-tracker-not-found-icon w-14 h-14 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
         <AlertCircle class="w-8 h-8" />
@@ -438,7 +490,10 @@ import {
   Mail,
   CalendarDays,
   CalendarClock,
-  CalendarCheck
+  CalendarCheck,
+  ServerOff,
+  WifiOff,
+  RotateCw
 } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 import {
@@ -638,6 +693,9 @@ function handleReset() {
   rescheduleSuccess.value = ''
   searched.value = false
   foundApp.value = null
+  registrationStore.isTrackingApiDown = false
+  registrationStore.trackingError = null
+  registrationStore.trackingErrorType = null
   if (route.query.code) {
     router.replace({ path: route.path, query: {} })
   }

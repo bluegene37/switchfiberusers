@@ -286,5 +286,48 @@ describe('QA Form Validation & Domain Model Integrity', () => {
       assert.equal(maskEmail(null), '')
     })
   })
+
+  describe('Public User-Friendly Offline & API Error Handling', () => {
+    const statusViewPath = path.resolve(__dirname, '../src/views/ApplicationStatusView.vue')
+    const wizardViewPath = path.resolve(__dirname, '../src/components/RegistrationWizard.vue')
+    const plansViewPath = path.resolve(__dirname, '../src/views/PlansView.vue')
+    const storePath = path.resolve(__dirname, '../src/stores/registration.js')
+
+    it('ApplicationStatusView renders dedicated API down state with reassuring public wording and hotline', () => {
+      const code = fs.readFileSync(statusViewPath, 'utf8')
+      assert.match(code, /sf-tracker-api-down/, 'Must include sf-tracker-api-down container')
+      assert.match(code, /System Verification Temporarily Unavailable/, 'Must provide user-friendly offline title')
+      assert.match(code, /Service Connection Interrupted/, 'Must indicate service connection interrupted badge')
+      assert.match(code, /your application records are safe with us/i, 'Must reassure user their records are safe')
+      assert.match(code, /0915\s*407\s*7565/, 'Must display customer care hotline')
+      assert.match(code, /ServerOff/, 'Must import and use ServerOff icon')
+      assert.match(code, /WifiOff/, 'Must import and use WifiOff icon')
+    })
+
+    it('RegistrationWizard displays reassuring submission failure and offline plan wording', () => {
+      const code = fs.readFileSync(wizardViewPath, 'utf8')
+      assert.match(code, /Application Submission Temporarily Unavailable/, 'Must avoid harsh all-caps NOT submitted title')
+      assert.match(code, /safely preserved on this device/, 'Must reassure applicant that entries are preserved')
+      assert.match(code, /Plan Catalog Temporarily Unavailable/, 'Must use friendly plan catalog offline heading')
+      assert.match(code, /Showing verified standard plan rates/, 'Must indicate verified standard rates when sync is offline')
+      assert.match(code, /0915\s*407\s*7565/, 'Must display customer care hotline')
+    })
+
+    it('PlansView provides reassuring offline messaging and hotline contact button', () => {
+      const code = fs.readFileSync(plansViewPath, 'utf8')
+      assert.match(code, /Plan Catalog Temporarily Offline/, 'Must display friendly catalog offline title')
+      assert.match(code, /Service Connection Interrupted/, 'Must display service interrupted indicator')
+      assert.match(code, /0915\s*407\s*7565/, 'Must provide direct hotline link')
+      assert.match(code, /Retry Connection/, 'Must provide retry connection button')
+    })
+
+    it('registration store tracks API down status and friendly cached plans note', () => {
+      const code = fs.readFileSync(storePath, 'utf8')
+      assert.match(code, /isTrackingApiDown/, 'Store must export isTrackingApiDown')
+      assert.match(code, /trackingErrorType/, 'Store must export trackingErrorType')
+      assert.match(code, /Showing standard fiber plans • Live pricing sync temporarily unavailable/, 'Must set friendly plansError text')
+    })
+  })
 })
+
 

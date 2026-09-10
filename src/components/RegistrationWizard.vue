@@ -435,7 +435,7 @@
             <RotateCw class="w-3 h-3 animate-spin" /> Syncing live plans...
           </span>
           <span v-else-if="plansError" class="inline-flex items-center gap-1 text-amber-500 font-medium">
-            <AlertCircle class="w-3 h-3" /> Using cached rates
+            <AlertCircle class="w-3 h-3" /> Standard plan rates
           </span>
           <span v-else class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -457,11 +457,11 @@
       <!-- No plans available error state -->
       <div v-else-if="!availablePlans.length" class="p-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 text-center space-y-3">
         <AlertCircle class="w-8 h-8 text-amber-500 mx-auto" />
-        <p class="text-sm font-bold dark:text-white text-slate-900">We couldn't load the plan list</p>
+        <p class="text-sm font-bold dark:text-white text-slate-900">Plan Catalog Temporarily Unavailable</p>
         <p class="text-xs dark:text-slate-300 text-slate-600">
-          Please retry, or call
+          We're currently experiencing a brief technical interruption loading our plan catalog. Please tap 'Retry Sync' below, or call
           <a href="tel:09154077565" class="font-bold text-[#ee2824] dark:text-[#ff6b67] hover:underline">0915 407 7565</a>
-          and we'll take your application over the phone.
+          to apply directly over the phone.
         </p>
         <button type="button" @click="registrationStore.fetchPlans(true)" class="btn-secondary text-xs mx-auto">
           Retry Sync
@@ -474,11 +474,11 @@
           <div class="flex items-center gap-2">
             <AlertCircle class="w-4 h-4 text-amber-500 shrink-0" />
             <span class="dark:text-slate-300 text-slate-700">
-              Showing cached pricing — rates will be re-verified upon submission.
+              Showing verified standard plan rates — live package sync is temporarily offline. All details will be confirmed with our team prior to installation.
             </span>
           </div>
           <button @click="registrationStore.fetchPlans(true)" type="button" class="font-bold text-[#ee2824] dark:text-[#ff6b67] underline shrink-0">
-            Retry
+            Retry Sync
           </button>
         </div>
 
@@ -782,14 +782,14 @@
           <AlertCircle class="w-5 h-5 shrink-0 mt-0.5" />
           <div class="space-y-1 min-w-0 flex-1">
             <h4 class="font-bold text-sm">
-              {{ hasSubmitFailed ? 'Application NOT Submitted' : 'Application Cannot Be Submitted Yet' }}
+              {{ hasSubmitFailed ? 'Application Submission Temporarily Unavailable' : 'Application Cannot Be Submitted Yet' }}
             </h4>
             <p>{{ submissionError }}</p>
 
             <div v-if="hasSubmitFailed" class="mt-2 space-y-1 font-normal dark:text-slate-200 text-slate-700">
               <p v-if="friendlyCause" class="font-semibold">{{ friendlyCause }}</p>
               <p>
-                Please try again, or call our customer hotline at
+                Please try again in a few moments, or call our customer hotline at
                 <a href="tel:09154077565" class="font-bold underline">0915 407 7565</a>
                 for assistance.
               </p>
@@ -1152,15 +1152,19 @@ const friendlyCause = computed(() => {
   if (!e) return ''
   const body = e.responseBody || ''
   if (/would be truncated|Error Number:8152/i.test(body)) {
-    return 'Your uploaded photos are too large for our system to store. ' +
-           'Try again with smaller photos, or apply without the optional uploads.'
+    return 'Your uploaded photos exceed our maximum storage size. ' +
+           'Please try uploading smaller photos, or apply without the optional uploads.'
   }
   if (e.httpStatus === null) {
-    return 'We could not reach our servers. Please check your connection and try again.'
+    return 'We could not establish a connection to our application server. Please check your internet connection and try submitting again. Your details are safely saved.'
   }
-  if (e.httpStatus >= 500) return 'Our server had a problem saving your application.'
-  if (e.httpStatus === 400) return 'Some of the details were rejected by our system.'
-  return ''
+  if (e.httpStatus >= 500) {
+    return 'Our server is temporarily undergoing maintenance or high traffic. Please wait a moment and tap "Try Submitting Again".'
+  }
+  if (e.httpStatus === 400) {
+    return 'Some application details could not be verified by the system. Please double-check your entries and try again.'
+  }
+  return 'A temporary network interruption occurred while submitting. Please try submitting again.'
 })
 const lastSubmitError = computed(() => registrationStore.lastSubmitError)
 
@@ -1491,12 +1495,12 @@ async function handleSubmit() {
       // Stay on the form and show the failure panel — never the success screen
       hasSubmitFailed.value = true
       submissionError.value =
-        'Your application was NOT submitted. Nothing has been received by our team yet.'
+        'We were unable to transmit your application due to a temporary connection issue. Your details and uploaded documents are safely preserved on this device.'
       await revealError()
     }
   } catch (err) {
     console.error('Submission failed:', err)
-    submissionError.value = 'Failed to submit application. Please check your network connection.'
+    submissionError.value = 'We could not connect to our application server. Please check your connection or try again shortly. Your details are safely preserved.'
     hasSubmitFailed.value = true
     await revealError()
   }

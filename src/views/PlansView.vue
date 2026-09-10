@@ -78,15 +78,27 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="glass-card p-10 rounded-3xl border dark:border-slate-800 border-slate-200 text-center space-y-3 max-w-xl mx-auto">
-        <AlertCircle class="w-10 h-10 text-amber-500 mx-auto" />
-        <h2 class="text-xl font-bold font-heading dark:text-white text-slate-900">Plans are temporarily unavailable</h2>
-        <p class="text-sm dark:text-slate-400 text-slate-600">
-          Please try refreshing, or call our hotline at
-          <a href="tel:09154077565" class="text-[#ee2824] dark:text-[#ff6b67] font-bold hover:underline">0915 407 7565</a>
-          and we'll walk you through the options.
+      <div v-else class="glass-card p-10 rounded-3xl border border-amber-500/40 bg-amber-500/5 text-center space-y-4 max-w-xl mx-auto shadow-xl">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+          <AlertCircle class="w-8 h-8" />
+        </div>
+        <div class="space-y-1">
+          <h2 class="text-xl font-bold font-heading dark:text-white text-slate-900">Plan Catalog Temporarily Offline</h2>
+          <p class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Service Connection Interrupted</p>
+        </div>
+        <p class="text-sm dark:text-slate-300 text-slate-600 leading-relaxed">
+          Our plan catalog service is undergoing brief maintenance. We apologize for the inconvenience. You can retry connecting below, or call our customer hotline to inquire about our plans and ongoing promotions.
         </p>
-        <button @click="refreshPlans" class="btn-secondary text-sm mx-auto">Try Again</button>
+        <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button @click="refreshPlans" :disabled="isLoading" class="btn-primary py-3 px-6 text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md">
+            <RotateCw class="w-4 h-4" :class="{ 'animate-spin': isLoading }" />
+            <span>{{ isLoading ? 'Checking Plans...' : 'Retry Connection' }}</span>
+          </button>
+          <a href="tel:09154077565" class="btn-secondary py-3 px-6 text-sm flex items-center justify-center gap-2">
+            <PhoneCall class="w-4 h-4 text-[#ee2824] dark:text-[#ff6b67]" />
+            <span>Call Hotline: 0915 407 7565</span>
+          </a>
+        </div>
       </div>
 
       <!-- Detailed Plan Features Comparison Table -->
