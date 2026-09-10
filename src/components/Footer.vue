@@ -112,12 +112,22 @@
         </nav>
       </div>
 
+      <!-- HarmonyITC Crafting Tagline -->
+      <div class="mt-6 pt-6 border-t dark:border-slate-900/60 border-slate-200/80 flex items-center justify-center text-center text-xs text-slate-500 dark:text-slate-500">
+        <span class="inline-flex items-center gap-1.5 flex-wrap justify-center">
+          <span>Handcrafted with</span>
+          <Heart class="w-3.5 h-3.5 text-[#ee2824] dark:text-[#ff6b67] fill-current inline-block animate-pulse" />
+          <span>and engineered with harmony by</span>
+          <span class="font-semibold text-slate-700 dark:text-slate-200 hover:text-[#ee2824] dark:hover:text-[#ff6b67] transition-colors cursor-default" title="HarmonyITC • Engineering gigabit web experiences">HarmonyITC</span>
+        </span>
+      </div>
+
     </div>
   </footer>
 </template>
 
 <script setup>
-import { Zap, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock, MapPin } from 'lucide-vue-next'
+import { Zap, Heart, Facebook, Instagram, MessageSquare, PhoneCall, CreditCard, Clock, MapPin } from 'lucide-vue-next'
 import { useRegistrationStore } from '../stores/registration'
 import { LEGAL_ENTITY, COPYRIGHT_YEAR } from '../data/legal'
 
