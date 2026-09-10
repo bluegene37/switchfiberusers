@@ -114,16 +114,16 @@ export default async function handler(req, res) {
 
     const nowIso = new Date().toISOString()
     const enrichedPayload = {
-      fullName: body.fullName || 'Subscriber',
-      contactNumber: body.contactNumber || '09154077565',
       address: body.address || 'Service Address to be verified with Subscriber',
-      concern: body.concern || 'Service Issue & Support Request',
+      concern: body.concern || 'Direct Email Intake Support Request',
       ...body,
-      supportStatus: 'In Progress',
-      visitStatus: 'In Progress',
+      fullName: body.fullName !== undefined ? body.fullName : '',
+      contactNumber: body.contactNumber !== undefined ? body.contactNumber : '',
+      supportStatus: body.supportStatus || 'Inprogress',
+      visitStatus: body.visitStatus !== undefined ? body.visitStatus : '',
       createdDate: body.createdDate || nowIso,
       modifiedDate: nowIso,
-      modifiedBy: 'Online Portal (Direct Email Intake)'
+      modifiedBy: body.modifiedBy !== undefined ? body.modifiedBy : ''
     }
 
     req.body = enrichedPayload

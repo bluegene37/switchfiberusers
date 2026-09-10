@@ -113,6 +113,16 @@ describe('Service Orders API & Data Handling', () => {
         emailAddress: 'subscriber.contact@gmail.com'
       })
       assert.equal(defaultSubscriberIntake.ok, true)
+
+      const directIntakePayload = validateServiceOrderPayload({
+        emailAddress: 'subscriber.contact@gmail.com',
+        fullName: '',
+        contactNumber: '',
+        visitStatus: '',
+        supportStatus: 'Inprogress',
+        modifiedBy: ''
+      })
+      assert.equal(directIntakePayload.ok, true)
     })
 
     it('accepts a valid payload with complete details', () => {
@@ -253,6 +263,17 @@ describe('Service Orders API & Data Handling', () => {
       assert.ok(content.includes('displayEmailError'), 'Form must compute a single displayEmailError')
       assert.ok(content.includes('serverError'), 'Form must compute serverError separate from validation errors')
       assert.ok(!content.includes("Email address must include an '@' symbol"), 'Form must avoid duplicate fragmented @ error message')
+    })
+
+    it('configures support request payload with empty fullName, empty contactNumber, empty visitStatus, Inprogress supportStatus, and empty modifiedBy', () => {
+      const storePath = path.resolve(__dirname, '../src/stores/serviceOrder.js')
+      const content = fs.readFileSync(storePath, 'utf8')
+
+      assert.ok(content.includes("fullName: ''"), 'Payload must leave fullName empty')
+      assert.ok(content.includes("contactNumber: ''"), 'Payload must leave contactNumber empty')
+      assert.ok(content.includes("visitStatus: ''"), 'Payload must leave visitStatus empty')
+      assert.ok(content.includes("supportStatus: 'Inprogress'"), 'Payload must set supportStatus to Inprogress')
+      assert.ok(content.includes("modifiedBy: ''"), 'Payload must leave modifiedBy empty')
     })
   })
 })

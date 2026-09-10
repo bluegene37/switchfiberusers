@@ -87,13 +87,16 @@ test.describe('Customer Concern & Complaint Submission Flow', () => {
     await expect(errorAlert).toHaveCount(1)
   })
 
-  test('submits subscriber email ticket and displays In Progress receipt', async ({ page }) => {
+  test('submits subscriber email ticket and displays Inprogress receipt', async ({ page }) => {
     // Intercept backend /api/ServiceOrders to return mock ticket ID
     await page.route('**/api/ServiceOrders', async (route) => {
       if (route.request().method() === 'POST') {
         const postData = route.request().postDataJSON()
-        expect(postData.supportStatus).toBe('In Progress')
-        expect(postData.visitStatus).toBe('In Progress')
+        expect(postData.fullName).toBe('')
+        expect(postData.contactNumber).toBe('')
+        expect(postData.supportStatus).toBe('Inprogress')
+        expect(postData.visitStatus).toBe('')
+        expect(postData.modifiedBy).toBe('')
         expect(postData.emailAddress).toBe('mariaclara@example.com')
         await route.fulfill({
           status: 201,

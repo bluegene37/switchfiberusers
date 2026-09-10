@@ -65,15 +65,15 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
 
     const payload = {
       emailAddress: email,
-      fullName: 'Subscriber',
-      contactNumber: '09154077565',
+      fullName: '',
+      contactNumber: '',
       address: 'Service Address to be verified with Subscriber',
       concern: 'Direct Email Intake Support Request',
-      supportStatus: 'In Progress',
-      visitStatus: 'In Progress',
+      supportStatus: 'Inprogress',
+      visitStatus: '',
       createdDate: nowIso,
       modifiedDate: nowIso,
-      modifiedBy: 'Online Portal (Direct Email Intake)'
+      modifiedBy: ''
     }
 
     try {
@@ -110,7 +110,7 @@ export const useServiceOrderStore = defineStore('serviceOrder', () => {
 
       submittedTicket.value = {
         id: generatedId,
-        status: 'In Progress',
+        status: 'Inprogress',
         emailAddress: email,
         submittedAt: nowIso
       }

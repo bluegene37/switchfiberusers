@@ -16,7 +16,7 @@ const docMd = `# Switch Fiber — Service and Ticketing & Customer Support Guide
 **Feature**: Service and Ticketing & Customer Support Desk with Subscriber Email Space
 **Module**: src/views/ContactView.vue, src/components/ServiceConcernForm.vue, src/stores/serviceOrder.js, api/ServiceOrders.js
 **Backend Target**: /api/ServiceOrders (HTTP POST / PUT)
-**Queue Status**: In Progress / Queued for Dispatch
+**Queue Status**: Inprogress (visitStatus empty)
 **Offline Fallback**: Resilient Local Queue with Support Hotline & 1-Click Email Dispatch
 
 ---
@@ -48,13 +48,13 @@ When the backend API is undergoing maintenance or temporarily offline, users are
 | :--- | :--- | :--- | :--- |
 | **Subscriber Email** | Dedicated Space | emailAddress | Required contact email for status notifications & receipts |
 | **Account Number** | User / Lookup | accountNumber | Subscriber Account ID |
-| **Full Name** | User / Auto-fill | fullName | Contact / Subscriber name |
-| **Mobile Number** | User / Auto-fill | contactNumber | Validated 11-digit Philippine mobile (09XXXXXXXXX) |
-| **Service Address** | User / Auto-fill | address | Street, lot/house number, nearest landmark |
+| **Full Name** | Intake Preset | fullName | Empty for simplified intake |
+| **Mobile Number** | Intake Preset | contactNumber | Empty for direct email intake |
+| **Service Address** | System Preset | address | Street, lot/house number, nearest landmark |
 | **Barangay & City** | User / Auto-fill | barangay, city | Binangonan / Rizal locality |
-| **Concern Category** | Select Option | concern | Outage type, Slow internet, Wi-Fi issue, Billing, etc. |
+| **Concern Category** | System Preset | concern | Outage type, Slow internet, Wi-Fi issue, Billing, etc. |
 | **Detailed Notes** | Textarea | connectionRemarks, supportRemarks | Customer's complete issue narrative |
-| **Queue Status** | System Preset | supportStatus, visitStatus | Assigned to **In Progress** / **Queued for Dispatch** |
+| **Queue Status** | System Preset | supportStatus | Assigned to **Inprogress**; visitStatus & modifiedBy empty |
 | **Priority Level** | Select Option | priorityLevel | Normal or High / Urgent |
 | **Timestamp** | ISO 8601 | createdDate, modifiedDate | Creation and update timestamps |
 
@@ -95,10 +95,10 @@ const qaReportMd = `# Switch Fiber — Quality Assurance & Test Report
 ## 1. Test Execution Summary
 | Test Suite | Total Tests | Passed | Failed | Skipped | Duration |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| Unit & Integration (tests/*.test.js) | 172 | 172 | 0 | 0 | ~165 ms |
-| Service Orders Specific (tests/service-orders.test.js) | 17 | 17 | 0 | 0 | ~3.4 ms |
+| Unit & Integration (tests/*.test.js) | 176 | 176 | 0 | 0 | ~170 ms |
+| Service Orders Specific (tests/service-orders.test.js) | 18 | 18 | 0 | 0 | ~3.5 ms |
 | Static Code Analysis (npm run lint) | All files | Passed | 0 | 0 | ~1.2 s |
-| Production Bundle (npm run build) | 1,641 modules | Built clean | 0 | 0 | ~1.6 s |
+| Production Bundle (npm run build) | 1,643 modules | Built clean | 0 | 0 | ~2.0 s |
 
 ---
 
