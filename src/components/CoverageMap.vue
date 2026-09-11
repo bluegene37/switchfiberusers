@@ -17,7 +17,7 @@
             </span>
           </div>
           <p class="text-xs dark:text-slate-400 text-slate-600">
-            Click any pin to inspect fiber speed, port capacity, or check your GPS location.
+            Click any pin to open its details in the side panel, or check your GPS location.
           </p>
         </div>
       </div>
@@ -95,7 +95,7 @@
       <!-- Notice when selected municipality has no active NAP points -->
       <div
         v-if="unservedNotice"
-        class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-amber-500/40 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-top-2 duration-300"
+        class="absolute top-4 left-4 right-16 sm:left-auto z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-amber-500/40 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-top-2 duration-300"
       >
         <div class="flex items-center justify-between font-bold text-amber-600 dark:text-amber-400">
           <span>Expansion Planned Area</span>
@@ -107,7 +107,7 @@
       <!-- Geolocation failure notice -->
       <div
         v-if="locateError"
-        class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-amber-500/40 shadow-xl text-xs space-y-1"
+        class="absolute top-4 left-4 right-16 sm:left-auto z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-amber-500/40 shadow-xl text-xs space-y-1"
       >
         <div class="flex items-center justify-between font-bold text-amber-600 dark:text-amber-400">
           <span>Location unavailable</span>
@@ -117,9 +117,9 @@
       </div>
 
       <!-- Live GPS Banner if detected -->
-      <div 
-        v-if="userLocationMessage" 
-        class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-top-2 duration-300"
+      <div
+        v-if="userLocationMessage"
+        class="absolute top-4 left-4 right-16 sm:left-auto z-[400] max-w-sm p-3.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 shadow-xl text-xs space-y-1 animate-in fade-in slide-in-from-top-2 duration-300"
       >
         <div class="flex items-center justify-between font-bold text-emerald-600 dark:text-emerald-400">
           <span class="flex items-center gap-1.5">
@@ -134,6 +134,124 @@
           {{ userLocationMessage }}
         </p>
       </div>
+
+      <!-- Detail side panel: replaces Leaflet popups so the pins stay visible.
+           Docked to the left on tablet/desktop (that side of the map is mostly
+           Laguna de Bay, so it hides the fewest pins); a bottom sheet on phones. -->
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 translate-y-3 sm:translate-y-0 sm:-translate-x-4"
+        enter-to-class="opacity-100 translate-y-0 sm:translate-x-0"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0 sm:translate-x-0"
+        leave-to-class="opacity-0 translate-y-3 sm:translate-y-0 sm:-translate-x-4"
+      >
+        <aside
+          v-if="selectedDetail"
+          :key="selectedDetailKey"
+          ref="detailPanelRef"
+          class="absolute z-[450] left-3 right-3 bottom-3 max-h-[58%] sm:right-auto sm:top-4 sm:left-4 sm:bottom-auto sm:max-h-[calc(100%-2rem)] sm:w-80 flex flex-col rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border dark:border-slate-700 border-slate-200 shadow-2xl overflow-hidden"
+          role="dialog"
+          aria-modal="false"
+          :aria-label="detailPanelTitle"
+          tabindex="-1"
+        >
+          <!-- Header -->
+          <div class="flex items-start justify-between gap-3 p-4 border-b dark:border-slate-800 border-slate-200 shrink-0">
+            <div class="min-w-0">
+              <div
+                class="text-[10px] font-extrabold uppercase tracking-wider"
+                :class="detailAccentClass"
+              >
+                {{ detailEyebrow }}
+              </div>
+              <h4 class="text-base font-bold font-heading dark:text-white text-slate-900 leading-snug break-words">
+                {{ detailPanelTitle }}
+              </h4>
+            </div>
+            <button
+              type="button"
+              @click="closeDetail"
+              aria-label="Close details"
+              class="shrink-0 w-8 h-8 -mr-1 -mt-1 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            >
+              <X class="w-4 h-4" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-4 overflow-y-auto text-sm space-y-3 min-h-0">
+            <!-- Barangay coverage pin -->
+            <template v-if="selectedDetail.kind === 'barangay'">
+              <p class="text-xs font-bold text-sky-600 dark:text-sky-400 flex items-start gap-1.5">
+                <Home class="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>{{ selectedDetail.item.connectedHomes || 'Fiber Coverage Active' }} &bull; {{ selectedNapCountLabel }}</span>
+              </p>
+              <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
+                <dt class="font-bold dark:text-slate-300 text-slate-700">Speed</dt>
+                <dd class="text-right dark:text-slate-200 text-slate-800">{{ selectedDetail.item.speed }}</dd>
+                <dt class="font-bold dark:text-slate-300 text-slate-700">Status</dt>
+                <dd class="text-right font-bold" :class="selectedDetail.item.status === 'Available Now' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
+                  {{ selectedDetail.item.slots }}
+                </dd>
+              </dl>
+              <div v-if="selectedDetail.item.coveredAreas && selectedDetail.item.coveredAreas.length" class="pt-3 border-t dark:border-slate-800 border-slate-200">
+                <div class="text-[10px] font-bold uppercase tracking-wider dark:text-slate-400 text-slate-500 mb-1.5">
+                  Covered Subdivisions &amp; Streets
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="area in selectedDetail.item.coveredAreas"
+                    :key="area"
+                    class="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >{{ area }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- Live NAP terminal dot -->
+            <template v-else-if="selectedDetail.kind === 'nap'">
+              <p class="text-xs dark:text-slate-300 text-slate-600 leading-relaxed">
+                {{ selectedNapLocationLine || 'Rizal service area' }}
+              </p>
+              <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
+                <template v-if="selectedDetail.point.portTotal">
+                  <dt class="font-bold dark:text-slate-300 text-slate-700">Port capacity</dt>
+                  <dd class="text-right dark:text-slate-200 text-slate-800">{{ selectedDetail.point.portTotal }} ports</dd>
+                </template>
+                <dt class="font-bold dark:text-slate-300 text-slate-700">Coordinates</dt>
+                <dd class="text-right dark:text-slate-200 text-slate-800 tabular-nums">
+                  {{ Number(selectedDetail.point.lat).toFixed(5) }}, {{ Number(selectedDetail.point.lng).toFixed(5) }}
+                </dd>
+              </dl>
+            </template>
+
+            <!-- User GPS pin -->
+            <template v-else-if="selectedDetail.kind === 'user'">
+              <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
+                <dt class="font-bold dark:text-slate-300 text-slate-700">Latitude</dt>
+                <dd class="text-right dark:text-slate-200 text-slate-800 tabular-nums">{{ selectedDetail.lat.toFixed(4) }}</dd>
+                <dt class="font-bold dark:text-slate-300 text-slate-700">Longitude</dt>
+                <dd class="text-right dark:text-slate-200 text-slate-800 tabular-nums">{{ selectedDetail.lng.toFixed(4) }}</dd>
+              </dl>
+              <p v-if="userLocationMessage" class="text-xs dark:text-slate-300 text-slate-600 leading-relaxed">
+                {{ userLocationMessage }}
+              </p>
+            </template>
+          </div>
+
+          <!-- CTA -->
+          <div v-if="detailCta" class="p-4 pt-0 shrink-0">
+            <RouterLink
+              :to="detailCta.to"
+              class="block text-center text-white text-xs font-bold py-2.5 px-3 rounded-xl shadow-md transition hover:brightness-110"
+              :class="detailCta.className"
+            >
+              {{ detailCta.label }}
+            </RouterLink>
+          </div>
+        </aside>
+      </Transition>
     </div>
 
     <!-- Map Legend Footer -->
@@ -183,11 +301,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { RouterLink } from 'vue-router'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { MapPin, Navigation, RotateCw, Maximize2, CheckCircle2, Home } from 'lucide-vue-next'
+import { MapPin, Navigation, RotateCw, Maximize2, CheckCircle2, Home, X } from 'lucide-vue-next'
 import { useCoverageStore } from '../stores/coverage'
 import { useThemeStore } from '../stores/theme'
 import { barangayBoundaries } from '../data/barangayBoundaries'
@@ -195,13 +313,125 @@ import { samePlace } from '../data/calabarzonLocations'
 
 const coverageStore = useCoverageStore()
 const themeStore = useThemeStore()
-const router = useRouter()
 const mapElementRef = ref(null)
+const detailPanelRef = ref(null)
 const isLocating = ref(false)
 const userLocationMessage = ref('')
 const locateError = ref('')
 const showTouchHint = ref(false)
 const unservedNotice = ref('')
+
+// What the side panel is showing. Pins used to open Leaflet popups anchored to
+// the marker, which hid the neighbouring pins; the panel keeps the map clear.
+//   { kind: 'barangay', item }  – a coverage pin or its boundary
+//   { kind: 'nap', point }      – a live NAP terminal dot
+//   { kind: 'user', lat, lng }  – the GPS marker
+const selectedDetail = ref(null)
+
+const selectedDetailKey = computed(() => {
+  const d = selectedDetail.value
+  if (!d) return ''
+  if (d.kind === 'barangay') return `barangay:${d.item.id}`
+  if (d.kind === 'nap') return `nap:${d.point.id ?? `${d.point.lat},${d.point.lng}`}`
+  return 'user'
+})
+
+const detailEyebrow = computed(() => {
+  const d = selectedDetail.value
+  if (!d) return ''
+  if (d.kind === 'barangay') return `${d.item.municipality}, Rizal`
+  if (d.kind === 'nap') return 'Live Fiber NAP Terminal'
+  return 'GPS Location'
+})
+
+const detailPanelTitle = computed(() => {
+  const d = selectedDetail.value
+  if (!d) return ''
+  if (d.kind === 'barangay') return `Brgy. ${d.item.name}`
+  if (d.kind === 'nap') return d.point.name
+  return 'Your Location'
+})
+
+const detailAccentClass = computed(() => {
+  const d = selectedDetail.value
+  if (!d) return ''
+  if (d.kind === 'barangay') {
+    if (d.item.name.includes('HQ')) return 'text-[#ee2824] dark:text-[#ff6b67]'
+    return d.item.status === 'Available Now'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : 'text-amber-600 dark:text-amber-400'
+  }
+  if (d.kind === 'nap') return 'text-sky-600 dark:text-sky-400'
+  return 'text-blue-600 dark:text-blue-400'
+})
+
+const selectedNapCountLabel = computed(() => {
+  const d = selectedDetail.value
+  if (!d || d.kind !== 'barangay') return ''
+  const count = coverageStore.getNapCountForBarangay(d.item)
+  return count > 0
+    ? `${count} Live NAP Terminal${count === 1 ? '' : 's'} Mapped`
+    : (d.item.activeNodes || 'Fiber Terminal Active')
+})
+
+const selectedNapLocationLine = computed(() => {
+  const d = selectedDetail.value
+  if (!d || d.kind !== 'nap') return ''
+  return [d.point.street, d.point.city].filter(Boolean).join(', ')
+})
+
+const detailCta = computed(() => {
+  const d = selectedDetail.value
+  if (!d) return null
+  if (d.kind === 'barangay') {
+    return {
+      to: { path: '/register', query: { barangay: d.item.name, city: d.item.municipality } },
+      label: 'Apply for my House in this Barangay',
+      className: 'bg-[#ee2824] shadow-[#ee2824]/30'
+    }
+  }
+  if (d.kind === 'nap') {
+    return {
+      to: { path: '/register', query: { city: d.point.city || '' } },
+      label: 'Connect My Residence',
+      className: 'bg-sky-600 shadow-sky-600/30'
+    }
+  }
+  return null
+})
+
+function closeDetail() {
+  selectedDetail.value = null
+}
+
+function onDocumentKeydown(e) {
+  if (e.key === 'Escape' && selectedDetail.value) closeDetail()
+}
+
+// Keep the clicked pin out from under the panel: nudge the map only as far as
+// needed, instead of recentring on every click.
+function keepPinVisible(latlng) {
+  if (!map) return
+  const isDocked = typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches
+  const opts = isDocked
+    ? { paddingTopLeft: [352, 24], paddingBottomRight: [24, 24] }
+    : { paddingTopLeft: [24, 24], paddingBottomRight: [24, Math.round(map.getSize().y * 0.58) + 24] }
+  map.panInside(latlng, { ...opts, animate: true })
+}
+
+// Leaflet re-dispatches a layer click to the map unless the *Leaflet* event is
+// stopped (it checks originalEvent._stopped, which native stopPropagation never
+// sets). Path layers — the canvas NAP dots and the boundary polygons — bubble
+// by default, so without this the map's click handler would close the panel
+// the instant it opened.
+function stopMapClick(e) {
+  if (e?.originalEvent) L.DomEvent.stopPropagation(e)
+}
+
+function openDetail(detail, latlng) {
+  selectedDetail.value = detail
+  if (latlng) nextTick(() => keepPinVisible(latlng))
+}
 
 let map = null
 let markersLayer = null
@@ -247,10 +477,12 @@ function initMap() {
   map = L.map(mapElementRef.value, {
     center: RIZAL_DEFAULT_CENTER,
     zoom: RIZAL_DEFAULT_ZOOM,
-    zoomControl: true,
+    // Zoom buttons sit top-right; the detail panel docks on the left edge
+    zoomControl: false,
     // Require Ctrl/⌘ + wheel so scrolling the page doesn't get swallowed by the map
     scrollWheelZoom: false
   })
+  L.control.zoom({ position: 'topright' }).addTo(map)
 
   applyTileTheme()
 
@@ -266,6 +498,7 @@ function initMap() {
   map.on('click', () => {
     coverageStore.focusedBarangayId = null
     highlightBarangayBoundary(null)
+    closeDetail()
   })
 
   renderCoverageItems()
@@ -301,15 +534,6 @@ function flashTouchHint(show) {
   if (show) {
     touchHintTimer = setTimeout(() => { showTouchHint.value = false }, 1600)
   }
-}
-
-// Popup CTAs are plain anchors inside Leaflet's DOM, so route them through
-// vue-router instead of letting the browser do a full page reload.
-function onPopupClick(e) {
-  const link = e.target.closest('a[data-route]')
-  if (!link) return
-  e.preventDefault()
-  router.push(link.getAttribute('data-route'))
 }
 
 function escapeHtml(value) {
@@ -368,8 +592,7 @@ function createPinIcon(type) {
     className: 'custom-leaflet-marker',
     html: html,
     iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14]
+    iconAnchor: [14, 14]
   })
 }
 
@@ -418,39 +641,10 @@ function renderNapPoints() {
       fillOpacity: 0.9
     })
 
-    const locationLine = [point.street, point.city].filter(Boolean).join(', ')
-    const registerHref = `/register?city=${encodeURIComponent(point.city || '')}`
-
-    dot.bindPopup(`
-      <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
-        <div style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase;">
-          Live Fiber NAP Terminal
-        </div>
-        <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin: 3px 0;">
-          ${escapeHtml(point.name)}
-        </div>
-        <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
-          ${escapeHtml(locationLine || 'Rizal service area')}${point.portTotal ? ` • ${escapeHtml(point.portTotal)} ports` : ''}
-        </div>
-        <a
-          href="${registerHref}"
-          data-route="${registerHref}"
-          style="
-            display: block;
-            text-align: center;
-            background-color: #0284c7;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 10px;
-            padding: 6px 10px;
-            border-radius: 6px;
-            text-decoration: none;
-          "
-        >
-          Connect My Residence
-        </a>
-      </div>
-    `)
+    dot.on('click', (e) => {
+      stopMapClick(e)
+      openDetail({ kind: 'nap', point }, dot.getLatLng())
+    })
     napPointsLayer.addLayer(dot)
   })
 
@@ -645,67 +839,16 @@ function renderCoverageItems() {
     const icon = createPinIcon(type)
     const marker = L.marker([item.lat, item.lng], { icon })
 
-    const coveredAreasHtml = item.coveredAreas && item.coveredAreas.length
-      ? item.coveredAreas.map(a => `<span style="display:inline-block; font-size:10px; background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px; margin:2px 2px 0 0; font-weight:600;">${escapeHtml(a)}</span>`).join('')
-      : ''
-
-    const registerHref = `/register?barangay=${encodeURIComponent(item.name)}&city=${encodeURIComponent(item.municipality)}`
-
     const liveNapCount = coverageStore.getNapCountForBarangay(item)
     const napCountLabel = liveNapCount > 0
       ? `${liveNapCount} Live NAP Terminal${liveNapCount === 1 ? '' : 's'} Mapped`
       : escapeHtml(item.activeNodes || 'Fiber Terminal Active')
 
-    // Main Barangay Popup
-    const popupContent = `
-      <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 240px; padding: 4px;">
-        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: ${isHq ? '#ee2824' : (isAvailable ? '#059669' : '#d97706')}; margin-bottom: 2px;">
-          ${escapeHtml(item.municipality)}, Rizal
-        </div>
-        <div style="font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
-          Brgy. ${escapeHtml(item.name)}
-        </div>
-        <div style="font-size: 11px; font-weight: 700; color: #0284c7; margin-bottom: 8px;">
-          🏠 ${escapeHtml(item.connectedHomes || 'Fiber Coverage Active')} • ${napCountLabel}
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #334155;">
-          <span style="font-weight: 700;">Speed:</span>
-          <span>${escapeHtml(item.speed)}</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; color: #334155;">
-          <span style="font-weight: 700;">Status:</span>
-          <span style="font-weight: 700; color: ${isAvailable ? '#059669' : '#d97706'};">${escapeHtml(item.slots)}</span>
-        </div>
-        ${coveredAreasHtml ? `<div style="margin-bottom: 10px; border-top: 1px solid #e2e8f0; pt: 6px;"><div style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:3px;">Covered Subdivisions & Streets:</div><div>${coveredAreasHtml}</div></div>` : ''}
-        <a
-          href="${registerHref}"
-          data-route="${registerHref}"
-          style="
-            display: block;
-            text-align: center;
-            background-color: #ee2824;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 11px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            text-decoration: none;
-            box-shadow: 0 2px 6px rgba(238,40,36,0.35);
-          "
-        >
-          Apply for my House in this Barangay
-        </a>
-      </div>
-    `
-
-    marker.bindPopup(popupContent)
     marker.on('click', (e) => {
-      if (e) {
-        if (typeof e.stopPropagation === 'function') e.stopPropagation()
-        if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent)
-      }
+      stopMapClick(e)
       coverageStore.focusedBarangayId = item.id
       highlightBarangayBoundary(item.id)
+      openDetail({ kind: 'barangay', item }, marker.getLatLng())
     })
     markersLayer.addLayer(marker)
 
@@ -735,13 +878,10 @@ function renderCoverageItems() {
 
     // Only highlight border on click, not on hover
     shape.on('click', (e) => {
-      if (e) {
-        if (typeof e.stopPropagation === 'function') e.stopPropagation()
-        if (e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent)
-      }
+      stopMapClick(e)
       coverageStore.focusedBarangayId = item.id
       highlightBarangayBoundary(item.id)
-      marker.openPopup()
+      openDetail({ kind: 'barangay', item }, marker.getLatLng())
     })
     circlesLayer.addLayer(shape)
     shapesByBoundary.set(boundary, shape)
@@ -769,7 +909,7 @@ function resetView() {
   userLocationMessage.value = ''
   locateError.value = ''
   unservedNotice.value = ''
-  map.closePopup()
+  closeDetail()
   map.flyTo(RIZAL_DEFAULT_CENTER, RIZAL_DEFAULT_ZOOM, { duration: 1 })
 }
 
@@ -805,10 +945,12 @@ function locateUser() {
         iconAnchor: [15, 15]
       })
 
-      userMarker = L.marker([lat, lng], { icon: userIcon })
-        .addTo(map)
-        .bindPopup(`<strong>Your Location</strong><br>Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`)
-        .openPopup()
+      userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map)
+      userMarker.on('click', (e) => {
+        stopMapClick(e)
+        openDetail({ kind: 'user', lat, lng }, userMarker.getLatLng())
+      })
+      openDetail({ kind: 'user', lat, lng })
 
       map.flyTo([lat, lng], 14, { duration: 1.2 })
 
@@ -922,24 +1064,33 @@ watch(() => coverageStore.focusedBarangayId, (newId) => {
   const item = coverageStore.coverageList.find(b => b.id === newId)
   if (item) {
     map.flyTo([item.lat, item.lng], 15, { duration: 1 })
-    // Open popup for this marker
-    markersLayer.eachLayer(layer => {
-      const latlng = layer.getLatLng()
-      if (Math.abs(latlng.lat - item.lat) < 0.0001 && Math.abs(latlng.lng - item.lng) < 0.0001) {
-        layer.openPopup()
-      }
-    })
+    // Show this barangay in the side panel (no latlng: flyTo already centres it)
+    openDetail({ kind: 'barangay', item })
   }
+})
+
+// A re-render (search, municipality filter, NAP refresh) can drop the pin the
+// panel describes; close it rather than showing details for a hidden pin.
+watch(() => coverageStore.mapCoverageItems, (items) => {
+  const d = selectedDetail.value
+  if (!d || d.kind !== 'barangay') return
+  if (!items.some(i => i.id === d.item.id)) closeDetail()
+})
+
+// Move focus into the panel when it opens so keyboard users land on it
+watch(selectedDetailKey, (key) => {
+  if (!key) return
+  nextTick(() => detailPanelRef.value?.focus({ preventScroll: true }))
 })
 
 onMounted(() => {
   coverageStore.fetchNapLocations()
   if (typeof window !== 'undefined') {
     window.addEventListener('focus', handleWindowFocus)
+    document.addEventListener('keydown', onDocumentKeydown)
   }
   nextTick(() => {
     initMap()
-    mapElementRef.value?.addEventListener('click', onPopupClick)
 
     // Leaflet caches the container size at init. If fonts, images or the
     // surrounding layout settle afterwards the map keeps requesting tiles for
@@ -958,10 +1109,10 @@ onUnmounted(() => {
   clearTimeout(touchHintTimer)
   if (typeof window !== 'undefined') {
     window.removeEventListener('focus', handleWindowFocus)
+    document.removeEventListener('keydown', onDocumentKeydown)
   }
   resizeObserver?.disconnect()
   resizeObserver = null
-  mapElementRef.value?.removeEventListener('click', onPopupClick)
   if (map) {
     map.remove()
     map = null
